@@ -8,5 +8,4 @@ Configure your workspace:
 sudo apt install bison
 sudo apt install flex
 sudo apt-get install aptitude
-sudo apt install
 sudo aptitude install libssl-dev
