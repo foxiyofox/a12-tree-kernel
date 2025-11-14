@@ -1,0 +1,13 @@
+--- drivers/staging/rtl8188eu/core/rtw_recv.c
++++ drivers/staging/rtl8188eu/core/rtw_recv.c
+@@ -1283,8 +1283,8 @@ int recv_decache(struct _adapter *padapter, union recv_frame *precv_frame, u8 b
+ 		-!((memcmp(sa, get_bcmc_sa(padapter), ETH_ALEN) == 0) &&
+ 		(memcmp(psnap_type, SNAP_ETH_TYPE_IPX, 2) ||
+ 		memcmp(psnap_type, SNAP_ETH_TYPE_APPLETALK_AARP, 2)))) {*/
+-		if ((!memcmp(psnap_type, SNAP_ETH_TYPE_IPX, 2) == false) &&
+-			(!memcmp(psnap_type, SNAP_ETH_TYPE_APPLETALK_AARP, 2) == false)) {
++		if ((memcmp(psnap_type, SNAP_ETH_TYPE_IPX, 2) != 0) &&
++			(memcmp(psnap_type, SNAP_ETH_TYPE_APPLETALK_AARP, 2) != 0)) {
+ 			/*  If it is not a bc mc packet && not IPX and Appletalk, return the packet. */
+ 			/*  Otherwise, we need to judge whether it is a bc/mc packet and whether it is a broadcast/multicast IP packet. */
+ 			/*  If it is a bc/mc IP packet, we need to return it. */

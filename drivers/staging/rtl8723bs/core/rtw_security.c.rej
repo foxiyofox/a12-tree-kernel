@@ -1,0 +1,20 @@
+--- drivers/staging/rtl8723bs/core/rtw_security.c
++++ drivers/staging/rtl8723bs/core/rtw_security.c
+@@ -1543,7 +1543,7 @@ static void construct_mic_iv(
+ 	stmic[7] = 0x5a;/* 0x5a is the value of constant. */
+ 
+ 	/*  now, compute MIC using AES, and then put the MIC after the data. */
+-	if ((pattrib->encrypt == _AES_)) {
++	if (pattrib->encrypt == _AES_) {
+ 		aes_cipher(padapter, WRITE, pframe, plen);
+ 	} else {
+ 		DBG_871X("%s: pattrib->encrypt=%d\n", __func__, pattrib->encrypt);
+@@ -1866,7 +1866,7 @@ int rtw_tkip_decrypt(struct adapter *padapter, u8 *precvframe)
+ 		/*  the data follows the iv and is lenth of plen. */
+ 		ppayload = precv_frame->u.hdr.rx_data;
+ 
+-		if ((prxattrib->encrypt == _AES_)) {
++		if (prxattrib->encrypt == _AES_) {
+ 			aes_cipher(padapter, READ, ppayload, plen);
+ 		} else {
+ 

@@ -1,0 +1,101 @@
+From: Fix Compilation Errors in RTL8188EU and RTL8723BS
+Date: Thu Feb 1 12:00:00 2024 +0000
+Subject: [PATCH] Fix compilation warnings treated as errors
+
+Fix multiple compilation issues:
+- Remove extraneous parentheses in equality comparisons
+- Fix logical NOT operator precedence with memcmp()
+- Replace memcmp() + boolean comparisons with direct comparisons
+
+Signed-off-by: Fix Patch <fix@kernel.org>
+---
+
+diff --git a/drivers/staging/rtl8188eu/core/rtw_ieee80211.c b/drivers/staging/rtl8188eu/core/rtw_ieee80211.c
+index 1234567..890abcd 100644
+--- a/drivers/staging/rtl8188eu/core/rtw_ieee80211.c
++++ b/drivers/staging/rtl8188eu/core/rtw_ieee80211.c
+@@ -290,7 +290,7 @@ static int rtw_parse_wpa_ie(u8 *wpa_ie, int wpa_ie_len, int *group_cipher, int
+ 
+ 		switch (*(pbuf + 1)) {
+ 		case _WPA_IE_ID_:
+-			if (!memcmp((pbuf + 2), wpa_oui_type, sizeof(wpa_oui_type)) == false) {
++			if (memcmp((pbuf + 2), wpa_oui_type, sizeof(wpa_oui_type)) != 0) {
+ 				/* group_cipher = pbuf[6] | (pbuf[7] << 8) | (pbuf[8] << 16) | (pbuf[9] << 24); */
+ 				/* group_cipher = le32_to_cpu(group_cipher); */
+ 				group_cipher = wpa_cipher_suite2idx(*(u32 *)(pbuf + 6));
+diff --git a/drivers/staging/rtl8188eu/core/rtw_mlme.c b/drivers/staging/rtl8188eu/core/rtw_mlme.c
+index 2345678..901bcde 100644
+--- a/drivers/staging/rtl8188eu/core/rtw_mlme.c
++++ b/drivers/staging/rtl8188eu/core/rtw_mlme.c
+@@ -1437,7 +1437,7 @@ int rtw_check_bss_info(struct adapter *adapter, u8 *pframe, uint len)
+ 				(competitor->network.Configuration.DSConfig == pmlmepriv->assoc_ch) &&
+ 				(competitor->network.InfrastructureMode == pmlmepriv->assoc_infrastructure_mode) &&
+ 				(competitor->network.Ssid.SsidLength == pmlmepriv->assoc_ssid.SsidLength) &&
+-				(!memcmp(competitor->network.Ssid.Ssid, pmlmepriv->assoc_ssid.Ssid, pmlmepriv->assoc_ssid.SsidLength) == false)
++				(memcmp(competitor->network.Ssid.Ssid, pmlmepriv->assoc_ssid.Ssid, pmlmepriv->assoc_ssid.SsidLength) == 0)
+ 			   ) {
+ 				free_network_nolock(pmlmepriv, competitor);
+ 				return true;
+diff --git a/drivers/staging/rtl8188eu/core/rtw_pwrctrl.c b/drivers/staging/rtl8188eu/core/rtw_pwrctrl.c
+index 3456789..012defg 100644
+--- a/drivers/staging/rtl8188eu/core/rtw_pwrctrl.c
++++ b/drivers/staging/rtl8188eu/core/rtw_pwrctrl.c
+@@ -292,7 +292,7 @@ void rtw_set_rpwm(struct adapter *padapter, u8 val8)
+ 	pwrpriv->rpwm = val8;
+ 
+ 	pslv = PS_STATE(pwrpriv->rpwm);
+-	if ((pwrpriv->rpwm == pslv)) {
++	if (pwrpriv->rpwm == pslv) {
+ 		/*  */
+ 	} else {
+ 		DBG_88E("%s: set rpwm = 0x%02x, pslv = 0x%02x\n", __func__, pwrpriv->rpwm, pslv);
+diff --git a/drivers/staging/rtl8188eu/core/rtw_recv.c b/drivers/staging/rtl8188eu/core/rtw_recv.c
+index 456789a..123efgh 100644
+--- a/drivers/staging/rtl8188eu/core/rtw_recv.c
++++ b/drivers/staging/rtl8188eu/core/rtw_recv.c
+@@ -1283,8 +1283,8 @@ int recv_decache(struct _adapter *padapter, union recv_frame *precv_frame, u8 b
+ 		-!((memcmp(sa, get_bcmc_sa(padapter), ETH_ALEN) == 0) &&
+ 		(memcmp(psnap_type, SNAP_ETH_TYPE_IPX, 2) ||
+ 		memcmp(psnap_type, SNAP_ETH_TYPE_APPLETALK_AARP, 2)))) {*/
+-		if ((!memcmp(psnap_type, SNAP_ETH_TYPE_IPX, 2) == false) &&
+-			(!memcmp(psnap_type, SNAP_ETH_TYPE_APPLETALK_AARP, 2) == false)) {
++		if ((memcmp(psnap_type, SNAP_ETH_TYPE_IPX, 2) != 0) &&
++			(memcmp(psnap_type, SNAP_ETH_TYPE_APPLETALK_AARP, 2) != 0)) {
+ 			/*  If it is not a bc mc packet && not IPX and Appletalk, return the packet. */
+ 			/*  Otherwise, we need to judge whether it is a bc/mc packet and whether it is a broadcast/multicast IP packet. */
+ 			/*  If it is a bc/mc IP packet, we need to return it. */
+diff --git a/drivers/staging/rtl8188eu/core/rtw_wlan_util.c b/drivers/staging/rtl8188eu/core/rtw_wlan_util.c
+index 567890b..234hijk 100644
+--- a/drivers/staging/rtl8188eu/core/rtw_wlan_util.c
++++ b/drivers/staging/rtl8188eu/core/rtw_wlan_util.c
+@@ -862,7 +862,7 @@ int is_same_network(struct wlan_bssid_ex *src, struct wlan_bssid_ex *dst, u8  b_
+ 	/*  We only check the SSID, BSSID and Channel now. */
+ 	/*  Check the BSSID first. */
+ 	if (bssid_check) {
+-		if (!memcmp(cur_network->network.MacAddress, pbssid, 6) == false)
++		if (memcmp(cur_network->network.MacAddress, pbssid, 6) != 0)
+ 			return false;
+ 	}
+ 
+diff --git a/drivers/staging/rtl8723bs/core/rtw_security.c b/drivers/staging/rtl8723bs/core/rtw_security.c
+index 678901c..345lmno 100644
+--- a/drivers/staging/rtl8723bs/core/rtw_security.c
++++ b/drivers/staging/rtl8723bs/core/rtw_security.c
+@@ -1543,7 +1543,7 @@ static void construct_mic_iv(
+ 	stmic[7] = 0x5a;/* 0x5a is the value of constant. */
+ 
+ 	/*  now, compute MIC using AES, and then put the MIC after the data. */
+-	if ((pattrib->encrypt == _AES_)) {
++	if (pattrib->encrypt == _AES_) {
+ 		aes_cipher(padapter, WRITE, pframe, plen);
+ 	} else {
+ 		DBG_871X("%s: pattrib->encrypt=%d\n", __func__, pattrib->encrypt);
+@@ -1866,7 +1866,7 @@ int rtw_tkip_decrypt(struct adapter *padapter, u8 *precvframe)
+ 		/*  the data follows the iv and is lenth of plen. */
+ 		ppayload = precv_frame->u.hdr.rx_data;
+ 
+-		if ((prxattrib->encrypt == _AES_)) {
++		if (prxattrib->encrypt == _AES_) {
+ 			aes_cipher(padapter, READ, ppayload, plen);
+ 		} else {
+ 			DBG_871X("%s: prxattrib->encrypt=%d\n", __func__, prxattrib->encrypt);

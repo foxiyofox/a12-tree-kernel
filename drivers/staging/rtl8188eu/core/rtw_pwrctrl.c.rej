@@ -1,0 +1,11 @@
+--- drivers/staging/rtl8188eu/core/rtw_pwrctrl.c
++++ drivers/staging/rtl8188eu/core/rtw_pwrctrl.c
+@@ -292,7 +292,7 @@ void rtw_set_rpwm(struct adapter *padapter, u8 val8)
+ 	pwrpriv->rpwm = val8;
+ 
+ 	pslv = PS_STATE(pwrpriv->rpwm);
+-	if ((pwrpriv->rpwm == pslv)) {
++	if (pwrpriv->rpwm == pslv) {
+ 		/*  */
+ 	} else {
+ 		DBG_88E("%s: set rpwm = 0x%02x, pslv = 0x%02x\n", __func__, pwrpriv->rpwm, pslv);

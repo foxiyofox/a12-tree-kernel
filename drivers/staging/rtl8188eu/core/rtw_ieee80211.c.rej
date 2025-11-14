@@ -1,0 +1,11 @@
+--- drivers/staging/rtl8188eu/core/rtw_ieee80211.c
++++ drivers/staging/rtl8188eu/core/rtw_ieee80211.c
+@@ -290,7 +290,7 @@ static int rtw_parse_wpa_ie(u8 *wpa_ie, int wpa_ie_len, int *group_cipher, int
+ 
+ 		switch (*(pbuf + 1)) {
+ 		case _WPA_IE_ID_:
+-			if (!memcmp((pbuf + 2), wpa_oui_type, sizeof(wpa_oui_type)) == false) {
++			if (memcmp((pbuf + 2), wpa_oui_type, sizeof(wpa_oui_type)) != 0) {
+ 				/* group_cipher = pbuf[6] | (pbuf[7] << 8) | (pbuf[8] << 16) | (pbuf[9] << 24); */
+ 				/* group_cipher = le32_to_cpu(group_cipher); */
+ 				group_cipher = wpa_cipher_suite2idx(*(u32 *)(pbuf + 6));

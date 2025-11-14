@@ -1,0 +1,11 @@
+--- drivers/staging/rtl8188eu/core/rtw_mlme.c
++++ drivers/staging/rtl8188eu/core/rtw_mlme.c
+@@ -1437,7 +1437,7 @@ int rtw_check_bss_info(struct adapter *adapter, u8 *pframe, uint len)
+ 				(competitor->network.Configuration.DSConfig == pmlmepriv->assoc_ch) &&
+ 				(competitor->network.InfrastructureMode == pmlmepriv->assoc_infrastructure_mode) &&
+ 				(competitor->network.Ssid.SsidLength == pmlmepriv->assoc_ssid.SsidLength) &&
+-				(!memcmp(competitor->network.Ssid.Ssid, pmlmepriv->assoc_ssid.Ssid, pmlmepriv->assoc_ssid.SsidLength) == false)
++				(memcmp(competitor->network.Ssid.Ssid, pmlmepriv->assoc_ssid.Ssid, pmlmepriv->assoc_ssid.SsidLength) == 0)
+ 			   ) {
+ 				free_network_nolock(pmlmepriv, competitor);
+ 				return true;
