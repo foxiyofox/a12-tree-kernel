@@ -43,6 +43,8 @@ int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
 
 	schedule_work(&cfg80211_disconnect_work);
 
+	schedule_work(&cfg80211_disconnect_work);
+
 	return err;
 }
 

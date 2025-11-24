@@ -66,6 +66,10 @@ bool kvm_hv_assist_page_enabled(struct kvm_vcpu *vcpu);
 bool kvm_hv_get_assist_page(struct kvm_vcpu *vcpu,
 			    struct hv_vp_assist_page *assist_page);
 
+bool kvm_hv_assist_page_enabled(struct kvm_vcpu *vcpu);
+bool kvm_hv_get_assist_page(struct kvm_vcpu *vcpu,
+			    struct hv_vp_assist_page *assist_page);
+
 static inline struct kvm_vcpu_hv_stimer *vcpu_to_stimer(struct kvm_vcpu *vcpu,
 							int timer_index)
 {

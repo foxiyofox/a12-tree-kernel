@@ -253,6 +253,7 @@ nfp_flower_spawn_vnic_reprs(struct nfp_app *app,
 		repr = nfp_repr_alloc(app);
 		if (!repr) {
 			err = -ENOMEM;
+			nfp_repr_free(repr);
 			goto err_reprs_clean;
 		}
 
@@ -370,6 +371,7 @@ nfp_flower_spawn_phy_reprs(struct nfp_app *app, struct nfp_flower_priv *priv)
 		repr = nfp_repr_alloc(app);
 		if (!repr) {
 			err = -ENOMEM;
+			nfp_repr_free(repr);
 			goto err_reprs_clean;
 		}
 

@@ -228,13 +228,12 @@ static inline bool try_to_reuse_as_compressed_page(
 }
 
 /* callers must be with work->lock held */
-static int z_erofs_vle_work_add_page(
-	struct z_erofs_vle_work_builder *builder,
-	struct page *page,
-	enum z_erofs_page_type type)
+static int z_erofs_vle_work_add_page(struct z_erofs_vle_work_builder *builder,
+				     struct page *page,
+				     enum z_erofs_page_type type,
+				     bool pvec_safereuse)
 {
 	int ret;
-	bool occupied;
 
 	/* give priority for the compressed data storage */
 	if (builder->role >= Z_EROFS_VLE_WORK_PRIMARY &&
@@ -435,6 +434,9 @@ static inline void __update_workgrp_llen(struct z_erofs_vle_workgroup *grp,
 			break;
 	}
 }
+
+#define builder_is_hooked(builder) \
+	((builder)->role >= Z_EROFS_VLE_WORK_PRIMARY_HOOKED)
 
 #define builder_is_hooked(builder) \
 	((builder)->role >= Z_EROFS_VLE_WORK_PRIMARY_HOOKED)

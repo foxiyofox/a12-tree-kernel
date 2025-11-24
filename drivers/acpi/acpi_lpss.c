@@ -104,6 +104,9 @@ struct lpss_private_data {
 /* Devices which need to be in D3 before lpss_iosf_enter_d3_state() proceeds */
 static u32 pmc_atom_d3_mask = 0xfe000ffe;
 
+/* Devices which need to be in D3 before lpss_iosf_enter_d3_state() proceeds */
+static u32 pmc_atom_d3_mask = 0xfe000ffe;
+
 /* LPSS run time quirks */
 static unsigned int lpss_quirks;
 

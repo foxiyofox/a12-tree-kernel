@@ -42,6 +42,14 @@ static int uvcg_config_compare_u32(const void *l, const void *r)
 	return li < ri ? -1 : li == ri ? 0 : 1;
 }
 
+static int uvcg_config_compare_u32(const void *l, const void *r)
+{
+	u32 li = *(const u32 *)l;
+	u32 ri = *(const u32 *)r;
+
+	return li < ri ? -1 : li == ri ? 0 : 1;
+}
+
 static inline struct f_uvc_opts *to_f_uvc_opts(struct config_item *item)
 {
 	return container_of(to_config_group(item), struct f_uvc_opts,
@@ -814,6 +822,8 @@ static void uvcg_streaming_header_drop_link(struct config_item *src,
 			--src_hdr->num_fmt;
 			break;
 		}
+
+	--target_fmt->linked;
 
 	--target_fmt->linked;
 

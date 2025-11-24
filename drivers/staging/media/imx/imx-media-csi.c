@@ -195,6 +195,14 @@ static int csi_get_upstream_endpoint(struct csi_priv *priv,
 	    sd->grp_id != IMX_MEDIA_GRP_ID_CSI2)
 		src = &priv->sd.entity;
 
+	/*
+	 * If the source is neither the video mux nor the CSI-2 receiver,
+	 * get the source pad directly upstream from CSI itself.
+	 */
+	if (src->function != MEDIA_ENT_F_VID_MUX &&
+	    sd->grp_id != IMX_MEDIA_GRP_ID_CSI2)
+		src = &priv->sd.entity;
+
 	/* get source pad of entity directly upstream from src */
 	pad = imx_media_find_upstream_pad(priv->md, src, 0);
 	if (IS_ERR(pad))
@@ -658,7 +666,7 @@ static void csi_idmac_wait_last_eof(struct csi_priv *priv)
 		v4l2_warn(&priv->sd, "wait last EOF timeout\n");
 }
 
-static void csi_idmac_stop(struct csi_priv *priv)
+static void csi_idmac_wait_last_eof(struct csi_priv *priv)
 {
 	devm_free_irq(priv->dev, priv->eof_irq, priv);
 	devm_free_irq(priv->dev, priv->nfb4eof_irq, priv);

@@ -149,6 +149,7 @@ static inline void __percpu_write(void *ptr, unsigned long val, int size)
 		WRITE_ONCE(*(u64 *)ptr, (u64)val);
 		break;
 	default:
+		ret = 0;
 		BUILD_BUG();
 	}
 }

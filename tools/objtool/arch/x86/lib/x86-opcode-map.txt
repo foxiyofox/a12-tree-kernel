@@ -1057,6 +1057,10 @@ GrpTable: Grp20
 0: cldemote Mb
 EndTable
 
+GrpTable: Grp20
+0: cldemote Mb
+EndTable
+
 # AMD's Prefetch Group
 GrpTable: GrpP
 0: PREFETCH

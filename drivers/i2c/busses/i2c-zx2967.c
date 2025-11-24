@@ -499,6 +499,10 @@ static const struct i2c_adapter_quirks zx2967_i2c_quirks = {
 	.flags = I2C_AQ_NO_ZERO_LEN,
 };
 
+static const struct i2c_adapter_quirks zx2967_i2c_quirks = {
+	.flags = I2C_AQ_NO_ZERO_LEN,
+};
+
 static const struct of_device_id zx2967_i2c_of_match[] = {
 	{ .compatible = "zte,zx296718-i2c", },
 	{ },

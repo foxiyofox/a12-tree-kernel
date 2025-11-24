@@ -345,6 +345,7 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
 
 	return rc;
 }
+EXPORT_SYMBOL_GPL(ahci_platform_enable_phys);
 
 /**
  * ahci_platform_get_resources - Get platform resources
@@ -632,6 +633,7 @@ static void ahci_host_stop(struct ata_host *host)
 
 	ahci_platform_disable_resources(hpriv);
 }
+EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
 
 /**
  * ahci_platform_shutdown - Disable interrupts and stop DMA for host ports

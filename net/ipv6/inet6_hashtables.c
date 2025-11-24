@@ -135,6 +135,7 @@ static struct sock *inet6_lhash2_lookup(struct net *net,
 	bool exact_dif = inet6_exact_dif_match(net, skb);
 	struct inet_connection_sock *icsk;
 	struct sock *sk, *result = NULL;
+	struct hlist_nulls_node *node;
 	int score, hiscore = 0;
 	u32 phash = 0;
 

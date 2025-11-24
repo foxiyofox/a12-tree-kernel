@@ -87,7 +87,7 @@ static void ovl_dentry_release(struct dentry *dentry)
 static struct dentry *ovl_d_real(struct dentry *dentry,
 				 const struct inode *inode)
 {
-	struct dentry *real;
+	struct dentry *real = NULL, *lower;
 
 	/* It's an overlay file */
 	if (inode && d_inode(dentry) == inode)
@@ -106,9 +106,10 @@ static struct dentry *ovl_d_real(struct dentry *dentry,
 	if (real && !inode && ovl_has_upperdata(d_inode(dentry)))
 		return real;
 
-	real = ovl_dentry_lowerdata(dentry);
-	if (!real)
+	lower = ovl_dentry_lowerdata(dentry);
+	if (!lower)
 		goto bug;
+	real = lower;
 
 	/* Handle recursion */
 	real = d_real(real, inode);
@@ -116,8 +117,10 @@ static struct dentry *ovl_d_real(struct dentry *dentry,
 	if (!inode || inode == d_inode(real))
 		return real;
 bug:
-	WARN(1, "ovl_d_real(%pd4, %s:%lu): real dentry not found\n", dentry,
-	     inode ? inode->i_sb->s_id : "NULL", inode ? inode->i_ino : 0);
+	WARN(1, "%s(%pd4, %s:%lu): real dentry (%p/%lu) not found\n",
+	     __func__, dentry, inode ? inode->i_sb->s_id : "NULL",
+	     inode ? inode->i_ino : 0, real,
+	     real && d_inode(real) ? d_inode(real)->i_ino : 0);
 	return dentry;
 }
 
@@ -303,6 +306,7 @@ static int ovl_statfs(struct dentry *dentry, struct kstatfs *buf)
 	struct dentry *root_dentry = dentry->d_sb->s_root;
 	struct path path;
 	int err;
+	bool metacopy_opt = false, redirect_opt = false;
 
 	ovl_path_real(root_dentry, &path);
 
@@ -511,6 +515,7 @@ static int ovl_parse_opt(char *opt, struct ovl_config *config)
 			config->upperdir = match_strdup(&args[0]);
 			if (!config->upperdir)
 				return -ENOMEM;
+			redirect_opt = true;
 			break;
 
 		case OPT_LOWERDIR:
@@ -1092,6 +1097,11 @@ static int ovl_get_upper(struct super_block *sb, struct ovl_fs *ofs,
 	if (err)
 		goto out;
 
+	err = ovl_setup_trap(sb, upperpath->dentry, &ofs->upperdir_trap,
+			     "upperdir");
+	if (err)
+		goto out;
+
 	upper_mnt = clone_private_mount(upperpath);
 	err = PTR_ERR(upper_mnt);
 	if (IS_ERR(upper_mnt)) {
@@ -1130,6 +1140,10 @@ static int ovl_make_workdir(struct super_block *sb, struct ovl_fs *ofs,
 
 	ofs->workdir = ovl_workdir_create(ofs, OVL_WORKDIR_NAME, false);
 	if (!ofs->workdir)
+		goto out;
+
+	err = ovl_setup_trap(sb, ofs->workdir, &ofs->workdir_trap, "workdir");
+	if (err)
 		goto out;
 
 	err = ovl_setup_trap(sb, ofs->workdir, &ofs->workdir_trap, "workdir");
@@ -1571,6 +1585,79 @@ static int ovl_check_overlapping_layers(struct super_block *sb,
 	return 0;
 }
 
+/*
+ * Check if this layer root is a descendant of:
+ * - another layer of this overlayfs instance
+ * - upper/work dir of any overlayfs instance
+ */
+static int ovl_check_layer(struct super_block *sb, struct ovl_fs *ofs,
+			   struct dentry *dentry, const char *name,
+			   bool is_lower)
+{
+	struct dentry *next = dentry, *parent;
+	int err = 0;
+
+	if (!dentry)
+		return 0;
+
+	parent = dget_parent(next);
+
+	/* Walk back ancestors to root (inclusive) looking for traps */
+	while (!err && parent != next) {
+		if (is_lower && ovl_lookup_trap_inode(sb, parent)) {
+			err = -ELOOP;
+			pr_err("overlayfs: overlapping %s path\n", name);
+		} else if (ovl_is_inuse(parent)) {
+			err = ovl_report_in_use(ofs, name);
+		}
+		next = parent;
+		parent = dget_parent(next);
+		dput(next);
+	}
+
+	dput(parent);
+
+	return err;
+}
+
+/*
+ * Check if any of the layers or work dirs overlap.
+ */
+static int ovl_check_overlapping_layers(struct super_block *sb,
+					struct ovl_fs *ofs)
+{
+	int i, err;
+
+	if (ofs->upper_mnt) {
+		err = ovl_check_layer(sb, ofs, ofs->upper_mnt->mnt_root,
+				      "upperdir", false);
+		if (err)
+			return err;
+
+		/*
+		 * Checking workbasedir avoids hitting ovl_is_inuse(parent) of
+		 * this instance and covers overlapping work and index dirs,
+		 * unless work or index dir have been moved since created inside
+		 * workbasedir.  In that case, we already have their traps in
+		 * inode cache and we will catch that case on lookup.
+		 */
+		err = ovl_check_layer(sb, ofs, ofs->workbasedir, "workdir",
+				      false);
+		if (err)
+			return err;
+	}
+
+	for (i = 0; i < ofs->numlower; i++) {
+		err = ovl_check_layer(sb, ofs,
+				      ofs->lower_layers[i].mnt->mnt_root,
+				      "lowerdir", true);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
+
 static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 {
 	struct path upperpath = { };
@@ -1656,6 +1743,10 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 		}
 
 	}
+
+	err = ovl_check_overlapping_layers(sb, ofs);
+	if (err)
+		goto out_free_oe;
 
 	err = ovl_check_overlapping_layers(sb, ofs);
 	if (err)

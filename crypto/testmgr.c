@@ -2693,6 +2693,13 @@ static const struct alg_test_desc alg_test_descs[] = {
 			.hash = __VECS(aes_cbcmac_tv_template)
 		}
 	}, {
+		.alg = "cfb(aes)",
+		.test = alg_test_skcipher,
+		.fips_allowed = 1,
+		.suite = {
+			.cipher = __VECS(aes_cfb_tv_template)
+		},
+	}, {
 		.alg = "ccm(aes)",
 		.test = alg_test_aead,
 		.fips_allowed = 1,

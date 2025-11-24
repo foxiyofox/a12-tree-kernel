@@ -210,3 +210,13 @@ bool perf_env__single_address_space(struct perf_env *env)
 {
 	return strcmp(perf_env__arch(env), "sparc");
 }
+
+/*
+ * Some architectures have a single address space for kernel and user addresses,
+ * which makes it possible to determine if an address is in kernel space or user
+ * space.
+ */
+bool perf_env__single_address_space(struct perf_env *env)
+{
+	return strcmp(perf_env__arch(env), "sparc");
+}

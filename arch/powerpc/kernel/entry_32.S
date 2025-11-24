@@ -231,6 +231,9 @@ reenable_mmu:				/* re-enable mmu so we can */
 	andi.	r10,r10,MSR_EE		/* Did EE change? */
 	beq	1f
 
+	/* Clear the exception_marker on the stack to avoid confusing stacktrace */
+	li	r10, 0
+	stw	r10, 8(r1)
 	/*
 	 * The trace_hardirqs_off will use CALLER_ADDR0 and CALLER_ADDR1.
 	 * If from user mode there is only one stack frame on the stack, and

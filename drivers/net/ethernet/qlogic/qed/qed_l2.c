@@ -613,6 +613,10 @@ qed_sp_update_accept_mode(struct qed_hwfn *p_hwfn,
 			  (!!(accept_filter & QED_ACCEPT_UCAST_MATCHED) &&
 			   !!(accept_filter & QED_ACCEPT_UCAST_UNMATCHED)));
 
+		SET_FIELD(state, ETH_VPORT_TX_MODE_UCAST_ACCEPT_ALL,
+			  (!!(accept_filter & QED_ACCEPT_UCAST_MATCHED) &&
+			   !!(accept_filter & QED_ACCEPT_UCAST_UNMATCHED)));
+
 		SET_FIELD(state, ETH_VPORT_TX_MODE_BCAST_ACCEPT_ALL,
 			  !!(accept_filter & QED_ACCEPT_BCAST));
 
@@ -1547,6 +1551,10 @@ qed_sp_eth_filter_mcast(struct qed_hwfn *p_hwfn,
 	p_ramrod->common.vport_id = abs_vport_id;
 
 	return qed_spq_post(p_hwfn, p_ent, NULL);
+
+err:
+	qed_sp_destroy_request(p_hwfn, p_ent);
+	return rc;
 }
 
 static int qed_filter_mcast_cmd(struct qed_dev *cdev,

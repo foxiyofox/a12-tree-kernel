@@ -2722,6 +2722,9 @@ int sched_group_set_rt_period(struct task_group *tg, u64 rt_period_us)
 	if (rt_period_us > U64_MAX / NSEC_PER_USEC)
 		return -EINVAL;
 
+	if (rt_period_us > U64_MAX / NSEC_PER_USEC)
+		return -EINVAL;
+
 	rt_period = rt_period_us * NSEC_PER_USEC;
 	rt_runtime = tg->rt_bandwidth.rt_runtime;
 

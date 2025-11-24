@@ -102,6 +102,11 @@ static void reg_w(struct gspca_dev *gspca_dev, u16 value, u16 index)
 		pr_err("reg_w err writing %02x to %02x: %d\n",
 		       value, index, ret);
 		gspca_dev->usb_err = ret;
+		/*
+		 * Make sure the buffer is zeroed to avoid uninitialized
+		 * values.
+		 */
+		memset(gspca_dev->usb_buf, 0, 2);
 	}
 }
 

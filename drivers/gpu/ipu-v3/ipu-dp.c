@@ -264,6 +264,8 @@ void ipu_dp_disable_channel(struct ipu_dp *dp, bool sync)
 
 	dp->in_cs = IPUV3_COLORSPACE_UNKNOWN;
 
+	dp->in_cs = IPUV3_COLORSPACE_UNKNOWN;
+
 	if (!dp->foreground)
 		return;
 

@@ -142,6 +142,8 @@ static int pmbus_identify(struct i2c_client *client,
 				goto abort;
 			}
 		}
+
+		pmbus_clear_faults(client);
 	}
 
 	/*

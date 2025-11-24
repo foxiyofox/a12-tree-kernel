@@ -844,8 +844,13 @@ compose_entry_fh(struct nfsd3_readdirres *cd, struct svc_fh *fhp,
 	if (isdotent(name, namlen)) {
 		if (namlen == 2) {
 			dchild = dget_parent(dparent);
-			/* filesystem root - cannot return filehandle for ".." */
+			/*
+			 * Don't return filehandle for ".." if we're at
+			 * the filesystem or export root:
+			 */
 			if (dchild == dparent)
+				goto out;
+			if (dparent == exp->ex_path.dentry)
 				goto out;
 		} else
 			dchild = dget(dparent);
@@ -1014,6 +1019,7 @@ encode_entry(struct readdir_cd *ccd, const char *name, int namlen,
 
 			p = tmp + (len2 >> 2);
 		}
+		cd->offset = NULL;
 	}
 	else {
 		cd->common.err = nfserr_toosmall;

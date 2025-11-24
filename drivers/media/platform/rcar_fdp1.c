@@ -2373,6 +2373,12 @@ static int fdp1_probe(struct platform_device *pdev)
 	case FD1_IP_E3:
 		dprintk(fdp1, "FDP1 Version R-Car E3\n");
 		break;
+	case FD1_IP_M3N:
+		dprintk(fdp1, "FDP1 Version R-Car M3-N\n");
+		break;
+	case FD1_IP_E3:
+		dprintk(fdp1, "FDP1 Version R-Car E3\n");
+		break;
 	default:
 		dev_err(fdp1->dev, "FDP1 Unidentifiable (0x%08x)\n",
 				hw_version);

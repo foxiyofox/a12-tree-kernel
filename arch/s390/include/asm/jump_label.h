@@ -16,6 +16,12 @@
 #define JUMP_LABEL_STATIC_KEY_CONSTRAINT "jdd"
 #endif
 
+#if __GNUC__ < 9
+#define JUMP_LABEL_STATIC_KEY_CONSTRAINT "X"
+#else
+#define JUMP_LABEL_STATIC_KEY_CONSTRAINT "jdd"
+#endif
+
 /*
  * We use a brcl 0,2 instruction for jump labels at compile time so it
  * can be easily distinguished from a hotpatch generated instruction.

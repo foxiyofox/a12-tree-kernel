@@ -93,7 +93,7 @@ tps6598x_block_read(struct tps6598x *tps, u8 reg, void *val, size_t len)
 	u8 data[TPS_MAX_LEN + 1];
 	int ret;
 
-	if (WARN_ON(len + 1 > sizeof(data)))
+	if (len + 1 > sizeof(data))
 		return -EINVAL;
 
 	if (!tps->i2c_protocol)
@@ -108,6 +108,20 @@ tps6598x_block_read(struct tps6598x *tps, u8 reg, void *val, size_t len)
 
 	memcpy(val, &data[1], len);
 	return 0;
+}
+
+static int tps6598x_block_write(struct tps6598x *tps, u8 reg,
+				const void *val, size_t len)
+{
+	u8 data[TPS_MAX_LEN + 1];
+
+	if (!tps->i2c_protocol)
+		return regmap_raw_write(tps->regmap, reg, val, len);
+
+	data[0] = len;
+	memcpy(&data[1], val, len);
+
+	return regmap_raw_write(tps->regmap, reg, data, sizeof(data));
 }
 
 static int tps6598x_block_write(struct tps6598x *tps, u8 reg,

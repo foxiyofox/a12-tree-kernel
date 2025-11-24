@@ -101,6 +101,11 @@ void __init smp_init_cpus(void)
 		pr_info("%s: limiting core count by %d\n", __func__, ncpus);
 	}
 
+	if (ncpus > NR_CPUS) {
+		ncpus = NR_CPUS;
+		pr_info("%s: limiting core count by %d\n", __func__, ncpus);
+	}
+
 	for (i = 0; i < ncpus; ++i)
 		set_cpu_possible(i, true);
 }

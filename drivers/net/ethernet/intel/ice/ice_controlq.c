@@ -491,6 +491,9 @@ ice_shutdown_sq(struct ice_hw *hw, struct ice_ctl_q_info *cq)
 {
 	enum ice_status ret_code = 0;
 
+	/* if reset is in progress return a soft error */
+	if (hw->reset_ongoing)
+		return ICE_ERR_RESET_ONGOING;
 	mutex_lock(&cq->sq_lock);
 
 	if (!cq->sq.count) {

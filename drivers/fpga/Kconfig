@@ -60,6 +60,7 @@ config FPGA_MGR_ZYNQ_FPGA
 config FPGA_MGR_XILINX_SPI
 	tristate "Xilinx Configuration over Slave Serial (SPI)"
 	depends on SPI
+	select BITREVERSE
 	help
 	  FPGA manager driver support for Xilinx FPGA configuration
 	  over slave serial interface.

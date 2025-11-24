@@ -1044,6 +1044,12 @@ static int edt_ft5x06_ts_probe(struct i2c_client *client,
 	 */
 	edt_ft5x06_ts_readwrite(tsdata->client, 2, buf, 2, buf);
 
+	/*
+	 * Dummy read access. EP0700MLP1 returns bogus data on the first
+	 * register read access and ignores writes.
+	 */
+	edt_ft5x06_ts_readwrite(tsdata->client, 2, buf, 2, buf);
+
 	edt_ft5x06_ts_set_regs(tsdata);
 	edt_ft5x06_ts_get_defaults(&client->dev, tsdata);
 	edt_ft5x06_ts_get_parameters(tsdata);

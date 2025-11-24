@@ -1418,7 +1418,6 @@ bool batadv_dat_snoop_incoming_arp_reply(struct batadv_priv *bat_priv,
 			   "Device %pM claimed by another backbone gw. Drop ARP reply.\n",
 			   hw_src);
 		dropped = true;
-		goto out;
 	}
 
 	/* if this REPLY is directed to a client of mine, let's deliver the

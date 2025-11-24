@@ -881,7 +881,7 @@ int gnttab_dma_alloc_pages(struct gnttab_dma_alloc_args *args)
 
 	ret = xenmem_reservation_decrease(args->nr_pages, args->frames);
 	if (ret != args->nr_pages) {
-		pr_debug("Failed to decrease reservation for DMA buffer\n");
+		pr_debug("Failed to increase reservation for DMA buffer\n");
 		ret = -EFAULT;
 		goto fail;
 	}

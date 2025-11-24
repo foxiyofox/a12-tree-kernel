@@ -1351,6 +1351,21 @@ static void macb_tx_restart(struct macb_queue *queue)
 	macb_writel(bp, NCR, macb_readl(bp, NCR) | MACB_BIT(TSTART));
 }
 
+static void macb_tx_restart(struct macb_queue *queue)
+{
+	unsigned int head = queue->tx_head;
+	unsigned int tail = queue->tx_tail;
+	struct macb *bp = queue->bp;
+
+	if (bp->caps & MACB_CAPS_ISR_CLEAR_ON_WRITE)
+		queue_writel(queue, ISR, MACB_BIT(TXUBR));
+
+	if (head == tail)
+		return;
+
+	macb_writel(bp, NCR, macb_readl(bp, NCR) | MACB_BIT(TSTART));
+}
+
 static irqreturn_t macb_interrupt(int irq, void *dev_id)
 {
 	struct macb_queue *queue = dev_id;
@@ -1407,6 +1422,9 @@ static irqreturn_t macb_interrupt(int irq, void *dev_id)
 
 		if (status & MACB_BIT(TCOMP))
 			macb_tx_interrupt(queue);
+
+		if (status & MACB_BIT(TXUBR))
+			macb_tx_restart(queue);
 
 		if (status & MACB_BIT(TXUBR))
 			macb_tx_restart(queue);
@@ -1704,7 +1722,8 @@ static inline int macb_clear_csum(struct sk_buff *skb)
 
 static int macb_pad_and_fcs(struct sk_buff **skb, struct net_device *ndev)
 {
-	bool cloned = skb_cloned(*skb) || skb_header_cloned(*skb);
+	bool cloned = skb_cloned(*skb) || skb_header_cloned(*skb) ||
+		      skb_is_nonlinear(*skb);
 	int padlen = ETH_ZLEN - (*skb)->len;
 	int headroom = skb_headroom(*skb);
 	int tailroom = skb_tailroom(*skb);
@@ -2511,6 +2530,9 @@ static struct net_device_stats *gem_get_stats(struct macb *bp)
 {
 	struct gem_stats *hwstat = &bp->hw_stats.gem;
 	struct net_device_stats *nstat = &bp->dev->stats;
+
+	if (!netif_running(bp->dev))
+		return nstat;
 
 	gem_update_stats(bp);
 
@@ -4060,7 +4082,7 @@ static int macb_probe(struct platform_device *pdev)
 	bp->wol = 0;
 	if (of_get_property(np, "magic-packet", NULL))
 		bp->wol |= MACB_WOL_HAS_MAGIC_PACKET;
-	device_init_wakeup(&pdev->dev, bp->wol & MACB_WOL_HAS_MAGIC_PACKET);
+	device_set_wakeup_capable(&pdev->dev, bp->wol & MACB_WOL_HAS_MAGIC_PACKET);
 
 	spin_lock_init(&bp->lock);
 
@@ -4099,6 +4121,10 @@ static int macb_probe(struct platform_device *pdev)
 			bp->tx_bd_rd_prefetch = (2 << (val - 1)) *
 						macb_dma_desc_get_size(bp);
 	}
+
+	bp->rx_intr_mask = MACB_RX_INT_FLAGS;
+	if (bp->caps & MACB_CAPS_NEEDS_RSTONUBR)
+		bp->rx_intr_mask |= MACB_BIT(RXUBR);
 
 	bp->rx_intr_mask = MACB_RX_INT_FLAGS;
 	if (bp->caps & MACB_CAPS_NEEDS_RSTONUBR)

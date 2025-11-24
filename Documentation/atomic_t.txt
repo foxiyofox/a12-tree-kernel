@@ -180,6 +180,9 @@ provide full ordered atomics and these barriers are no-ops.
 NOTE: when the atomic RmW ops are fully ordered, they should also imply a
 compiler barrier.
 
+NOTE: when the atomic RmW ops are fully ordered, they should also imply a
+compiler barrier.
+
 Thus:
 
   atomic_fetch_add();

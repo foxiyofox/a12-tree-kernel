@@ -167,6 +167,8 @@ mtrr_ioctl(struct file *file, unsigned int cmd, unsigned long __arg)
 
 	memset(&gentry, 0, sizeof(gentry));
 
+	memset(&gentry, 0, sizeof(gentry));
+
 	switch (cmd) {
 	case MTRRIOC_ADD_ENTRY:
 	case MTRRIOC_SET_ENTRY:

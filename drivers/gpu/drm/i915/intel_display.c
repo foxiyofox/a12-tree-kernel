@@ -2723,6 +2723,17 @@ intel_alloc_initial_plane_obj(struct intel_crtc *crtc,
 		return false;
 	}
 
+	switch (fb->modifier) {
+	case DRM_FORMAT_MOD_LINEAR:
+	case I915_FORMAT_MOD_X_TILED:
+	case I915_FORMAT_MOD_Y_TILED:
+		break;
+	default:
+		DRM_DEBUG_DRIVER("Unsupported modifier for initial FB: 0x%llx\n",
+				 fb->modifier);
+		return false;
+	}
+
 	mutex_lock(&dev->struct_mutex);
 	obj = i915_gem_object_create_stolen_for_preallocated(dev_priv,
 							     base_aligned,
@@ -15613,7 +15624,6 @@ static void readout_plane_state(struct drm_i915_private *dev_priv)
 static void intel_modeset_readout_hw_state(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = to_i915(dev);
-	enum pipe pipe;
 	struct intel_crtc *crtc;
 	struct intel_encoder *encoder;
 	struct intel_connector *connector;

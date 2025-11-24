@@ -299,6 +299,9 @@ struct omap_sr_data {
 
 extern struct omap_sr_data omap_sr_pdata[OMAP_SR_NR];
 
+
+extern struct omap_sr_data omap_sr_pdata[OMAP_SR_NR];
+
 #ifdef CONFIG_POWER_AVS_OMAP
 
 /* Smartreflex module enable/disable interface */

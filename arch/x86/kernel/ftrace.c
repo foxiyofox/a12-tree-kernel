@@ -266,6 +266,8 @@ int ftrace_update_ftrace_func(ftrace_func_t func)
 
 	ftrace_update_func_call = (unsigned long)func;
 
+	ftrace_update_func_call = (unsigned long)func;
+
 	new = ftrace_call_replace(ip, (unsigned long)func);
 	ret = update_ftrace_func(ip, new);
 
@@ -887,6 +889,8 @@ void arch_ftrace_update_trampoline(struct ftrace_ops *ops)
 	ip = ops->trampoline + offset;
 
 	func = ftrace_ops_get_func(ops);
+
+	ftrace_update_func_call = (unsigned long)func;
 
 	ftrace_update_func_call = (unsigned long)func;
 

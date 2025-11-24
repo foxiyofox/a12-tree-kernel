@@ -430,6 +430,7 @@
 				regulator-name = "vdd_ldo9";
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
 				regulator-state-mem {
 					regulator-on-in-suspend;
 					regulator-mode = <MAX77802_OPMODE_LP>;

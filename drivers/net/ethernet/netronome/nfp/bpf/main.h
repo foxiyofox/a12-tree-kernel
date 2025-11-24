@@ -211,6 +211,11 @@ struct nfp_bpf_map_word {
 	unsigned char non_zero_update	:1;
 };
 
+struct nfp_bpf_map_word {
+	unsigned char type		:4;
+	unsigned char non_zero_update	:1;
+};
+
 /**
  * struct nfp_bpf_map - private per-map data attached to BPF maps for offload
  * @offmap:	pointer to the offloaded BPF map

@@ -84,7 +84,7 @@ static ssize_t set_pwm(struct device *dev, struct device_attribute *attr,
 
 	ret = __set_pwm(ctx, pwm);
 	if (ret)
-		return ret;
+		goto err_pwm_disable;
 
 	pwm_fan_update_state(ctx, pwm);
 	return count;

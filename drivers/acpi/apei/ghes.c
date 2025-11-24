@@ -692,6 +692,8 @@ static void __ghes_panic(struct ghes *ghes)
 
 	ghes_clear_estatus(ghes);
 
+	ghes_clear_estatus(ghes);
+
 	/* reboot to log the error! */
 	if (!panic_timeout)
 		panic_timeout = ghes_panic_timeout;

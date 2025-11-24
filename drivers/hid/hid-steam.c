@@ -496,7 +496,7 @@ static void steam_battery_unregister(struct steam_device *steam)
 	power_supply_unregister(battery);
 }
 
-static int steam_register(struct steam_device *steam)
+static int steam_input_register(struct steam_device *steam)
 {
 	int ret;
 	bool client_opened;
@@ -738,6 +738,7 @@ static int steam_probe(struct hid_device *hdev,
 	mutex_init(&steam->mutex);
 	steam->quirks = id->driver_data;
 	INIT_WORK(&steam->work_connect, steam_work_connect_cb);
+	INIT_LIST_HEAD(&steam->list);
 
 	steam->client_hdev = steam_create_client_hid(hdev);
 	if (IS_ERR(steam->client_hdev)) {

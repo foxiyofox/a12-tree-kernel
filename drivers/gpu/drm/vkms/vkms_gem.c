@@ -93,10 +93,10 @@ int vkms_gem_fault(struct vm_fault *vmf)
 	return ret;
 }
 
-struct drm_gem_object *vkms_gem_create(struct drm_device *dev,
-				       struct drm_file *file,
-				       u32 *handle,
-				       u64 size)
+static struct drm_gem_object *vkms_gem_create(struct drm_device *dev,
+					      struct drm_file *file,
+					      u32 *handle,
+					      u64 size)
 {
 	struct vkms_gem_object *obj;
 	int ret;
@@ -137,6 +137,8 @@ int vkms_dumb_create(struct drm_file *file, struct drm_device *dev,
 
 	args->size = gem_obj->size;
 	args->pitch = pitch;
+
+	drm_gem_object_put_unlocked(gem_obj);
 
 	DRM_DEBUG_DRIVER("Created object of size %lld\n", size);
 

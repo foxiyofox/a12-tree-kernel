@@ -669,6 +669,9 @@ static int cc_do_finup(struct ahash_request *req, bool update)
 		cc_unmap_result(dev, state, digestsize, result);
 		cc_unmap_req(dev, state, ctx);
 	}
+
+	kzfree(ctx->key_params.key);
+
 	return rc;
 }
 
@@ -889,6 +892,8 @@ out:
 		dev_dbg(dev, "Unmapped key-buffer: key_dma_addr=%pad keylen=%u\n",
 			&ctx->key_params.key_dma_addr, ctx->key_params.keylen);
 	}
+
+	kzfree(ctx->key_params.key);
 
 	kzfree(ctx->key_params.key);
 

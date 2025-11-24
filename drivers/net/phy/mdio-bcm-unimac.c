@@ -221,6 +221,35 @@ static void unimac_mdio_clk_set(struct unimac_mdio_priv *priv)
 	unimac_mdio_writel(priv, reg, MDIO_CFG);
 }
 
+static void unimac_mdio_clk_set(struct unimac_mdio_priv *priv)
+{
+	unsigned long rate;
+	u32 reg, div;
+
+	/* Keep the hardware default values */
+	if (!priv->clk_freq)
+		return;
+
+	if (!priv->clk)
+		rate = 250000000;
+	else
+		rate = clk_get_rate(priv->clk);
+
+	div = (rate / (2 * priv->clk_freq)) - 1;
+	if (div & ~MDIO_CLK_DIV_MASK) {
+		pr_warn("Incorrect MDIO clock frequency, ignoring\n");
+		return;
+	}
+
+	/* The MDIO clock is the reference clock (typicaly 250Mhz) divided by
+	 * 2 x (MDIO_CLK_DIV + 1)
+	 */
+	reg = unimac_mdio_readl(priv, MDIO_CFG);
+	reg &= ~(MDIO_CLK_DIV_MASK << MDIO_CLK_DIV_SHIFT);
+	reg |= div << MDIO_CLK_DIV_SHIFT;
+	unimac_mdio_writel(priv, reg, MDIO_CFG);
+}
+
 static int unimac_mdio_probe(struct platform_device *pdev)
 {
 	struct unimac_mdio_pdata *pdata = pdev->dev.platform_data;

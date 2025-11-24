@@ -414,7 +414,8 @@ static void __raise_exception(struct fsg_common *common, enum fsg_state new_stat
 	spin_unlock_irqrestore(&common->lock, flags);
 }
 
-static void raise_exception(struct fsg_common *common, enum fsg_state new_state)
+static void __raise_exception(struct fsg_common *common, enum fsg_state new_state,
+			      void *arg)
 {
 	__raise_exception(common, new_state, NULL);
 }
@@ -435,6 +436,10 @@ static int ep0_queue(struct fsg_common *common)
 	return rc;
 }
 
+static void raise_exception(struct fsg_common *common, enum fsg_state new_state)
+{
+	__raise_exception(common, new_state, NULL);
+}
 
 /*-------------------------------------------------------------------------*/
 

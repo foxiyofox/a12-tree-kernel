@@ -32,6 +32,8 @@ static inline int cc_pm_init(struct cc_drvdata *drvdata)
 
 static inline void cc_pm_go(struct cc_drvdata *drvdata) {}
 
+static inline void cc_pm_go(struct cc_drvdata *drvdata) {}
+
 static inline void cc_pm_fini(struct cc_drvdata *drvdata) {}
 
 static inline int cc_pm_suspend(struct device *dev)

@@ -1498,6 +1498,9 @@ int start_topology_update(void)
 	if (!topology_updates_enabled)
 		return 0;
 
+	if (!topology_updates_enabled)
+		return 0;
+
 	if (firmware_has_feature(FW_FEATURE_PRRN)) {
 		if (!prrn_enabled) {
 			prrn_enabled = 1;
@@ -1526,6 +1529,9 @@ int start_topology_update(void)
 int stop_topology_update(void)
 {
 	int rc = 0;
+
+	if (!topology_updates_enabled)
+		return 0;
 
 	if (!topology_updates_enabled)
 		return 0;

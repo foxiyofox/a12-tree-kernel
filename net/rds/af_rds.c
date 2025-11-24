@@ -509,6 +509,9 @@ static int rds_connect(struct socket *sock, struct sockaddr *uaddr,
 	if (addr_len < offsetofend(struct sockaddr, sa_family))
 		return -EINVAL;
 
+	if (addr_len < offsetofend(struct sockaddr, sa_family))
+		return -EINVAL;
+
 	lock_sock(sk);
 
 	switch (uaddr->sa_family) {

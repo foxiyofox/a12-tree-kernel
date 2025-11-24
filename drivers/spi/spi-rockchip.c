@@ -449,6 +449,9 @@ static int rockchip_spi_prepare_dma(struct rockchip_spi *rs)
 	memset(&rxconf, 0, sizeof(rxconf));
 	memset(&txconf, 0, sizeof(txconf));
 
+	memset(&rxconf, 0, sizeof(rxconf));
+	memset(&txconf, 0, sizeof(txconf));
+
 	spin_lock_irqsave(&rs->lock, flags);
 	rs->state &= ~RXBUSY;
 	rs->state &= ~TXBUSY;

@@ -58,6 +58,9 @@ static struct crypto_alg *crypto_alg_match(struct crypto_user_alg *p, int exact)
 		if (crypto_is_larval(q))
 			continue;
 
+		if (crypto_is_larval(q))
+			continue;
+
 		if ((q->cra_flags ^ p->cru_type) & p->cru_mask)
 			continue;
 

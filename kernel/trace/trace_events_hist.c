@@ -451,6 +451,8 @@ static bool synth_field_signed(char *type)
 		return false;
 	if (strcmp(type, "gfp_t") == 0)
 		return false;
+	if (strcmp(type, "gfp_t") == 0)
+		return false;
 
 	return true;
 }
@@ -3618,6 +3620,7 @@ static void onmatch_destroy(struct action_data *data)
 {
 	unsigned int i;
 
+	mutex_lock(&event_mutex);
 	mutex_lock(&synth_event_mutex);
 
 	kfree(data->onmatch.match_event);
@@ -3719,6 +3722,17 @@ onmatch_find_var(struct hist_trigger_data *hist_data, struct action_data *data,
 	return hist_field;
 }
 
+/**
+ * check_field_for_var_ref - Check if a VAR_REF field references a variable
+ * @hist_field: The VAR_REF field to check
+ * @var_data: The hist trigger that owns the variable
+ * @var_idx: The trigger variable identifier
+ *
+ * Check the given VAR_REF field to see whether or not it references
+ * the given variable associated with the given trigger.
+ *
+ * Return: The VAR_REF field if it does reference the variable, NULL if not
+ */
 static struct hist_field *
 onmatch_create_field_var(struct hist_trigger_data *hist_data,
 			 struct action_data *data, char *system,
@@ -4699,6 +4713,9 @@ static void hist_trigger_elt_update(struct hist_trigger_data *hist_data,
 	unsigned int i, var_idx;
 	u64 hist_val;
 
+	if (WARN_ON_ONCE(!elt))
+		return var_val;
+
 	elt_data = elt->private_data;
 	elt_data->var_ref_vals = var_ref_vals;
 
@@ -5607,6 +5624,12 @@ static void hist_unreg_all(struct trace_event_file *file)
 				test->ops->free(test->ops, test);
 		}
 	}
+
+	for (i = 0; i < hist_data->n_var_refs; i++) {
+		WARN_ON(!(hist_data->var_refs[i]->flags & HIST_FIELD_FL_VAR_REF));
+		__destroy_hist_field(hist_data->var_refs[i]);
+		hist_data->var_refs[i] = NULL;
+	}
 }
 
 static int event_hist_trigger_func(struct event_command *cmd_ops,
@@ -5821,6 +5844,9 @@ hist_enable_trigger(struct event_trigger_data *data, void *rec,
 			else
 				test->paused = true;
 		}
+
+		hist_data->var_refs[hist_data->n_var_refs] = ref_field;
+		ref_field->var_ref_idx = hist_data->n_var_refs++;
 	}
 }
 
@@ -5957,6 +5983,12 @@ static __init int trace_events_hist_init(void)
 	if (!entry) {
 		err = -ENODEV;
 		goto err;
+	}
+	if (operand1->flags & HIST_FIELD_FL_STRING) {
+		/* String type can not be the operand of unary operator. */
+		destroy_hist_field(operand1, 0);
+		ret = -EINVAL;
+		goto free;
 	}
 
 	return err;

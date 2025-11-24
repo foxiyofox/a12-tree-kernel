@@ -289,6 +289,9 @@ void __check_object_size(const void *ptr, unsigned long n, bool to_user)
 	/* Check for bad heap object. */
 	check_heap_object(ptr, n, to_user);
 
+	/* Check for bad heap object. */
+	check_heap_object(ptr, n, to_user);
+
 	/* Check for object in kernel to avoid text exposure. */
 	check_kernel_text_object((const unsigned long)ptr, n, to_user);
 }

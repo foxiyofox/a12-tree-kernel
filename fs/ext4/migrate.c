@@ -454,6 +454,8 @@ int ext4_ext_migrate(struct inode *inode)
 
 	percpu_down_write(&sbi->s_writepages_rwsem);
 
+	percpu_down_write(&sbi->s_writepages_rwsem);
+
 	/*
 	 * Worst case we can touch the allocation bitmaps, a bgd
 	 * block, and a block to link in the orphan list.  We do need

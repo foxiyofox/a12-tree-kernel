@@ -137,6 +137,8 @@ restart:
 
 	str r13, [r12, #OMAP1510_GPIO_INT_STATUS] @ ack all requested interrupts
 
+	str r13, [r12, #OMAP1510_GPIO_INT_STATUS] @ ack all requested interrupts
+
 	ands r10, r13, #KEYBRD_CLK_MASK		@ extract keyboard status - set?
 	beq hksw				@ no - try next source
 

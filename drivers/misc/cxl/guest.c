@@ -189,6 +189,7 @@ static int afu_read_error_state(struct cxl_afu *afu, int *state_out)
 			state != H_STATE_PERM_UNAVAILABLE);
 		*state_out = state & 0xffffffff;
 	}
+	spin_unlock(&adapter->afu_list_lock);
 	return rc;
 }
 

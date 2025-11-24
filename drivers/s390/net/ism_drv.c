@@ -189,7 +189,7 @@ static int ism_read_local_gid(struct ism_dev *ism)
 	cmd.request.hdr.len = sizeof(cmd.request);
 
 	ret = ism_cmd(ism, &cmd);
-	if (ret)
+	if (ret && ret != ISM_ERROR)
 		goto out;
 
 	ism->smcd->local_gid = cmd.response.gid;

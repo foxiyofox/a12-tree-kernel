@@ -240,6 +240,9 @@ void dm_dp_mst_dc_sink_create(struct drm_connector *connector)
 
 static int dm_dp_mst_get_modes(struct drm_connector *connector)
 {
+	struct amdgpu_dm_connector *master = container_of(mgr, struct amdgpu_dm_connector, mst_mgr);
+	struct drm_device *dev = master->base.dev;
+	struct amdgpu_device *adev = dev->dev_private;
 	struct amdgpu_dm_connector *aconnector = to_amdgpu_dm_connector(connector);
 	int ret = 0;
 

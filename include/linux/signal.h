@@ -275,6 +275,9 @@ extern void kernel_sigaction(int, __sighandler_t);
 #define SIG_KTHREAD ((__force __sighandler_t)2)
 #define SIG_KTHREAD_KERNEL ((__force __sighandler_t)3)
 
+#define SIG_KTHREAD ((__force __sighandler_t)2)
+#define SIG_KTHREAD_KERNEL ((__force __sighandler_t)3)
+
 static inline void allow_signal(int sig)
 {
 	/*

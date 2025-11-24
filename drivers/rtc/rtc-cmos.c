@@ -10,6 +10,7 @@
  * 2 of the License, or (at your option) any later version.
  */
 
+#ifdef CONFIG_ACPI
 /*
  * The original "cmos clock" chip was an MC146818 chip, now obsolete.
  * That defined the register interface now provided by all PCs, some
@@ -61,6 +62,18 @@
 
 static bool use_acpi_alarm;
 module_param(use_acpi_alarm, bool, 0444);
+
+static inline int cmos_use_acpi_alarm(void)
+{
+	return use_acpi_alarm;
+}
+#else /* !CONFIG_ACPI */
+
+static inline int cmos_use_acpi_alarm(void)
+{
+	return 0;
+}
+#endif
 
 static inline int cmos_use_acpi_alarm(void)
 {
@@ -576,6 +589,12 @@ static const struct rtc_class_ops cmos_rtc_ops = {
 	.set_alarm		= cmos_set_alarm,
 	.proc			= cmos_procfs,
 	.alarm_irq_enable	= cmos_alarm_irq_enable,
+};
+
+static const struct rtc_class_ops cmos_rtc_ops_no_alarm = {
+	.read_time		= cmos_read_time,
+	.set_time		= cmos_set_time,
+	.proc			= cmos_procfs,
 };
 
 static const struct rtc_class_ops cmos_rtc_ops_no_alarm = {

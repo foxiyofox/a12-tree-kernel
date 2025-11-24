@@ -606,6 +606,8 @@ void drm_dev_fini(struct drm_device *dev)
 
 	put_device(dev->dev);
 
+	put_device(dev->dev);
+
 	mutex_destroy(&dev->master_mutex);
 	mutex_destroy(&dev->ctxlist_mutex);
 	mutex_destroy(&dev->clientlist_mutex);

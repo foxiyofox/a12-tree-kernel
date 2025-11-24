@@ -47,7 +47,7 @@
 #include <asm/udbg.h>
 #define DBG(fmt...) udbg_printf(fmt)
 #else
-#define DBG(fmt...)
+#define DBG(fmt...) do { } while (0)
 #endif
 
 static void pnv_smp_setup_cpu(int cpu)
@@ -180,6 +180,40 @@ static void pnv_smp_cpu_kill_self(void)
 	wmask = SRR1_WAKEMASK;
 	if (cpu_has_feature(CPU_FTR_ARCH_207S))
 		wmask = SRR1_WAKEMASK_P8;
+
+	/*
+	 * This turns the irq soft-disabled state we're called with, into a
+	 * hard-disabled state with pending irq_happened interrupts cleared.
+	 *
+	 * PACA_IRQ_DEC   - Decrementer should be ignored.
+	 * PACA_IRQ_HMI   - Can be ignored, processing is done in real mode.
+	 * PACA_IRQ_DBELL, EE, PMI - Unexpected.
+	 */
+	hard_irq_disable();
+	if (generic_check_cpu_restart(cpu))
+		goto out;
+
+	unexpected_mask = ~(PACA_IRQ_DEC | PACA_IRQ_HMI | PACA_IRQ_HARD_DIS);
+	if (local_paca->irq_happened & unexpected_mask) {
+		if (local_paca->irq_happened & PACA_IRQ_EE)
+			pnv_flush_interrupts();
+		DBG("CPU%d Unexpected exit while offline irq_happened=%lx!\n",
+				cpu, local_paca->irq_happened);
+	}
+	local_paca->irq_happened = PACA_IRQ_HARD_DIS;
+
+	/*
+	 * We don't want to take decrementer interrupts while we are
+	 * offline, so clear LPCR:PECE1. We keep PECE2 (and
+	 * LPCR_PECE_HVEE on P9) enabled so as to let IPIs in.
+	 *
+	 * If the CPU gets woken up by a special wakeup, ensure that
+	 * the SLW engine sets LPCR with decrementer bit cleared, else
+	 * the CPU will come back to the kernel due to a spurious
+	 * wakeup.
+	 */
+	lpcr_val = mfspr(SPRN_LPCR) & ~(u64)LPCR_PECE1;
+	pnv_program_cpu_hotplug_lpcr(cpu, lpcr_val);
 
 	/*
 	 * This turns the irq soft-disabled state we're called with, into a

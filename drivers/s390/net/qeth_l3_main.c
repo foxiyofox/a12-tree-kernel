@@ -301,6 +301,8 @@ static void qeth_l3_clear_ip_htable(struct qeth_card *card, int recover)
 
 	spin_unlock_bh(&card->mclock);
 
+	if (card->options.sniffer)
+		return 0;
 
 }
 static void qeth_l3_recover_ip(struct qeth_card *card)
@@ -660,6 +662,9 @@ static int qeth_l3_register_addr_entry(struct qeth_card *card,
 	char buf[50];
 	int rc = 0;
 	int cnt = 3;
+
+	if (card->options.sniffer)
+		return 0;
 
 	if (card->options.sniffer)
 		return 0;

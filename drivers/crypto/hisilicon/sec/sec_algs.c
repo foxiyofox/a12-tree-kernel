@@ -171,11 +171,30 @@ static void sec_free_hw_sgl(struct sec_hw_sgl *hw_sgl,
 	}
 }
 
+static void sec_free_hw_sgl(struct sec_hw_sgl *hw_sgl,
+			    dma_addr_t psec_sgl, struct sec_dev_info *info)
+{
+	struct sec_hw_sgl *sgl_current, *sgl_next;
+	dma_addr_t sgl_next_dma;
+
+	sgl_current = hw_sgl;
+	while (sgl_current) {
+		sgl_next = sgl_current->next;
+		sgl_next_dma = sgl_current->next_sgl;
+
+		dma_pool_free(info->hw_sgl_pool, sgl_current, psec_sgl);
+
+		sgl_current = sgl_next;
+		psec_sgl = sgl_next_dma;
+	}
+}
+
 static int sec_alloc_and_fill_hw_sgl(struct sec_hw_sgl **sec_sgl,
 				     dma_addr_t *psec_sgl,
 				     struct scatterlist *sgl,
 				     int count,
-				     struct sec_dev_info *info)
+				     struct sec_dev_info *info,
+				     gfp_t gfp)
 {
 	struct sec_hw_sgl *sgl_current = NULL;
 	struct sec_hw_sgl *sgl_next;
@@ -190,7 +209,7 @@ static int sec_alloc_and_fill_hw_sgl(struct sec_hw_sgl **sec_sgl,
 		sge_index = i % SEC_MAX_SGE_NUM;
 		if (sge_index == 0) {
 			sgl_next = dma_pool_zalloc(info->hw_sgl_pool,
-						   GFP_KERNEL, &sgl_next_dma);
+						   gfp, &sgl_next_dma);
 			if (!sgl_next) {
 				ret = -ENOMEM;
 				goto err_free_hw_sgls;
@@ -553,14 +572,14 @@ void sec_alg_callback(struct sec_bd_info *resp, void *shadow)
 }
 
 static int sec_alg_alloc_and_calc_split_sizes(int length, size_t **split_sizes,
-					      int *steps)
+					      int *steps, gfp_t gfp)
 {
 	size_t *sizes;
 	int i;
 
 	/* Split into suitable sized blocks */
 	*steps = roundup(length, SEC_REQ_LIMIT) / SEC_REQ_LIMIT;
-	sizes = kcalloc(*steps, sizeof(*sizes), GFP_KERNEL);
+	sizes = kcalloc(*steps, sizeof(*sizes), gfp);
 	if (!sizes)
 		return -ENOMEM;
 
@@ -576,7 +595,7 @@ static int sec_map_and_split_sg(struct scatterlist *sgl, size_t *split_sizes,
 				int steps, struct scatterlist ***splits,
 				int **splits_nents,
 				int sgl_len_in,
-				struct device *dev)
+				struct device *dev, gfp_t gfp)
 {
 	int ret, count;
 
@@ -584,12 +603,12 @@ static int sec_map_and_split_sg(struct scatterlist *sgl, size_t *split_sizes,
 	if (!count)
 		return -EINVAL;
 
-	*splits = kcalloc(steps, sizeof(struct scatterlist *), GFP_KERNEL);
+	*splits = kcalloc(steps, sizeof(struct scatterlist *), gfp);
 	if (!*splits) {
 		ret = -ENOMEM;
 		goto err_unmap_sg;
 	}
-	*splits_nents = kcalloc(steps, sizeof(int), GFP_KERNEL);
+	*splits_nents = kcalloc(steps, sizeof(int), gfp);
 	if (!*splits_nents) {
 		ret = -ENOMEM;
 		goto err_free_splits;
@@ -597,7 +616,7 @@ static int sec_map_and_split_sg(struct scatterlist *sgl, size_t *split_sizes,
 
 	/* output the scatter list before and after this */
 	ret = sg_split(sgl, count, 0, steps, split_sizes,
-		       *splits, *splits_nents, GFP_KERNEL);
+		       *splits, *splits_nents, gfp);
 	if (ret) {
 		ret = -ENOMEM;
 		goto err_free_splits_nents;
@@ -638,13 +657,13 @@ static struct sec_request_el
 			   int el_size, bool different_dest,
 			   struct scatterlist *sgl_in, int n_ents_in,
 			   struct scatterlist *sgl_out, int n_ents_out,
-			   struct sec_dev_info *info)
+			   struct sec_dev_info *info, gfp_t gfp)
 {
 	struct sec_request_el *el;
 	struct sec_bd_info *req;
 	int ret;
 
-	el = kzalloc(sizeof(*el), GFP_KERNEL);
+	el = kzalloc(sizeof(*el), gfp);
 	if (!el)
 		return ERR_PTR(-ENOMEM);
 	el->el_length = el_size;
@@ -676,7 +695,7 @@ static struct sec_request_el
 	el->sgl_in = sgl_in;
 
 	ret = sec_alloc_and_fill_hw_sgl(&el->in, &el->dma_in, el->sgl_in,
-					n_ents_in, info);
+					n_ents_in, info, gfp);
 	if (ret)
 		goto err_free_el;
 
@@ -687,7 +706,7 @@ static struct sec_request_el
 		el->sgl_out = sgl_out;
 		ret = sec_alloc_and_fill_hw_sgl(&el->out, &el->dma_out,
 						el->sgl_out,
-						n_ents_out, info);
+						n_ents_out, info, gfp);
 		if (ret)
 			goto err_free_hw_sgl_in;
 

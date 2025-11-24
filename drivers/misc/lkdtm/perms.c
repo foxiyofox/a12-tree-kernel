@@ -169,6 +169,11 @@ void lkdtm_EXEC_NULL(void)
 	execute_location(NULL, CODE_AS_IS);
 }
 
+void lkdtm_EXEC_NULL(void)
+{
+	execute_location(NULL, CODE_AS_IS);
+}
+
 void lkdtm_ACCESS_USERSPACE(void)
 {
 	unsigned long user_addr, tmp = 0;

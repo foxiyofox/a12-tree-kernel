@@ -50,6 +50,11 @@ not cause harm to the host, their actual behavior is not guaranteed by
 the API.  The only supported use is one virtual machine per process,
 and one vcpu per thread.
 
+ - device ioctls: These query and set attributes that control the operation
+   of a single device.
+
+   device ioctls must be issued from the same process (address space) that
+   was used to create the VM.
 
 3. Extensions
 -------------
@@ -3999,9 +4004,11 @@ EOI was received.
 #define KVM_EXIT_HYPERV_SYNIC          1
 #define KVM_EXIT_HYPERV_HCALL          2
 			__u32 type;
+			__u32 pad1;
 			union {
 				struct {
 					__u32 msr;
+					__u32 pad2;
 					__u64 control;
 					__u64 evt_page;
 					__u64 msg_page;

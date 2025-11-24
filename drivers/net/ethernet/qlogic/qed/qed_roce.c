@@ -407,6 +407,7 @@ static int qed_roce_sp_create_requester(struct qed_hwfn *p_hwfn,
 		DP_NOTICE(p_hwfn,
 			  "qed create requester failed: cannot allocate memory (orq). rc = %d\n",
 			  rc);
+		qed_sp_destroy_request(p_hwfn, p_ent);
 		return rc;
 	}
 

@@ -339,6 +339,9 @@ enum p9_qid_t {
 /* Minimal header size: size[4] type[1] tag[2] */
 #define P9_HDRSZ	7
 
+/* Minimal header size: size[4] type[1] tag[2] */
+#define P9_HDRSZ	7
+
 /* ample room for Twrite/Rread header */
 #define P9_IOHDRSZ	24
 

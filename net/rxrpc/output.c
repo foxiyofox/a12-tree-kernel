@@ -50,6 +50,21 @@ static void rxrpc_tx_backoff(struct rxrpc_call *call, int ret)
 }
 
 /*
+ * Increase Tx backoff on transmission failure and clear it on success.
+ */
+static void rxrpc_tx_backoff(struct rxrpc_call *call, int ret)
+{
+	if (ret < 0) {
+		u16 tx_backoff = READ_ONCE(call->tx_backoff);
+
+		if (tx_backoff < HZ)
+			WRITE_ONCE(call->tx_backoff, tx_backoff + 1);
+	} else {
+		WRITE_ONCE(call->tx_backoff, 0);
+	}
+}
+
+/*
  * Arrange for a keepalive ping a certain time after we last transmitted.  This
  * lets the far side know we're still interested in this call and helps keep
  * the route through any intervening firewall open.

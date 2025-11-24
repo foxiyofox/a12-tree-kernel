@@ -36,7 +36,7 @@ static void bcma_pcie_mdio_set_phy(struct bcma_drv_pci *pc, u16 phy)
 	u32 v;
 	int i;
 
-	v = BCMA_CORE_PCI_MDIODATA_START;
+	v |= BCMA_CORE_PCI_MDIODATA_START;
 	v |= BCMA_CORE_PCI_MDIODATA_WRITE;
 	v |= (BCMA_CORE_PCI_MDIODATA_DEV_ADDR <<
 	      BCMA_CORE_PCI_MDIODATA_DEVADDR_SHF);

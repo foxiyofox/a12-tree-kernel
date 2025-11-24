@@ -93,6 +93,32 @@ static inline void set_fs(mm_segment_t fs)
 	flag; })
 
 /*
+ * Sanitise a uaccess pointer such that it becomes NULL if addr+size
+ * is above the current addr_limit.
+ */
+#define uaccess_mask_range_ptr(ptr, size)			\
+	((__typeof__(ptr))__uaccess_mask_range_ptr(ptr, size))
+static inline void __user *__uaccess_mask_range_ptr(const void __user *ptr,
+						    size_t size)
+{
+	void __user *safe_ptr = (void __user *)ptr;
+	unsigned long tmp;
+
+	asm volatile(
+	"	sub	%1, %3, #1\n"
+	"	subs	%1, %1, %0\n"
+	"	addhs	%1, %1, #1\n"
+	"	subhss	%1, %1, %2\n"
+	"	movlo	%0, #0\n"
+	: "+r" (safe_ptr), "=&r" (tmp)
+	: "r" (size), "r" (current_thread_info()->addr_limit)
+	: "cc");
+
+	csdb();
+	return safe_ptr;
+}
+
+/*
  * This is a type: either unsigned long, if the argument fits into
  * that type, or otherwise unsigned long long.
  */
@@ -356,6 +382,13 @@ do {									\
 
 #else
 
+#if __LINUX_ARM_ARCH__ >= 6
+
+#define __get_user_asm_half(x, addr, err)			\
+	__get_user_asm(x, addr, err, ldrh)
+
+#else
+
 #ifndef __ARMEB__
 #define __get_user_asm_half(x, __gu_addr, err)			\
 ({								\
@@ -373,6 +406,8 @@ do {									\
 	(x) = (__b1 << 8) | __b2;				\
 })
 #endif
+
+#endif /* __LINUX_ARM_ARCH__ >= 6 */
 
 #endif /* __LINUX_ARM_ARCH__ >= 6 */
 
@@ -458,6 +493,13 @@ do {									\
 
 #else
 
+#if __LINUX_ARM_ARCH__ >= 6
+
+#define __put_user_asm_half(x, __pu_addr, err)			\
+	__put_user_asm(x, __pu_addr, err, strh)
+
+#else
+
 #ifndef __ARMEB__
 #define __put_user_asm_half(x, __pu_addr, err)			\
 ({								\
@@ -473,6 +515,8 @@ do {									\
 	__put_user_asm_byte(__temp, __pu_addr + 1, err);	\
 })
 #endif
+
+#endif /* __LINUX_ARM_ARCH__ >= 6 */
 
 #endif /* __LINUX_ARM_ARCH__ >= 6 */
 

@@ -30,6 +30,7 @@ static int perf_evsel__test_field(struct perf_evsel *evsel, const char *name,
 		ret = -1;
 	}
 
+	perf_evsel__delete(evsel);
 	return ret;
 }
 

@@ -61,6 +61,8 @@
 
 #include "process.h"
 
+#include "process.h"
+
 __visible DEFINE_PER_CPU(unsigned long, rsp_scratch);
 
 /* Prints also some state that isn't saved in the pt_regs */

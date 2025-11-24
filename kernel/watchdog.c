@@ -194,6 +194,8 @@ static void lockup_detector_update_enable(void)
 
 #define SOFTLOCKUP_RESET	ULONG_MAX
 
+#define SOFTLOCKUP_RESET	ULONG_MAX
+
 /* Global variables, exported for sysctl */
 unsigned int __read_mostly softlockup_panic =
 			CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC_VALUE;

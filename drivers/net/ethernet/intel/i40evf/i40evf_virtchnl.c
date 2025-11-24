@@ -180,6 +180,32 @@ static void i40evf_validate_num_queues(struct i40evf_adapter *adapter)
 }
 
 /**
+ * i40evf_validate_num_queues
+ * @adapter: adapter structure
+ *
+ * Validate that the number of queues the PF has sent in
+ * VIRTCHNL_OP_GET_VF_RESOURCES is not larger than the VF can handle.
+ **/
+static void i40evf_validate_num_queues(struct i40evf_adapter *adapter)
+{
+	if (adapter->vf_res->num_queue_pairs > I40EVF_MAX_REQ_QUEUES) {
+		struct virtchnl_vsi_resource *vsi_res;
+		int i;
+
+		dev_info(&adapter->pdev->dev, "Received %d queues, but can only have a max of %d\n",
+			 adapter->vf_res->num_queue_pairs,
+			 I40EVF_MAX_REQ_QUEUES);
+		dev_info(&adapter->pdev->dev, "Fixing by reducing queues to %d\n",
+			 I40EVF_MAX_REQ_QUEUES);
+		adapter->vf_res->num_queue_pairs = I40EVF_MAX_REQ_QUEUES;
+		for (i = 0; i < adapter->vf_res->num_vsis; i++) {
+			vsi_res = &adapter->vf_res->vsi_res[i];
+			vsi_res->num_queue_pairs = I40EVF_MAX_REQ_QUEUES;
+		}
+	}
+}
+
+/**
  * i40evf_get_vf_config
  * @adapter: private adapter structure
  *

@@ -210,6 +210,15 @@ static void tunnel_key_release_params(struct tcf_tunnel_key_params *p)
 	kfree_rcu(p, rcu);
 }
 
+static void tunnel_key_release_params(struct tcf_tunnel_key_params *p)
+{
+	if (!p)
+		return;
+	if (p->tcft_action == TCA_TUNNEL_KEY_ACT_SET)
+		dst_release(&p->tcft_enc_metadata->dst);
+	kfree_rcu(p, rcu);
+}
+
 static int tunnel_key_init(struct net *net, struct nlattr *nla,
 			   struct nlattr *est, struct tc_action **a,
 			   int ovr, int bind, bool rtnl_held,
@@ -314,7 +323,7 @@ static int tunnel_key_init(struct net *net, struct nlattr *nla,
 
 			metadata = __ipv6_tun_set_dst(&saddr, &daddr, tos, ttl, dst_port,
 						      0, flags,
-						      key_id, 0);
+						      key_id, opts_len);
 		} else {
 			NL_SET_ERR_MSG(extack, "Missing either ipv4 or ipv6 src and dst");
 			ret = -EINVAL;

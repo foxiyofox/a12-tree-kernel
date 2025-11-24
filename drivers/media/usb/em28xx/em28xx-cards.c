@@ -2823,6 +2823,9 @@ static int em28xx_wait_until_ac97_features_equals(struct em28xx *dev,
  */
 static void em28xx_pre_card_setup(struct em28xx *dev)
 {
+	int i, j, idx;
+	bool duplicate_entry;
+
 	/*
 	 * Set the initial XCLK and I2C clock values based on the board
 	 * definition
@@ -4030,8 +4033,11 @@ static void em28xx_usb_disconnect(struct usb_interface *intf)
 
 	em28xx_close_extension(dev);
 
-	if (dev->dev_next)
+	if (dev->dev_next) {
+		em28xx_close_extension(dev->dev_next);
 		em28xx_release_resources(dev->dev_next);
+	}
+
 	em28xx_release_resources(dev);
 
 	if (dev->dev_next) {

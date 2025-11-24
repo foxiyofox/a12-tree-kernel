@@ -478,6 +478,7 @@ static void mce_report_event(struct pt_regs *regs)
 
 	irq_work_queue(&mce_irq_work);
 }
+EXPORT_SYMBOL_GPL(mce_usable_address);
 
 /*
  * Check if the address reported by the CPU is in a format we can parse.
@@ -561,6 +562,7 @@ static bool cec_add_mce(struct mce *m)
 
 	return false;
 }
+EXPORT_SYMBOL_GPL(mce_is_correctable);
 
 static int mce_first_notifier(struct notifier_block *nb, unsigned long val,
 			      void *data)
@@ -600,7 +602,7 @@ static int srao_decode_notifier(struct notifier_block *nb, unsigned long val,
 	if (mce_usable_address(mce) && (mce->severity == MCE_AO_SEVERITY)) {
 		pfn = mce->addr >> PAGE_SHIFT;
 		if (!memory_failure(pfn, 0))
-			set_mce_nospec(pfn);
+			set_mce_nospec(pfn, whole_page(mce));
 	}
 
 	return NOTIFY_OK;
@@ -1101,7 +1103,7 @@ static int do_memory_failure(struct mce *m)
 	if (ret)
 		pr_err("Memory error not recovered");
 	else
-		set_mce_nospec(m->addr >> PAGE_SHIFT);
+		set_mce_nospec(m->addr >> PAGE_SHIFT, whole_page(m));
 	return ret;
 }
 

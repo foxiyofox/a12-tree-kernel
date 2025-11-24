@@ -875,6 +875,9 @@ struct fb_info *fbtft_framebuffer_alloc(struct fbtft_display *display,
 release_framebuf:
 	framebuffer_release(info);
 
+release_framebuf:
+	framebuffer_release(info);
+
 alloc_fail:
 	vfree(vmem);
 

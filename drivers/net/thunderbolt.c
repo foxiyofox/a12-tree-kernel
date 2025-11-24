@@ -1302,6 +1302,7 @@ static int __maybe_unused tbnet_resume(struct device *dev)
 		start_login(net);
 	}
 
+	tb_unregister_protocol_handler(&net->handler);
 	return 0;
 }
 

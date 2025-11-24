@@ -92,6 +92,7 @@ static unsigned ext4_num_overhead_clusters(struct super_block *sb,
 	ext4_fsblk_t start = ext4_group_first_block_no(sb, block_group);
 	ext4_fsblk_t itbl_blk;
 	struct ext4_sb_info *sbi = EXT4_SB(sb);
+	struct buffer_head *bh_p;
 
 	/* This is the number of clusters used by the superblock,
 	 * block group descriptors, and reserved block group

@@ -150,6 +150,12 @@ static const char * const gcc_parent_names_8_ao[] = {
 	"core_bi_pll_test_se",
 };
 
+static const char * const gcc_parent_names_8_ao[] = {
+	"bi_tcxo_ao",
+	"gpll0",
+	"core_bi_pll_test_se",
+};
+
 static const struct parent_map gcc_parent_map_10[] = {
 	{ P_BI_TCXO, 0 },
 	{ P_GPLL0_OUT_MAIN, 1 },
@@ -690,7 +696,7 @@ static struct clk_rcg2 gcc_tsif_ref_clk_src = {
 		.name = "gcc_tsif_ref_clk_src",
 		.parent_names = gcc_parent_names_6,
 		.num_parents = 5,
-		.ops = &clk_rcg2_ops,
+		.ops = &clk_rcg2_floor_ops,
 	},
 };
 
@@ -894,7 +900,7 @@ static struct clk_rcg2 gcc_usb30_sec_master_clk_src = {
 		.name = "gcc_usb30_sec_master_clk_src",
 		.parent_names = gcc_parent_names_0,
 		.num_parents = 4,
-		.ops = &clk_rcg2_ops,
+		.ops = &clk_rcg2_floor_ops,
 	},
 };
 

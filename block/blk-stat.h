@@ -150,6 +150,11 @@ static inline void blk_stat_deactivate(struct blk_stat_callback *cb)
 	del_timer_sync(&cb->timer);
 }
 
+static inline void blk_stat_deactivate(struct blk_stat_callback *cb)
+{
+	del_timer_sync(&cb->timer);
+}
+
 /**
  * blk_stat_activate_msecs() - Gather block statistics during a time window in
  * milliseconds.

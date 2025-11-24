@@ -276,6 +276,8 @@ static struct class uio_class = {
 
 bool uio_class_registered;
 
+bool uio_class_registered;
+
 /*
  * device functions
  */
@@ -413,10 +415,10 @@ static int uio_get_minor(struct uio_device *idev)
 	return retval;
 }
 
-static void uio_free_minor(struct uio_device *idev)
+static void uio_free_minor(unsigned long minor)
 {
 	mutex_lock(&minor_lock);
-	idr_remove(&uio_idr, idev->minor);
+	idr_remove(&uio_idr, minor);
 	mutex_unlock(&minor_lock);
 }
 
@@ -921,6 +923,9 @@ int __uio_register_device(struct module *owner,
 	if (!uio_class_registered)
 		return -EPROBE_DEFER;
 
+	if (!uio_class_registered)
+		return -EPROBE_DEFER;
+
 	if (!parent || !info || !info->name || !info->version)
 		return -EINVAL;
 
@@ -964,6 +969,8 @@ int __uio_register_device(struct module *owner,
 
 	info->uio_dev = idev;
 
+	info->uio_dev = idev;
+
 	if (info->irq && (info->irq != UIO_IRQ_CUSTOM)) {
 		/*
 		 * Note that we deliberately don't use devm_request_irq
@@ -1002,13 +1009,13 @@ EXPORT_SYMBOL_GPL(__uio_register_device);
 void uio_unregister_device(struct uio_info *info)
 {
 	struct uio_device *idev;
+	unsigned long minor;
 
 	if (!info || !info->uio_dev)
 		return;
 
 	idev = info->uio_dev;
-
-	uio_free_minor(idev);
+	minor = idev->minor;
 
 	mutex_lock(&idev->info_lock);
 	uio_dev_del_attributes(idev);
@@ -1020,6 +1027,8 @@ void uio_unregister_device(struct uio_info *info)
 	mutex_unlock(&idev->info_lock);
 
 	device_unregister(&idev->dev);
+
+	uio_free_minor(minor);
 
 	return;
 }

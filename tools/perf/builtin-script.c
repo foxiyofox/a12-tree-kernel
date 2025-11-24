@@ -559,6 +559,8 @@ static int perf_session__check_output_opt(struct perf_session *session)
 				goto out;
 			}
 		}
+		if (off != end - start)
+			printed += fprintf(fp, "\tmismatch of LBR data and executable\n");
 	}
 
 out:
@@ -2212,6 +2214,8 @@ static int __cmd_script(struct perf_script *script)
 	int ret;
 
 	signal(SIGINT, sig_handler);
+
+	perf_stat__init_shadow_stats();
 
 	perf_stat__init_shadow_stats();
 

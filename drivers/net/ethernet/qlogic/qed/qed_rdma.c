@@ -1453,6 +1453,7 @@ qed_rdma_register_tid(void *rdma_cxt,
 				 p_hwfn->p_rdma_info->proto, &init_data);
 	if (rc) {
 		DP_VERBOSE(p_hwfn, QED_MSG_RDMA, "rc = %d\n", rc);
+		qed_sp_destroy_request(p_hwfn, p_ent);
 		return rc;
 	}
 
@@ -1916,6 +1917,7 @@ static int qed_roce_ll2_set_mac_filter(struct qed_dev *cdev,
 		rc = qed_llh_add_mac_filter(p_hwfn, p_ptt, new_mac_address);
 
 	qed_ptt_release(p_hwfn, p_ptt);
+	p_hwfn->p_rdma_info->active = 1;
 
 	if (rc)
 		DP_ERR(cdev,

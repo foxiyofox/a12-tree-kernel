@@ -555,12 +555,16 @@ static void domain_add_cpu(int cpu, struct rdt_resource *r)
 	d->id = id;
 	cpumask_set_cpu(cpu, &d->cpu_mask);
 
+	rdt_domain_reconfigure_cdp(r);
+
 	if (r->alloc_capable && domain_setup_ctrlval(r, d)) {
 		kfree(d);
 		return;
 	}
 
 	if (r->mon_capable && domain_setup_mon_state(r, d)) {
+		kfree(d->ctrl_val);
+		kfree(d->mbps_val);
 		kfree(d);
 		return;
 	}
@@ -609,6 +613,13 @@ static void domain_remove_cpu(int cpu, struct rdt_resource *r)
 			__check_limbo(d, true);
 			cancel_delayed_work(&d->cqm_limbo);
 		}
+
+		/*
+		 * rdt_domain "d" is going to be freed below, so clear
+		 * its pointer from pseudo_lock_region struct.
+		 */
+		if (d->plr)
+			d->plr->d = NULL;
 
 		/*
 		 * rdt_domain "d" is going to be freed below, so clear

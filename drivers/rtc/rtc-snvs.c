@@ -277,6 +277,10 @@ static int snvs_rtc_probe(struct platform_device *pdev)
 	if (IS_ERR(data->rtc))
 		return PTR_ERR(data->rtc);
 
+	data->rtc = devm_rtc_allocate_device(&pdev->dev);
+	if (IS_ERR(data->rtc))
+		return PTR_ERR(data->rtc);
+
 	data->regmap = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "regmap");
 
 	if (IS_ERR(data->regmap)) {

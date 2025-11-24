@@ -498,6 +498,9 @@ struct bfq_data {
 	/* position of the last served request for the in-service queue */
 	sector_t in_serv_last_pos;
 
+	/* position of the last served request for the in-service queue */
+	sector_t in_serv_last_pos;
+
 	/* time of last request completion (ns) */
 	u64 last_completion;
 

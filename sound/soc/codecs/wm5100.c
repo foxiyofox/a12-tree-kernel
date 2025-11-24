@@ -2348,6 +2348,7 @@ static int wm5100_probe(struct snd_soc_component *component)
 
 	/* TODO: check if we're symmetric */
 
+	pm_runtime_disable(&i2c->dev);
 	if (i2c->irq)
 		snd_soc_dapm_new_controls(dapm, wm5100_dapm_widgets_noirq,
 					  ARRAY_SIZE(wm5100_dapm_widgets_noirq));

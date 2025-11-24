@@ -541,6 +541,10 @@ has_cortex_a76_erratum_1463225(const struct arm64_cpu_capabilities *entry,
 static bool __hardenbp_enab = true;
 static bool __spectrev2_safe = true;
 
+/* Track overall mitigation state. We are only mitigated if all cores are ok */
+static bool __hardenbp_enab = true;
+static bool __spectrev2_safe = true;
+
 /*
  * Generic helper for handling capabilties with multiple (match,enable) pairs
  * of call backs, sharing the same capability bit.

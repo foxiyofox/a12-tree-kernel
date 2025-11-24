@@ -849,6 +849,8 @@ static void bcm2835_timeout(struct work_struct *work)
 
 		bcm2835_reset(host->mmc);
 
+		bcm2835_reset(host->mmc);
+
 		if (host->data) {
 			host->data->error = -ETIMEDOUT;
 			bcm2835_finish_data(host);

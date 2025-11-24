@@ -98,6 +98,11 @@ static void __init tc_bus_add_devices(struct tc_bus *tbus)
 		tdev->dev.dma_mask = &tdev->dma_mask;
 		tdev->dev.coherent_dma_mask = DMA_BIT_MASK(34);
 
+		/* TURBOchannel has 34-bit DMA addressing (16GiB space). */
+		tdev->dma_mask = DMA_BIT_MASK(34);
+		tdev->dev.dma_mask = &tdev->dma_mask;
+		tdev->dev.coherent_dma_mask = DMA_BIT_MASK(34);
+
 		for (i = 0; i < 8; i++) {
 			tdev->firmware[i] =
 				readb(module + offset + TC_FIRM_VER + 4 * i);

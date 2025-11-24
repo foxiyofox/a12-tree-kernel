@@ -539,7 +539,8 @@ static struct clk_regmap meson8b_cpu_in_sel = {
 		.parent_names = (const char *[]){ "xtal", "sys_pll" },
 		.num_parents = 2,
 		.flags = (CLK_SET_RATE_PARENT |
-			  CLK_SET_RATE_NO_REPARENT),
+			  CLK_SET_RATE_NO_REPARENT |
+			  CLK_IS_CRITICAL),
 	},
 };
 

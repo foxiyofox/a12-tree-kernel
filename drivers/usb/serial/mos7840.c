@@ -1340,8 +1340,10 @@ static int mos7840_write(struct tty_struct *tty, struct usb_serial_port *port,
 	if (urb->transfer_buffer == NULL) {
 		urb->transfer_buffer = kmalloc(URB_TRANSFER_BUFFER_SIZE,
 					       GFP_ATOMIC);
-		if (!urb->transfer_buffer)
+		if (!urb->transfer_buffer) {
+			bytes_sent = -ENOMEM;
 			goto exit;
+		}
 	}
 	transfer_size = min(count, URB_TRANSFER_BUFFER_SIZE);
 
@@ -2065,6 +2067,11 @@ static int mos7840_probe(struct usb_serial *serial,
 	if (product == MOSCHIP_DEVICE_ID_7810 ||
 		product == MOSCHIP_DEVICE_ID_7820) {
 		device_type = product;
+		goto out;
+	}
+
+	if (vid == USB_VENDOR_ID_MOXA && product == MOXA_DEVICE_ID_2210) {
+		device_type = MOSCHIP_DEVICE_ID_7820;
 		goto out;
 	}
 

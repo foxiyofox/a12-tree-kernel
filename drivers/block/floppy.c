@@ -2125,6 +2125,9 @@ static void setup_format_params(int track)
 	if (!F_SECT_PER_TRACK)
 		return;
 
+	if (!F_SECT_PER_TRACK)
+		return;
+
 	/* allow for about 30ms for data transport per track */
 	head_shift = (F_SECT_PER_TRACK + 5) / 6;
 
@@ -3394,6 +3397,24 @@ static int fd_getgeo(struct block_device *bdev, struct hd_geometry *geo)
 	geo->sectors = g->sect;
 	geo->cylinders = g->track;
 	return 0;
+}
+
+static bool valid_floppy_drive_params(const short autodetect[8],
+		int native_format)
+{
+	size_t floppy_type_size = ARRAY_SIZE(floppy_type);
+	size_t i = 0;
+
+	for (i = 0; i < 8; ++i) {
+		if (autodetect[i] < 0 ||
+		    autodetect[i] >= floppy_type_size)
+			return false;
+	}
+
+	if (native_format < 0 || native_format >= floppy_type_size)
+		return false;
+
+	return true;
 }
 
 static bool valid_floppy_drive_params(const short autodetect[8],
@@ -4713,7 +4734,7 @@ static int __init do_floppy_init(void)
 		/* to be cleaned up... */
 		disks[drive]->private_data = (void *)(long)drive;
 		disks[drive]->flags |= GENHD_FL_REMOVABLE;
-		device_add_disk(&floppy_device[drive].dev, disks[drive]);
+		device_add_disk(&floppy_device[drive].dev, disks[drive], NULL);
 	}
 
 	return 0;

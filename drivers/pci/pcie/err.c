@@ -302,6 +302,14 @@ void pcie_do_nonfatal_recovery(struct pci_dev *dev)
 	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
 		dev = dev->bus->self;
 
+	/*
+	 * Error recovery runs on all subordinates of the first downstream port.
+	 * If the downstream port detected the error, it is cleared at the end.
+	 */
+	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
+		dev = dev->bus->self;
+
 	status = broadcast_error_message(dev,
 			state,
 			"error_detected",

@@ -137,6 +137,10 @@ static int qcom_cpufreq_kryo_probe(struct platform_device *pdev)
 	if (!opp_tables)
 		return -ENOMEM;
 
+	opp_tables = kcalloc(num_possible_cpus(), sizeof(*opp_tables), GFP_KERNEL);
+	if (!opp_tables)
+		return -ENOMEM;
+
 	for_each_possible_cpu(cpu) {
 		cpu_dev = get_cpu_device(cpu);
 		if (NULL == cpu_dev) {

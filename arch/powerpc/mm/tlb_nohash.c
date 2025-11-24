@@ -506,6 +506,9 @@ static void setup_page_sizes(void)
 			if (!def->shift)
 				continue;
 
+			if (!def->shift)
+				continue;
+
 			if (tlb1ps & (1U << (def->shift - 10))) {
 				def->flags |= MMU_PAGE_SIZE_DIRECT;
 

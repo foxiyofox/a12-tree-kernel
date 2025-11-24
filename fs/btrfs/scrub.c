@@ -2120,6 +2120,10 @@ static void scrub_missing_raid56_worker(struct btrfs_work *work)
 	struct btrfs_fs_info *fs_info = sctx->fs_info;
 	u64 logical;
 	struct btrfs_device *dev;
+	unsigned int nofs_flag;
+	struct btrfs_workqueue *scrub_workers = NULL;
+	struct btrfs_workqueue *scrub_wr_comp = NULL;
+	struct btrfs_workqueue *scrub_parity = NULL;
 
 	logical = sblock->pagev[0]->logical;
 	dev = sblock->pagev[0]->dev;
@@ -4019,7 +4023,7 @@ int btrfs_scrub_progress(struct btrfs_fs_info *fs_info, u64 devid,
 	struct scrub_ctx *sctx = NULL;
 
 	mutex_lock(&fs_info->fs_devices->device_list_mutex);
-	dev = btrfs_find_device(fs_info, devid, NULL, NULL);
+	dev = btrfs_find_device(fs_info->fs_devices, devid, NULL, NULL, true);
 	if (dev)
 		sctx = dev->scrub_ctx;
 	if (sctx)

@@ -1116,6 +1116,9 @@ static int pm80xx_chip_init(struct pm8001_hba_info *pm8001_ha)
 	/* Initialize the controller fatal error flag */
 	pm8001_ha->controller_fatal_error = false;
 
+	/* Initialize the controller fatal error flag */
+	pm8001_ha->controller_fatal_error = false;
+
 	/* Initialize pci space address eg: mpi offset */
 	init_pci_device_addresses(pm8001_ha);
 	init_default_table_values(pm8001_ha);
@@ -2841,6 +2844,8 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
 			"task 0x%p done with io_status 0x%x resp 0x%x"
 			"stat 0x%x but aborted by upper layer!\n",
 			t, status, ts->resp, ts->stat));
+		if (t->slow_task)
+			complete(&t->slow_task->completion);
 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
 	} else {
 		spin_unlock_irqrestore(&t->task_state_lock, flags);
@@ -3762,6 +3767,46 @@ static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void *piomb)
 			"Unknown outbound Queue IOMB OPC = 0x%x\n", opc));
 		break;
 	}
+}
+
+static void print_scratchpad_registers(struct pm8001_hba_info *pm8001_ha)
+{
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_SCRATCH_PAD_0: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_0)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_SCRATCH_PAD_1:0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_SCRATCH_PAD_2: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_2)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_SCRATCH_PAD_3: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_HOST_SCRATCH_PAD_0: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_0)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_HOST_SCRATCH_PAD_1: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_1)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_HOST_SCRATCH_PAD_2: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_2)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_HOST_SCRATCH_PAD_3: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_3)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_HOST_SCRATCH_PAD_4: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_4)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_HOST_SCRATCH_PAD_5: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_5)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_RSVD_SCRATCH_PAD_0: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_6)));
+	PM8001_FAIL_DBG(pm8001_ha,
+		pm8001_printk("MSGU_RSVD_SCRATCH_PAD_1: 0x%x\n",
+			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_7)));
 }
 
 static void print_scratchpad_registers(struct pm8001_hba_info *pm8001_ha)

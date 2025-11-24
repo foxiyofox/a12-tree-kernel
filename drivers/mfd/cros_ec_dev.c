@@ -268,6 +268,11 @@ static void cros_ec_class_release(struct device *dev)
 	kfree(to_cros_ec_dev(dev));
 }
 
+static void cros_ec_class_release(struct device *dev)
+{
+	kfree(to_cros_ec_dev(dev));
+}
+
 static void cros_ec_sensors_register(struct cros_ec_dev *ec)
 {
 	/*

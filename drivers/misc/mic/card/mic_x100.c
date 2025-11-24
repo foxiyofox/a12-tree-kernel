@@ -252,6 +252,9 @@ static int __init mic_probe(struct platform_device *pdev)
 	/* FIXME: use dma_set_mask_and_coherent() and check result */
 	dma_coerce_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
 
+	/* FIXME: use dma_set_mask_and_coherent() and check result */
+	dma_coerce_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+
 	mdev->mmio.pa = MIC_X100_MMIO_BASE;
 	mdev->mmio.len = MIC_X100_MMIO_LEN;
 	mdev->mmio.va = devm_ioremap(&pdev->dev, MIC_X100_MMIO_BASE,
@@ -305,6 +308,8 @@ static struct platform_driver __refdata mic_platform_driver = {
 		.name   = mic_driver_name,
 	},
 };
+
+static struct platform_device *mic_platform_dev;
 
 static struct platform_device *mic_platform_dev;
 

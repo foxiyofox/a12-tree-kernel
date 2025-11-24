@@ -2351,6 +2351,18 @@ static int struct_ep_setup(struct fsl_udc *udc, unsigned char index,
 	ep->qh = &udc->ep_qh[index];
 
 	return 0;
+
+udc_req_buf_alloc_failed:
+	kfree(udc->status_req);
+udc_status_alloc_failed:
+	kfree(udc->ep_qh);
+	udc->ep_qh_size = 0;
+ep_queue_alloc_failed:
+	kfree(udc->eps);
+eps_alloc_failed:
+	udc->phy_mode = 0;
+	return -1;
+
 }
 
 /* Driver probe function

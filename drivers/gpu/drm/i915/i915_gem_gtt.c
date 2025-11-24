@@ -2161,6 +2161,7 @@ unpin:
 void gen6_ppgtt_unpin(struct i915_hw_ppgtt *base)
 {
 	struct gen6_hw_ppgtt *ppgtt = to_gen6_ppgtt(base);
+	int err;
 
 	GEM_BUG_ON(!ppgtt->pin_count);
 	if (--ppgtt->pin_count)

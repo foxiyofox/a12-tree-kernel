@@ -225,6 +225,8 @@ GLOBAL(ftrace_regs_caller_op_ptr)
 
 	ENCODE_FRAME_POINTER
 
+	ENCODE_FRAME_POINTER
+
 	/* regs go into 4th parameter */
 	leaq (%rsp), %rcx
 

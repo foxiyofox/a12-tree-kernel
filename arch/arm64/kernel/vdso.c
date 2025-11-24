@@ -233,6 +233,9 @@ void update_vsyscall(struct timekeeper *tk)
 	/* Read without the seqlock held by clock_getres() */
 	WRITE_ONCE(vdso_data->hrtimer_res, hrtimer_resolution);
 
+	/* Read without the seqlock held by clock_getres() */
+	WRITE_ONCE(vdso_data->hrtimer_res, hrtimer_resolution);
+
 	if (!use_syscall) {
 		/* tkr_mono.cycle_last == tkr_raw.cycle_last */
 		vdso_data->cs_cycle_last	= tk->tkr_mono.cycle_last;

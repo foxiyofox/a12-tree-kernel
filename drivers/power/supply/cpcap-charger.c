@@ -373,6 +373,7 @@ static void cpcap_charger_vbus_work(struct work_struct *work)
 		cpcap_charger_set_inductive_path(ddata, true);
 	}
 
+	power_supply_changed(ddata->usb);
 	return;
 
 out_err:

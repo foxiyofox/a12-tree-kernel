@@ -370,6 +370,9 @@ err_opp:
 	dev_pm_opp_of_remove_table(dev);
 err_clk:
 	clk_disable_unprepare(bus->clk);
+err_reg:
+	if (!passive)
+		regulator_disable(bus->regulator);
 
 	return ret;
 }

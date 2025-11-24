@@ -649,6 +649,7 @@ nfsd3_proc_pathconf(struct svc_rqst *rqstp)
 			resp->p_case_preserving  = 0;
 			break;
 		}
+		resp->offset = NULL;
 	}
 
 	fh_put(&argp->fh);

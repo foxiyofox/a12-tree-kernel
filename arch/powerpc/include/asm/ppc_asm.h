@@ -831,4 +831,14 @@ END_FTR_SECTION_IFCLR(CPU_FTR_601)
 #define BTB_FLUSH(reg)
 #endif /* CONFIG_PPC_FSL_BOOK3E */
 
+#ifdef CONFIG_PPC_FSL_BOOK3E
+#define BTB_FLUSH(reg)			\
+	lis reg,BUCSR_INIT@h;		\
+	ori reg,reg,BUCSR_INIT@l;	\
+	mtspr SPRN_BUCSR,reg;		\
+	isync;
+#else
+#define BTB_FLUSH(reg)
+#endif /* CONFIG_PPC_FSL_BOOK3E */
+
 #endif /* _ASM_POWERPC_PPC_ASM_H */

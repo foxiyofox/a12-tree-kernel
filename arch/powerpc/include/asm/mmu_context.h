@@ -204,7 +204,7 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
  */
 static inline void activate_mm(struct mm_struct *prev, struct mm_struct *next)
 {
-	switch_mm(prev, next, current);
+	switch_mm_irqs_off(prev, next, current);
 }
 
 /* We don't currently use enter_lazy_tlb() for anything */
@@ -262,6 +262,13 @@ static inline u64 pte_to_hpte_pkey_bits(u64 pteflags)
 }
 
 #endif /* CONFIG_PPC_MEM_KEYS */
+
+static inline int arch_dup_mmap(struct mm_struct *oldmm,
+				struct mm_struct *mm)
+{
+	arch_dup_pkeys(oldmm, mm);
+	return 0;
+}
 
 static inline int arch_dup_mmap(struct mm_struct *oldmm,
 				struct mm_struct *mm)

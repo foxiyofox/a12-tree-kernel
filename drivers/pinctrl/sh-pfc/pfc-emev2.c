@@ -1271,6 +1271,14 @@ static const char * const ext_clki_groups[] = {
 	"ext_clki",
 };
 
+static const char * const err_rst_reqb_groups[] = {
+	"err_rst_reqb",
+};
+
+static const char * const ext_clki_groups[] = {
+	"ext_clki",
+};
+
 static const char * const iic0_groups[] = {
 	"iic0",
 };
@@ -1297,6 +1305,10 @@ static const char * const lowpwr_groups[] = {
 	"lowpwr",
 };
 
+static const char * const lowpwr_groups[] = {
+	"lowpwr",
+};
+
 static const char * const ntsc_groups[] = {
 	"ntsc_clk",
 	"ntsc_data",
@@ -1308,6 +1320,10 @@ static const char * const pwm0_groups[] = {
 
 static const char * const pwm1_groups[] = {
 	"pwm1",
+};
+
+static const char * const ref_clko_groups[] = {
+	"ref_clko",
 };
 
 static const char * const ref_clko_groups[] = {

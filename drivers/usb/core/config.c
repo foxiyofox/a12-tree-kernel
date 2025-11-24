@@ -864,7 +864,11 @@ int usb_parse_configuration(struct usb_device *dev, int cfgidx,
 				dev_warn(ddev, "config %d interface %d has no "
 				    "altsetting %d\n", cfgno, inums[i], j);
 		}
+
+		total_len -= length;
+		buffer += length;
 	}
+	dev->bos->desc->wTotalLength = cpu_to_le16(buffer - buffer0);
 
 	return 0;
 }

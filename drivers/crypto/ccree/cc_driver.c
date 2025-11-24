@@ -390,6 +390,9 @@ static int init_cc_resources(struct platform_device *plat_dev)
 	/* All set, we can allow autosuspend */
 	cc_pm_go(new_drvdata);
 
+	/* All set, we can allow autosuspend */
+	cc_pm_go(new_drvdata);
+
 	/* If we got here and FIPS mode is enabled
 	 * it means all FIPS test passed, so let TEE
 	 * know we're good.

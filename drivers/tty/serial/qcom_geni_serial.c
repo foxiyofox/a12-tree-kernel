@@ -831,6 +831,8 @@ static void get_tx_fifo_size(struct qcom_geni_serial_port *port)
 static void qcom_geni_serial_shutdown(struct uart_port *uport)
 {
 	unsigned long flags;
+	u32 geni_status;
+	u32 irq_en;
 
 	/* Stop the console before stopping the current tx */
 	if (uart_console(uport))

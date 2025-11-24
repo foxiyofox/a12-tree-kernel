@@ -243,6 +243,8 @@ enum sm5502_reg {
 
 #define SM5502_REG_RESET_MASK			(0x1)
 
+#define SM5502_REG_RESET_MASK			(0x1)
+
 /* SM5502 Interrupts */
 enum sm5502_irq {
 	/* INT1 */

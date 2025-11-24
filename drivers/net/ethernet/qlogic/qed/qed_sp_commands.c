@@ -60,6 +60,19 @@ void qed_sp_destroy_request(struct qed_hwfn *p_hwfn,
 		qed_spq_return_entry(p_hwfn, p_ent);
 }
 
+void qed_sp_destroy_request(struct qed_hwfn *p_hwfn,
+			    struct qed_spq_entry *p_ent)
+{
+	/* qed_spq_get_entry() can either get an entry from the free_pool,
+	 * or, if no entries are left, allocate a new entry and add it to
+	 * the unlimited_pending list.
+	 */
+	if (p_ent->queue == &p_hwfn->p_spq->unlimited_pending)
+		kfree(p_ent);
+	else
+		qed_spq_return_entry(p_hwfn, p_ent);
+}
+
 int qed_sp_init_request(struct qed_hwfn *p_hwfn,
 			struct qed_spq_entry **pp_ent,
 			u8 cmd, u8 protocol, struct qed_sp_init_data *p_data)

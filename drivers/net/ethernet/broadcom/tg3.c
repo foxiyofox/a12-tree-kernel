@@ -18109,6 +18109,7 @@ static int tg3_suspend(struct device *device)
 	struct net_device *dev = pci_get_drvdata(pdev);
 	struct tg3 *tp = netdev_priv(dev);
 	int err = 0;
+	bool reset_phy = false;
 
 	rtnl_lock();
 

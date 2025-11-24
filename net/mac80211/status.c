@@ -487,8 +487,7 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
 		rcu_read_lock();
 		sdata = ieee80211_sdata_from_skb(local, skb);
 		if (sdata) {
-			if (ieee80211_is_nullfunc(hdr->frame_control) ||
-			    ieee80211_is_qos_nullfunc(hdr->frame_control))
+			if (ieee80211_is_any_nullfunc(hdr->frame_control))
 				cfg80211_probe_status(sdata->dev, hdr->addr1,
 						      cookie, acked,
 						      info->status.ack_signal,

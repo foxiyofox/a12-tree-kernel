@@ -33,6 +33,8 @@
 #include <uapi/drm/i915_drm.h>
 #include <uapi/drm/drm_fourcc.h>
 
+#include <asm/hypervisor.h>
+
 #include <linux/io-mapping.h>
 #include <linux/i2c.h>
 #include <linux/i2c-algo-bit.h>
@@ -2503,6 +2505,12 @@ intel_info(const struct drm_i915_private *dev_priv)
  */
 #define CMDPARSER_USES_GGTT(dev_priv) IS_GEN7(dev_priv)
 
+/*
+ * The Gen7 cmdparser copies the scanned buffer to the ggtt for execution
+ * All later gens can run the final buffer from the ppgtt
+ */
+#define CMDPARSER_USES_GGTT(dev_priv) IS_GEN7(dev_priv)
+
 #define ENGINE_MASK(id)	BIT(id)
 #define RENDER_RING	ENGINE_MASK(RCS)
 #define BSD_RING	ENGINE_MASK(VCS)
@@ -2523,6 +2531,8 @@ intel_info(const struct drm_i915_private *dev_priv)
 #define HAS_VEBOX(dev_priv)	HAS_ENGINE(dev_priv, VECS)
 
 #define HAS_LEGACY_SEMAPHORES(dev_priv) IS_GEN7(dev_priv)
+
+#define HAS_SECURE_BATCHES(dev_priv) (INTEL_GEN(dev_priv) < 6)
 
 #define HAS_SECURE_BATCHES(dev_priv) (INTEL_GEN(dev_priv) < 6)
 
@@ -2683,7 +2693,9 @@ static inline bool intel_vtd_active(void)
 	if (intel_iommu_gfx_mapped)
 		return true;
 #endif
-	return false;
+
+	/* Running as a guest, we assume the host is enforcing VT'd */
+	return !hypervisor_is_type(X86_HYPER_NATIVE);
 }
 
 static inline bool intel_scanout_needs_vtd_wa(struct drm_i915_private *dev_priv)
@@ -2954,6 +2966,14 @@ i915_gem_object_ggtt_pin(struct drm_i915_gem_object *obj,
 			 u64 size,
 			 u64 alignment,
 			 u64 flags);
+
+struct i915_vma * __must_check
+i915_gem_object_pin(struct drm_i915_gem_object *obj,
+		    struct i915_address_space *vm,
+		    const struct i915_ggtt_view *view,
+		    u64 size,
+		    u64 alignment,
+		    u64 flags);
 
 struct i915_vma * __must_check
 i915_gem_object_pin(struct drm_i915_gem_object *obj,

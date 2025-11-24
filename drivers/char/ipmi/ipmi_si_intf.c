@@ -224,6 +224,9 @@ struct smi_info {
 	/* Is the driver in maintenance mode? */
 	bool in_maintenance_mode;
 
+	/* Is the driver in maintenance mode? */
+	bool in_maintenance_mode;
+
 	/*
 	 * Did we get an attention that we did not handle?
 	 */
@@ -1888,6 +1891,18 @@ int ipmi_si_add_smi(struct si_sm_io *io)
 		return -ENODEV;
 	}
 
+	/*
+	 * If the user gave us a hard-coded device at the same
+	 * address, they presumably want us to use it and not what is
+	 * in the firmware.
+	 */
+	if (io->addr_source != SI_HARDCODED &&
+	    ipmi_si_hardcode_match(io->addr_type, io->addr_data)) {
+		dev_info(io->dev,
+			 "Hard-coded device at this address already exists");
+		return -ENODEV;
+	}
+
 	if (!io->io_setup) {
 		if (io->addr_type == IPMI_IO_ADDR_SPACE) {
 			io->io_setup = ipmi_si_port_setup;
@@ -2307,6 +2322,8 @@ void ipmi_si_remove_by_data(int addr_space, enum si_type si_type,
 			cleanup_one_si(e);
 	}
 	mutex_unlock(&smi_infos_lock);
+
+	ipmi_si_hardcode_exit();
 }
 
 static void cleanup_ipmi_si(void)

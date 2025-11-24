@@ -862,6 +862,14 @@ static int rk3288_clk_suspend(void)
 		       rk3288_cru_base + RK3288_CLKGATE_CON(10));
 
 	/*
+	 * Going into deep sleep (specifically setting PMU_CLR_DMA in
+	 * RK3288_PMU_PWRMODE_CON1) appears to fail unless
+	 * "aclk_dmac1" is on.
+	 */
+	writel_relaxed(1 << (12 + 16),
+		       rk3288_cru_base + RK3288_CLKGATE_CON(10));
+
+	/*
 	 * Switch PLLs other than DPLL (for SDRAM) to slow mode to
 	 * avoid crashes on resume. The Mask ROM on the system will
 	 * put APLL, CPLL, and GPLL into slow mode at resume time

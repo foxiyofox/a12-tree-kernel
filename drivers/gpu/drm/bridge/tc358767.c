@@ -146,6 +146,8 @@
 
 #define DP1_SRCCTRL		0x07a0
 
+#define DP1_SRCCTRL		0x07a0
+
 /* PHY */
 #define DP_PHY_CTRL		0x0800
 #define DP_PHY_RST			BIT(28)  /* DP PHY Global Soft Reset */
@@ -752,6 +754,7 @@ static int tc_link_training(struct tc_data *tc, int pattern)
 	int retry;
 	u32 value;
 	int ret;
+	u32 dp_phy_ctrl;
 
 	if (pattern == DP_TRAINING_PATTERN_1) {
 		srcctrl |= DP0_SRCCTRL_TP1;

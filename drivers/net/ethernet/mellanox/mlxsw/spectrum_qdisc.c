@@ -209,6 +209,20 @@ mlxsw_sp_xstats_tail_drop(struct mlxsw_sp_port_xstats *xstats, int tclass_num)
 	       xstats->tail_drop[tclass_num + 8];
 }
 
+static u64
+mlxsw_sp_xstats_backlog(struct mlxsw_sp_port_xstats *xstats, int tclass_num)
+{
+	return xstats->backlog[tclass_num] +
+	       xstats->backlog[tclass_num + 8];
+}
+
+static u64
+mlxsw_sp_xstats_tail_drop(struct mlxsw_sp_port_xstats *xstats, int tclass_num)
+{
+	return xstats->tail_drop[tclass_num] +
+	       xstats->tail_drop[tclass_num + 8];
+}
+
 static void
 mlxsw_sp_qdisc_bstats_per_priority_get(struct mlxsw_sp_port_xstats *xstats,
 				       u8 prio_bitmap, u64 *tx_packets,
@@ -665,6 +679,13 @@ mlxsw_sp_qdisc_prio_graft(struct mlxsw_sp_port *mlxsw_sp_port,
 	if (p->band < IEEE_8021QAZ_MAX_TCS &&
 	    mlxsw_sp_port->tclass_qdiscs[tclass_num].handle == p->child_handle)
 		return 0;
+
+	if (!p->child_handle) {
+		/* This is an invisible FIFO replacing the original Qdisc.
+		 * Ignore it--the original Qdisc's destroy will follow.
+		 */
+		return 0;
+	}
 
 	if (!p->child_handle) {
 		/* This is an invisible FIFO replacing the original Qdisc.

@@ -661,6 +661,11 @@ static int __mtd_del_partition(struct mtd_part *priv)
 	free_partition(priv);
 
 	return 0;
+
+err_del_partitions:
+	del_mtd_partitions(master);
+
+	return ret;
 }
 
 /*

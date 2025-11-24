@@ -1617,6 +1617,9 @@ static const unsigned int gpio0k_3516_pins[] = { 275, 298 };
 /* The GPIO0L (0) pins overlap with TVC_CLK */
 static const unsigned int gpio0l_3516_pins[] = { 333 };
 
+/* The GPIO0L (0) pins overlap with TVC_CLK */
+static const unsigned int gpio0l_3516_pins[] = { 333 };
+
 /* The GPIO1A (0-4) pins that overlap with IDE and parallel flash */
 static const unsigned int gpio1a_3516_pins[] = { 221, 200, 222, 201, 220 };
 
@@ -1885,6 +1888,13 @@ static const struct gemini_pin_group gemini_3516_pin_groups[] = {
 		.mask = LCD_PADS_ENABLE,
 		.value = PFLASH_PADS_DISABLE | NAND_PADS_DISABLE |
 			SFLASH_PADS_DISABLE,
+	},
+	{
+		.name = "gpio0lgrp",
+		.pins = gpio0l_3516_pins,
+		.num_pins = ARRAY_SIZE(gpio0l_3516_pins),
+		/* Conflict with TVE CLK */
+		.mask = TVC_CLK_PAD_ENABLE,
 	},
 	{
 		.name = "gpio0kgrp",

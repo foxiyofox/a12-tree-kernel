@@ -2202,6 +2202,11 @@ static int uea_boot(struct uea_softc *sc, struct usb_interface *intf)
 		goto err0;
 	}
 
+	if (intf->cur_altsetting->desc.bNumEndpoints < 1) {
+		ret = -ENODEV;
+		goto err0;
+	}
+
 	intr = kmalloc(size, GFP_KERNEL);
 	if (!intr)
 		goto err0;

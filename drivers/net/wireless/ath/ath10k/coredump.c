@@ -1159,6 +1159,9 @@ int ath10k_coredump_register(struct ath10k *ar)
 		if (!crash_data->ramdump_buf_len)
 			return 0;
 
+		if (!crash_data->ramdump_buf_len)
+			return 0;
+
 		crash_data->ramdump_buf = vzalloc(crash_data->ramdump_buf_len);
 		if (!crash_data->ramdump_buf)
 			return -ENOMEM;

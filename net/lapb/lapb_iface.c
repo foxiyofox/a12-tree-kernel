@@ -159,6 +159,7 @@ int lapb_register(struct net_device *dev,
 	rc = LAPB_NOMEM;
 	if (!lapb)
 		goto out;
+	lapb_put(lapb);
 
 	lapb->dev       = dev;
 	lapb->callbacks = callbacks;

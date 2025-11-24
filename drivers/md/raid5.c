@@ -2417,8 +2417,6 @@ static int resize_stripes(struct r5conf *conf, int newsize)
 	} else
 		err = -ENOMEM;
 
-	mutex_unlock(&conf->cache_size_mutex);
-
 	conf->slab_cache = sc;
 	conf->active_name = 1-conf->active_name;
 
@@ -2441,6 +2439,8 @@ static int resize_stripes(struct r5conf *conf, int newsize)
 
 	if (!err)
 		conf->pool_size = newsize;
+	mutex_unlock(&conf->cache_size_mutex);
+
 	return err;
 }
 
@@ -3596,6 +3596,7 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
 	 * is missing/faulty, then we need to read everything we can.
 	 */
 	if (sh->raid_conf->level != 6 &&
+	    sh->raid_conf->rmw_level != PARITY_DISABLE_RMW &&
 	    sh->sector < sh->raid_conf->mddev->recovery_cp)
 		/* reconstruct-write isn't being forced */
 		return 0;
@@ -4221,6 +4222,14 @@ static void handle_parity_checks6(struct r5conf *conf, struct stripe_head *sh,
 			clear_bit(R5_Wantwrite, &dev->flags);
 			s->locked--;
 		}
+		if (WARN_ONCE(dev && !test_bit(R5_UPTODATE, &dev->flags),
+			      "%s: disk%td not up to date\n",
+			      mdname(conf->mddev),
+			      dev - (struct r5dev *) &sh->dev)) {
+			clear_bit(R5_LOCKED, &dev->flags);
+			clear_bit(R5_Wantwrite, &dev->flags);
+			s->locked--;
+		}
 		clear_bit(STRIPE_DEGRADED, &sh->state);
 
 		set_bit(STRIPE_INSYNC, &sh->state);
@@ -4832,7 +4841,7 @@ static void handle_stripe(struct stripe_head *sh)
 	 * or to load a block that is being partially written.
 	 */
 	if (s.to_read || s.non_overwrite
-	    || (conf->level == 6 && s.to_write && s.failed)
+	    || (s.to_write && s.failed)
 	    || (s.syncing && (s.uptodate + s.compute < disks))
 	    || s.replacing
 	    || s.expanding)
@@ -6429,6 +6438,7 @@ raid5_stripecache_size = __ATTR(stripe_cache_size, S_IRUGO | S_IWUSR,
 static ssize_t
 raid5_show_rmw_level(struct mddev  *mddev, char *page)
 {
+	int result = 0;
 	struct r5conf *conf = mddev->private;
 	if (conf)
 		return sprintf(page, "%d\n", conf->rmw_level);

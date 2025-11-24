@@ -667,6 +667,8 @@ void do_IRQ(struct pt_regs *regs)
 
 	check_stack_overflow();
 
+	check_stack_overflow();
+
 	/* Already there ? */
 	if (unlikely(curtp == irqtp || curtp == sirqtp)) {
 		__do_irq(regs);

@@ -1026,6 +1026,9 @@ ice_handle_vsi_list_mgmt(struct ice_hw *hw,
 		if (!m_entry->vsi_list_info)
 			return ICE_ERR_CFG;
 
+		if (!m_entry->vsi_list_info)
+			return ICE_ERR_CFG;
+
 		/* A rule already exists with the new VSI being added */
 		if (test_bit(vsi_id, m_entry->vsi_list_info->vsi_map))
 			return 0;

@@ -398,6 +398,18 @@ struct rds_iov_vector_arr {
 	int                    incr;
 };
 
+struct rds_iov_vector {
+	struct rds_iovec *iov;
+	int               len;
+};
+
+struct rds_iov_vector_arr {
+	struct rds_iov_vector *vec;
+	int                    len;
+	int                    indx;
+	int                    incr;
+};
+
 struct rds_message {
 	refcount_t		m_refcount;
 	struct list_head	m_sock_item;

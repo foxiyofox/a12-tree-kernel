@@ -266,7 +266,11 @@ static inline bool __transparent_hugepage_enabled(struct vm_area_struct *vma)
 	return false;
 }
 
-static inline bool transparent_hugepage_enabled(struct vm_area_struct *vma)
+/*
+ * to be used on vmas which are known to support THP.
+ * Use transparent_hugepage_enabled otherwise
+ */
+static inline bool __transparent_hugepage_enabled(struct vm_area_struct *vma)
 {
 	return false;
 }
@@ -338,6 +342,11 @@ static inline vm_fault_t do_huge_pmd_numa_page(struct vm_fault *vmf,
 }
 
 static inline bool is_huge_zero_page(struct page *page)
+{
+	return false;
+}
+
+static inline bool is_huge_zero_pmd(pmd_t pmd)
 {
 	return false;
 }

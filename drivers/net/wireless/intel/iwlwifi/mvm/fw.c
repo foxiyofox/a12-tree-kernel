@@ -858,6 +858,26 @@ static bool iwl_mvm_sar_geo_support(struct iwl_mvm *mvm)
 		 CSR_HW_REV_TYPE_7265D));
 }
 
+static bool iwl_mvm_sar_geo_support(struct iwl_mvm *mvm)
+{
+	/*
+	 * The GEO_TX_POWER_LIMIT command is not supported on earlier
+	 * firmware versions.  Unfortunately, we don't have a TLV API
+	 * flag to rely on, so rely on the major version which is in
+	 * the first byte of ucode_ver.  This was implemented
+	 * initially on version 38 and then backported to 17.  It was
+	 * also backported to 29, but only for 7265D devices.  The
+	 * intention was to have it in 36 as well, but not all 8000
+	 * family got this feature enabled.  The 8000 family is the
+	 * only one using version 36, so skip this version entirely.
+	 */
+	return IWL_UCODE_SERIAL(mvm->fw->ucode_ver) >= 38 ||
+	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 17 ||
+	       (IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 29 &&
+		((mvm->trans->hw_rev & CSR_HW_REV_TYPE_MSK) ==
+		 CSR_HW_REV_TYPE_7265D));
+}
+
 int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
 {
 	struct iwl_geo_tx_power_profiles_resp *resp;
@@ -872,6 +892,9 @@ int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
 		.flags = CMD_WANT_SKB,
 		.data = { &geo_cmd },
 	};
+
+	if (!iwl_mvm_sar_geo_support(mvm))
+		return -EOPNOTSUPP;
 
 	if (!iwl_mvm_sar_geo_support(mvm))
 		return -EOPNOTSUPP;
@@ -900,6 +923,9 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
 	};
 	int ret, i, j;
 	u16 cmd_wide_id =  WIDE_ID(PHY_OPS_GROUP, GEO_TX_POWER_LIMIT);
+
+	if (!iwl_mvm_sar_geo_support(mvm))
+		return 0;
 
 	if (!iwl_mvm_sar_geo_support(mvm))
 		return 0;
@@ -947,6 +973,11 @@ static int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
 }
 
 static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
+{
+	return -ENOENT;
+}
+
+static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
 {
 	return -ENOENT;
 }

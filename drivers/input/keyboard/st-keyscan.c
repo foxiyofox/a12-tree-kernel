@@ -155,6 +155,8 @@ static int keyscan_probe(struct platform_device *pdev)
 
 	keypad_data->input_dev = input_dev;
 
+	keypad_data->input_dev = input_dev;
+
 	error = keypad_matrix_key_parse_dt(keypad_data);
 	if (error)
 		return error;

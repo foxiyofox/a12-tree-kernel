@@ -333,6 +333,9 @@ void acpi_gpiochip_request_interrupts(struct gpio_chip *chip)
 	acpi_walk_resources(handle, "_AEI",
 			    acpi_gpiochip_alloc_event, acpi_gpio);
 
+	acpi_walk_resources(handle, "_AEI",
+			    acpi_gpiochip_alloc_event, acpi_gpio);
+
 	mutex_lock(&acpi_gpio_deferred_req_irqs_lock);
 	defer = !acpi_gpio_deferred_req_irqs_done;
 	if (defer)

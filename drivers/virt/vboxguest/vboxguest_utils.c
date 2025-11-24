@@ -219,6 +219,8 @@ static int hgcm_call_preprocess_linaddr(
 
 	*bounce_buf_ret = bounce_buf;
 
+	*bounce_buf_ret = bounce_buf;
+
 	if (copy_in) {
 		ret = copy_from_user(bounce_buf, (void __user *)buf, len);
 		if (ret)

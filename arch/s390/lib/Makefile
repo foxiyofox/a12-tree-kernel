@@ -13,5 +13,9 @@ lib-$(CONFIG_UPROBES) += probes.o
 # produce false positives
 KASAN_SANITIZE_uaccess.o := n
 
+# Instrumenting memory accesses to __user data (in different address space)
+# produce false positives
+KASAN_SANITIZE_uaccess.o := n
+
 chkbss := mem.o
 include $(srctree)/arch/s390/scripts/Makefile.chkbss

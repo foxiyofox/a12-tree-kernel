@@ -727,6 +727,12 @@ int pvrdma_post_send(struct ib_qp *ibqp, const struct ib_send_wr *wr,
 			goto out;
 		}
 
+		if (unlikely(wqe_hdr->opcode == PVRDMA_WR_ERROR)) {
+			*bad_wr = wr;
+			ret = -EINVAL;
+			goto out;
+		}
+
 		switch (qp->ibqp.qp_type) {
 		case IB_QPT_GSI:
 		case IB_QPT_UD:

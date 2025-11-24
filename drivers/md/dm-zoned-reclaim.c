@@ -179,7 +179,7 @@ static int dmz_reclaim_copy(struct dmz_reclaim *zrc,
 			dst_zone->wp_block = block;
 	}
 
-	return 0;
+	return ret;
 }
 
 /*

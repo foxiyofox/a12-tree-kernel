@@ -283,6 +283,12 @@ static void aesti_encrypt(struct crypto_tfm *tfm, u8 *out, const u8 *in)
 	 */
 	local_irq_save(flags);
 
+	/*
+	 * Temporarily disable interrupts to avoid races where cachelines are
+	 * evicted when the CPU is interrupted to do something else.
+	 */
+	local_irq_save(flags);
+
 	st0[0] ^= __aesti_sbox[ 0] ^ __aesti_sbox[128];
 	st0[1] ^= __aesti_sbox[32] ^ __aesti_sbox[160];
 	st0[2] ^= __aesti_sbox[64] ^ __aesti_sbox[192];
@@ -324,6 +330,12 @@ static void aesti_decrypt(struct crypto_tfm *tfm, u8 *out, const u8 *in)
 	st0[1] = ctx->key_dec[1] ^ get_unaligned_le32(in + 4);
 	st0[2] = ctx->key_dec[2] ^ get_unaligned_le32(in + 8);
 	st0[3] = ctx->key_dec[3] ^ get_unaligned_le32(in + 12);
+
+	/*
+	 * Temporarily disable interrupts to avoid races where cachelines are
+	 * evicted when the CPU is interrupted to do something else.
+	 */
+	local_irq_save(flags);
 
 	/*
 	 * Temporarily disable interrupts to avoid races where cachelines are

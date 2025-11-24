@@ -219,6 +219,7 @@ static acpi_status i2c_acpi_add_device(acpi_handle handle, u32 level,
 void i2c_acpi_register_devices(struct i2c_adapter *adap)
 {
 	acpi_status status;
+	acpi_handle handle;
 
 	if (!has_acpi_companion(&adap->dev))
 		return;
@@ -229,6 +230,15 @@ void i2c_acpi_register_devices(struct i2c_adapter *adap)
 				     adap, NULL);
 	if (ACPI_FAILURE(status))
 		dev_warn(&adap->dev, "failed to enumerate I2C slaves\n");
+
+	if (!adap->dev.parent)
+		return;
+
+	handle = ACPI_HANDLE(adap->dev.parent);
+	if (!handle)
+		return;
+
+	acpi_walk_dep_device_list(handle);
 }
 
 const struct acpi_device_id *
@@ -240,6 +250,19 @@ i2c_acpi_match_device(const struct acpi_device_id *matches,
 
 	return acpi_match_device(matches, &client->dev);
 }
+
+static const struct acpi_device_id i2c_acpi_force_400khz_device_ids[] = {
+	/*
+	 * These Silead touchscreen controllers only work at 400KHz, for
+	 * some reason they do not work at 100KHz. On some devices the ACPI
+	 * tables list another device at their bus as only being capable
+	 * of 100KHz, testing has shown that these other devices work fine
+	 * at 400KHz (as can be expected of any recent i2c hw) so we force
+	 * the speed of the bus to 400 KHz if a Silead device is present.
+	 */
+	{ "MSSL1680", 0 },
+	{}
+};
 
 static const struct acpi_device_id i2c_acpi_force_400khz_device_ids[] = {
 	/*
@@ -271,6 +294,9 @@ static acpi_status i2c_acpi_lookup_speed(acpi_handle handle, u32 level,
 
 	if (lookup->speed <= lookup->min_speed)
 		lookup->min_speed = lookup->speed;
+
+	if (acpi_match_device_ids(adev, i2c_acpi_force_400khz_device_ids) == 0)
+		lookup->force_speed = 400000;
 
 	if (acpi_match_device_ids(adev, i2c_acpi_force_400khz_device_ids) == 0)
 		lookup->force_speed = 400000;
@@ -385,6 +411,7 @@ static int i2c_acpi_notify(struct notifier_block *nb, unsigned long value,
 			break;
 
 		i2c_acpi_register_device(adapter, adev, &info);
+		put_device(&adapter->dev);
 		break;
 	case ACPI_RECONFIG_DEVICE_REMOVE:
 		if (!acpi_device_enumerated(adev))
@@ -693,7 +720,6 @@ int i2c_acpi_install_space_handler(struct i2c_adapter *adapter)
 		return -ENOMEM;
 	}
 
-	acpi_walk_dep_device_list(handle);
 	return 0;
 }
 

@@ -791,7 +791,7 @@ ecm_bind(struct usb_configuration *c, struct usb_function *f)
 		fs_ecm_notify_desc.bEndpointAddress;
 
 	status = usb_assign_descriptors(f, ecm_fs_function, ecm_hs_function,
-			ecm_ss_function, NULL);
+			ecm_ss_function, ecm_ss_function);
 	if (status)
 		goto fail;
 
@@ -909,6 +909,11 @@ static void ecm_unbind(struct usb_configuration *c, struct usb_function *f)
 	DBG(c->cdev, "ecm unbind\n");
 
 	usb_free_all_descriptors(f);
+
+	if (atomic_read(&ecm->notify_count)) {
+		usb_ep_dequeue(ecm->notify, ecm->notify_req);
+		atomic_set(&ecm->notify_count, 0);
+	}
 
 	if (atomic_read(&ecm->notify_count)) {
 		usb_ep_dequeue(ecm->notify, ecm->notify_req);

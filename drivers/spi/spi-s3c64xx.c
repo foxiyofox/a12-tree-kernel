@@ -674,6 +674,8 @@ static inline void enable_cs(struct s3c64xx_spi_driver_data *sdd,
 				S3C64XX_SPI_SLAVE_SIG_INACT : 0,
 			       sdd->regs + S3C64XX_SPI_SLAVE_SEL);
 	}
+
+	return 0;
 }
 
 static int wait_for_xfer(struct s3c64xx_spi_driver_data *sdd,
@@ -980,7 +982,9 @@ static int s3c64xx_spi_transfer_one_message(struct spi_master *master,
 		sdd->cur_bpw = spi->bits_per_word;
 		sdd->cur_speed = spi->max_speed_hz;
 		sdd->cur_mode = spi->mode;
-		s3c64xx_spi_config(sdd);
+		status = s3c64xx_spi_config(sdd);
+		if (status)
+			return status;
 	}
 
 	if (!(msg->is_dma_mapped) && (sci->dma_mode == DMA_MODE))

@@ -262,6 +262,8 @@ static void meson_pwm_enable(struct meson_pwm *meson,
 
 	spin_lock_irqsave(&meson->lock, flags);
 
+	spin_lock_irqsave(&meson->lock, flags);
+
 	value = readl(meson->base + REG_MISC_AB);
 	value &= ~(MISC_CLK_DIV_MASK << clk_shift);
 	value |= channel->pre_div << clk_shift;

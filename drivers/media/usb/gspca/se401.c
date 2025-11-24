@@ -136,6 +136,11 @@ static void se401_set_feature(struct gspca_dev *gspca_dev,
 		pr_err("set feature failed sel %#04x param %#04x error %d\n",
 		       selector, param, err);
 		gspca_dev->usb_err = err;
+		/*
+		 * Make sure the buffer is zeroed to avoid uninitialized
+		 * values.
+		 */
+		memset(gspca_dev->usb_buf, 0, READ_REQ_SIZE);
 	}
 }
 

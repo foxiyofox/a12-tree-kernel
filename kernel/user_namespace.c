@@ -1008,6 +1008,14 @@ static ssize_t map_write(struct file *file, const char __user *buf,
 	if (ret < 0)
 		goto out;
 
+	/*
+	 * If we want to use binary search for lookup, this clones the extent
+	 * array and sorts both copies.
+	 */
+	ret = sort_idmaps(&new_map);
+	if (ret < 0)
+		goto out;
+
 	/* Install the map */
 	if (new_map.nr_extents <= UID_GID_MAP_MAX_BASE_EXTENTS) {
 		memcpy(map->extent, new_map.extent,

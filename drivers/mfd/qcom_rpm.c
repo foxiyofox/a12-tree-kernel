@@ -642,6 +642,10 @@ static int qcom_rpm_probe(struct platform_device *pdev)
 	writel(fw_version[1], RPM_CTRL_REG(rpm, 1));
 	writel(fw_version[2], RPM_CTRL_REG(rpm, 2));
 
+	writel(fw_version[0], RPM_CTRL_REG(rpm, 0));
+	writel(fw_version[1], RPM_CTRL_REG(rpm, 1));
+	writel(fw_version[2], RPM_CTRL_REG(rpm, 2));
+
 	dev_info(&pdev->dev, "RPM firmware %u.%u.%u\n", fw_version[0],
 							fw_version[1],
 							fw_version[2]);

@@ -44,6 +44,7 @@ qla2100_intr_handler(int irq, void *dev_id)
 	uint16_t	mb[4];
 	struct rsp_que *rsp;
 	unsigned long	flags;
+	bool process_atio = false;
 
 	rsp = (struct rsp_que *) dev_id;
 	if (!rsp) {
@@ -3247,6 +3248,12 @@ qla24xx_msix_rsp_q(int irq, void *dev_id)
 	}
 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
 
+	if (process_atio) {
+		spin_lock_irqsave(&ha->tgt.atio_lock, flags);
+		qlt_24xx_process_atio_queue(vha, 0);
+		spin_unlock_irqrestore(&ha->tgt.atio_lock, flags);
+	}
+
 	return IRQ_HANDLED;
 }
 
@@ -3352,6 +3359,7 @@ qla2xxx_msix_rsp_q(int irq, void *dev_id)
 	struct qla_qpair *qpair;
 	struct device_reg_24xx __iomem *reg;
 	unsigned long flags;
+	bool process_atio = false;
 
 	qpair = dev_id;
 	if (!qpair) {
@@ -3370,6 +3378,12 @@ qla2xxx_msix_rsp_q(int irq, void *dev_id)
 	}
 
 	queue_work(ha->wq, &qpair->q_work);
+
+	if (process_atio) {
+		spin_lock_irqsave(&ha->tgt.atio_lock, flags);
+		qlt_24xx_process_atio_queue(vha, 0);
+		spin_unlock_irqrestore(&ha->tgt.atio_lock, flags);
+	}
 
 	return IRQ_HANDLED;
 }
@@ -3630,6 +3644,10 @@ clear_risc_ints:
 
 fail:
 	return ret;
+
+free_irqs:
+	pci_free_irq_vectors(ha->pdev);
+	goto msix_out;
 }
 
 void

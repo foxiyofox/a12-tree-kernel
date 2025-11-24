@@ -2594,6 +2594,11 @@ static int mv643xx_eth_change_mtu(struct net_device *dev, int new_mtu)
 	}
 
 	return 0;
+
+err_put_clk:
+	if (!IS_ERR(msp->clk))
+		clk_disable_unprepare(msp->clk);
+	return ret;
 }
 
 static void tx_timeout_task(struct work_struct *ugly)

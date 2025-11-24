@@ -982,6 +982,11 @@ int efivar_entry_set_get_size(struct efivar_entry *entry, u32 attributes,
 	if (efivar_validate(*vendor, name, data, *size) == false)
 		return -EINVAL;
 
+	if (!__efivars) {
+		err = -EINVAL;
+		goto out;
+	}
+
 	/*
 	 * The lock here protects the get_variable call, the conditional
 	 * set_variable call, and removal of the variable from the efivars
@@ -1010,6 +1015,8 @@ int efivar_entry_set_get_size(struct efivar_entry *entry, u32 attributes,
 			goto out;
 		}
 	}
+
+	ops = __efivars->ops;
 
 	ops = __efivars->ops;
 

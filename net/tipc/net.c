@@ -113,6 +113,14 @@ struct tipc_net_work {
 
 static void tipc_net_finalize(struct net *net, u32 addr);
 
+struct tipc_net_work {
+	struct work_struct work;
+	struct net *net;
+	u32 addr;
+};
+
+static void tipc_net_finalize(struct net *net, u32 addr);
+
 int tipc_net_init(struct net *net, u8 *node_id, u32 addr)
 {
 	if (tipc_own_id(net)) {

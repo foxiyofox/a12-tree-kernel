@@ -1695,6 +1695,7 @@ static void *aux_buffer_setup(struct perf_event *event, void **pages,
 			aux->sdbt_index[sfb->num_sdbt++] = (unsigned long)new;
 			/* Link current page to tail of chain */
 			*tail = (unsigned long)(void *) new + 1;
+			tail_prev = tail;
 			tail = new;
 		}
 		/* Tail is the entry in a SDBT */
@@ -2097,4 +2098,4 @@ out:
 	return err;
 }
 arch_initcall(init_cpum_sampling_pmu);
-core_param(cpum_sfb_size, CPUM_SF_MAX_SDB, sfb_size, 0640);
+core_param(cpum_sfb_size, CPUM_SF_MAX_SDB, sfb_size, 0644);

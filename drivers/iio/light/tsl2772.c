@@ -723,6 +723,13 @@ static void tsl2772_chip_off_action(void *data)
 	tsl2772_chip_off(indio_dev);
 }
 
+static void tsl2772_chip_off_action(void *data)
+{
+	struct iio_dev *indio_dev = data;
+
+	tsl2772_chip_off(indio_dev);
+}
+
 /**
  * tsl2772_invoke_change - power cycle the device to implement the user
  *                         parameters

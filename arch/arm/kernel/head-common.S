@@ -146,9 +146,6 @@ AR_CLASS(.long	0)				@ r3
 #endif
 	.size	__mmap_switched_data, . - __mmap_switched_data
 
-	__FINIT
-	.text
-
 /*
  * This provides a C-API version of __lookup_processor_type
  */

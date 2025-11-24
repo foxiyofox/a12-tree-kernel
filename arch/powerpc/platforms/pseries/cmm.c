@@ -429,6 +429,10 @@ static void cmm_release_device(struct device *dev)
 {
 }
 
+static void cmm_release_device(struct device *dev)
+{
+}
+
 /**
  * cmm_sysfs_register - Register with sysfs
  *

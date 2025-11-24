@@ -398,6 +398,8 @@ static int __init nf_ct_proto_gre_init(void)
 
 	BUILD_BUG_ON(offsetof(struct netns_proto_gre, nf) != 0);
 
+	BUILD_BUG_ON(offsetof(struct netns_proto_gre, nf) != 0);
+
 	ret = register_pernet_subsys(&proto_gre_net_ops);
 	if (ret < 0)
 		goto out_pernet;

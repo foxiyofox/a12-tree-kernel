@@ -244,7 +244,7 @@ int elevator_init_mq(struct request_queue *q);
 int elevator_switch_mq(struct request_queue *q,
 			      struct elevator_type *new_e);
 void elevator_exit(struct request_queue *, struct elevator_queue *);
-int elv_register_queue(struct request_queue *q);
+int elv_register_queue(struct request_queue *q, bool uevent);
 void elv_unregister_queue(struct request_queue *q);
 
 struct hd_struct *__disk_get_part(struct gendisk *disk, int partno);
@@ -333,6 +333,16 @@ static inline void blk_rq_set_deadline(struct request *rq, unsigned long time)
 static inline unsigned long blk_rq_deadline(struct request *rq)
 {
 	return rq->__deadline & ~0x1UL;
+}
+
+/*
+ * The max size one bio can handle is UINT_MAX becasue bvec_iter.bi_size
+ * is defined as 'unsigned int', meantime it has to aligned to with logical
+ * block size which is the minimum accepted unit by hardware.
+ */
+static inline unsigned int bio_allowed_max_sectors(struct request_queue *q)
+{
+	return round_down(UINT_MAX, queue_logical_block_size(q)) >> 9;
 }
 
 /*

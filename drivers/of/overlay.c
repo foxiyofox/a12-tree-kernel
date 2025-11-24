@@ -44,6 +44,26 @@ struct target {
 };
 
 /**
+ * struct target - info about current target node as recursing through overlay
+ * @np:			node where current level of overlay will be applied
+ * @in_livetree:	@np is a node in the live devicetree
+ *
+ * Used in the algorithm to create the portion of a changeset that describes
+ * an overlay fragment, which is a devicetree subtree.  Initially @np is a node
+ * in the live devicetree where the overlay subtree is targeted to be grafted
+ * into.  When recursing to the next level of the overlay subtree, the target
+ * also recurses to the next level of the live devicetree, as long as overlay
+ * subtree node also exists in the live devicetree.  When a node in the overlay
+ * subtree does not exist at the same level in the live devicetree, target->np
+ * points to a newly allocated node, and all subsequent targets in the subtree
+ * will be newly allocated nodes.
+ */
+struct target {
+	struct device_node *np;
+	bool in_livetree;
+};
+
+/**
  * struct fragment - info about fragment nodes in overlay expanded device tree
  * @target:	target of the overlay operation
  * @overlay:	pointer to the __overlay__ node
@@ -260,6 +280,8 @@ static struct property *dup_and_fixup_symbol_prop(
 	strcpy(new_prop->value + target_path_len, path_tail);
 
 	of_property_set_flag(new_prop, OF_DYNAMIC);
+
+	kfree(target_path);
 
 	return new_prop;
 

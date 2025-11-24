@@ -1084,6 +1084,39 @@ static int m88e6390_config_aneg(struct phy_device *phydev)
 	return m88e1510_config_aneg(phydev);
 }
 
+/* The VOD can be out of specification on link up. Poke an
+ * undocumented register, in an undocumented page, with a magic value
+ * to fix this.
+ */
+static int m88e6390_errata(struct phy_device *phydev)
+{
+	int err;
+
+	err = phy_write(phydev, MII_BMCR,
+			BMCR_ANENABLE | BMCR_SPEED1000 | BMCR_FULLDPLX);
+	if (err)
+		return err;
+
+	usleep_range(300, 400);
+
+	err = phy_write_paged(phydev, 0xf8, 0x08, 0x36);
+	if (err)
+		return err;
+
+	return genphy_soft_reset(phydev);
+}
+
+static int m88e6390_config_aneg(struct phy_device *phydev)
+{
+	int err;
+
+	err = m88e6390_errata(phydev);
+	if (err)
+		return err;
+
+	return m88e1510_config_aneg(phydev);
+}
+
 /**
  * fiber_lpa_to_ethtool_lpa_t
  * @lpa: value of the MII_LPA register for fiber link
@@ -2368,7 +2401,8 @@ static struct mdio_device_id __maybe_unused marvell_tbl[] = {
 	{ MARVELL_PHY_ID_88E1540, MARVELL_PHY_ID_MASK },
 	{ MARVELL_PHY_ID_88E1545, MARVELL_PHY_ID_MASK },
 	{ MARVELL_PHY_ID_88E3016, MARVELL_PHY_ID_MASK },
-	{ MARVELL_PHY_ID_88E6390, MARVELL_PHY_ID_MASK },
+	{ MARVELL_PHY_ID_88E6341_FAMILY, MARVELL_PHY_ID_MASK },
+	{ MARVELL_PHY_ID_88E6390_FAMILY, MARVELL_PHY_ID_MASK },
 	{ }
 };
 

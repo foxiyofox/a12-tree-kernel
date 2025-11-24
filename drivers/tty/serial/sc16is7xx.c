@@ -515,6 +515,21 @@ static int sc16is7xx_set_baud(struct uart_port *port, int baud)
 	 */
 	mutex_lock(&s->efr_lock);
 
+	/* In an amazing feat of design, the Enhanced Features Register shares
+	 * the address of the Interrupt Identification Register, and is
+	 * switched in by writing a magic value (0xbf) to the Line Control
+	 * Register. Any interrupt firing during this time will see the EFR
+	 * where it expects the IIR to be, leading to "Unexpected interrupt"
+	 * messages.
+	 *
+	 * Prevent this possibility by claiming a mutex while accessing the
+	 * EFR, and claiming the same mutex from within the interrupt handler.
+	 * This is similar to disabling the interrupt, but that doesn't work
+	 * because the bulk of the interrupt processing is run as a workqueue
+	 * job in thread context.
+	 */
+	mutex_lock(&s->efr_lock);
+
 	lcr = sc16is7xx_port_read(port, SC16IS7XX_LCR_REG);
 
 	/* Open the LCR divisors for configuration */
@@ -529,6 +544,8 @@ static int sc16is7xx_set_baud(struct uart_port *port, int baud)
 
 	/* Put LCR back to the normal mode */
 	sc16is7xx_port_write(port, SC16IS7XX_LCR_REG, lcr);
+
+	mutex_unlock(&s->efr_lock);
 
 	mutex_unlock(&s->efr_lock);
 
@@ -924,6 +941,9 @@ static void sc16is7xx_set_termios(struct uart_port *port,
 	/* As above, claim the mutex while accessing the EFR. */
 	mutex_lock(&s->efr_lock);
 
+	/* As above, claim the mutex while accessing the EFR. */
+	mutex_lock(&s->efr_lock);
+
 	sc16is7xx_port_write(port, SC16IS7XX_LCR_REG,
 			     SC16IS7XX_LCR_CONF_MODE_B);
 
@@ -944,6 +964,8 @@ static void sc16is7xx_set_termios(struct uart_port *port,
 
 	/* Update LCR register */
 	sc16is7xx_port_write(port, SC16IS7XX_LCR_REG, lcr);
+
+	mutex_unlock(&s->efr_lock);
 
 	mutex_unlock(&s->efr_lock);
 

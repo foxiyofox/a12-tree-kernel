@@ -42,6 +42,10 @@
 # define RUSAGE_THREAD 1
 #endif
 
+#ifndef RUSAGE_THREAD
+# define RUSAGE_THREAD 1
+#endif
+
 /*
  * Regular printout to the terminal, supressed if -q is specified:
  */

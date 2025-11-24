@@ -1021,7 +1021,7 @@ static u64 haswell_get_tohm(struct sbridge_pvt *pvt)
 	pci_read_config_dword(pvt->info.pci_vtd, HASWELL_TOHM_1, &reg);
 	rc = ((reg << 6) | rc) << 26;
 
-	return rc | 0x1ffffff;
+	return rc | 0x3ffffff;
 }
 
 static u64 knl_get_tolm(struct sbridge_pvt *pvt)
@@ -3050,6 +3050,22 @@ static int sbridge_mce_check_error(struct notifier_block *nb, unsigned long val,
 	 * bit 12 has an special meaning.
 	 */
 	if ((mce->status & 0xefff) >> 7 != 1)
+		return NOTIFY_DONE;
+
+	/* Check ADDRV bit in STATUS */
+	if (!GET_BITFIELD(mce->status, 58, 58))
+		return NOTIFY_DONE;
+
+	/* Check MISCV bit in STATUS */
+	if (!GET_BITFIELD(mce->status, 59, 59))
+		return NOTIFY_DONE;
+
+	/* Check address type in MISC (physical address only) */
+	if (GET_BITFIELD(mce->misc, 6, 8) != 2)
+		return NOTIFY_DONE;
+
+	mci = get_mci_for_node_id(mce->socketid, IMC0);
+	if (!mci)
 		return NOTIFY_DONE;
 
 	/* Check ADDRV bit in STATUS */

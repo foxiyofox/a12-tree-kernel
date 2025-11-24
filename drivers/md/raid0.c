@@ -29,6 +29,9 @@
 static int default_layout = 0;
 module_param(default_layout, int, 0644);
 
+static int default_layout = 0;
+module_param(default_layout, int, 0644);
+
 #define UNSUPPORTED_MDDEV_FLAGS		\
 	((1L << MD_HAS_JOURNAL) |	\
 	 (1L << MD_JOURNAL_CLEAN) |	\

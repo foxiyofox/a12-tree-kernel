@@ -1128,6 +1128,7 @@ static void reg_w_i(struct gspca_dev *gspca_dev, u16 reg, u8 val)
 	if (ret < 0) {
 		pr_err("reg_w failed %d\n", ret);
 		gspca_dev->usb_err = ret;
+		return 0;
 	}
 }
 

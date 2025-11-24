@@ -59,6 +59,9 @@ struct ti_ads7950_state {
 	/* Lock to protect the spi xfer buffers */
 	struct mutex		slock;
 
+	/* Lock to protect the spi xfer buffers */
+	struct mutex		slock;
+
 	struct regulator	*reg;
 	unsigned int		vref_mv;
 

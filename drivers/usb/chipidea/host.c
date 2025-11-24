@@ -153,6 +153,7 @@ static int host_start(struct ci_hdrc *ci)
 		} else {
 			priv->reg_vbus = ci->platdata->reg_vbus;
 		}
+		priv->enabled = enable;
 	}
 
 	ret = usb_add_hcd(hcd, 0, 0);

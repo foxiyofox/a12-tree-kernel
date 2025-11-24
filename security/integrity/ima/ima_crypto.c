@@ -385,6 +385,8 @@ static int ima_calc_file_shash(struct file *file, struct ima_digest_data *hash)
 {
 	struct crypto_shash *tfm;
 	int rc;
+	struct file *f = file;
+	bool new_file_instance = false;
 
 	tfm = ima_alloc_tfm(hash->algo);
 	if (IS_ERR(tfm))
@@ -651,7 +653,7 @@ int ima_calc_buffer_hash(const void *buf, loff_t len,
 	return calc_buffer_shash(buf, len, hash);
 }
 
-static void __init ima_pcrread(int idx, u8 *pcr)
+static void ima_pcrread(int idx, u8 *pcr)
 {
 	if (!ima_tpm_chip)
 		return;
@@ -663,8 +665,8 @@ static void __init ima_pcrread(int idx, u8 *pcr)
 /*
  * Calculate the boot aggregate hash
  */
-static int __init ima_calc_boot_aggregate_tfm(char *digest,
-					      struct crypto_shash *tfm)
+static int ima_calc_boot_aggregate_tfm(char *digest,
+				       struct crypto_shash *tfm)
 {
 	u8 pcr_i[TPM_DIGEST_SIZE];
 	int rc, i;
@@ -682,13 +684,15 @@ static int __init ima_calc_boot_aggregate_tfm(char *digest,
 		ima_pcrread(i, pcr_i);
 		/* now accumulate with current aggregate */
 		rc = crypto_shash_update(shash, pcr_i, TPM_DIGEST_SIZE);
+		if (rc != 0)
+			return rc;
 	}
 	if (!rc)
 		crypto_shash_final(shash, digest);
 	return rc;
 }
 
-int __init ima_calc_boot_aggregate(struct ima_digest_data *hash)
+int ima_calc_boot_aggregate(struct ima_digest_data *hash)
 {
 	struct crypto_shash *tfm;
 	int rc;

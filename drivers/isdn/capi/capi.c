@@ -691,6 +691,9 @@ capi_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos
 	if (count < CAPIMSG_BASELEN)
 		return -EINVAL;
 
+	if (count < CAPIMSG_BASELEN)
+		return -EINVAL;
+
 	skb = alloc_skb(count, GFP_USER);
 	if (!skb)
 		return -ENOMEM;

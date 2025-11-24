@@ -598,6 +598,7 @@ static void msg_done_handler(struct ssif_info *ssif_info, int result,
 	 * start messing with driver states or the queues.
 	 */
 
+ continue_op:
 	if (result < 0) {
 		ssif_info->retries_left--;
 		if (ssif_info->retries_left > 0) {

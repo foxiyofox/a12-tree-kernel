@@ -256,7 +256,7 @@ void *idr_get_next_ul(struct idr *idr, unsigned long *nextid)
 EXPORT_SYMBOL(idr_get_next_ul);
 
 /**
- * idr_get_next() - Find next populated entry.
+ * idr_get_next_ul() - Find next populated entry.
  * @idr: IDR handle.
  * @nextid: Pointer to an ID.
  *

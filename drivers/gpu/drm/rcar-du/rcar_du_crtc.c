@@ -745,7 +745,7 @@ static int rcar_du_crtc_enable_vblank(struct drm_crtc *crtc)
 	rcar_du_crtc_set(rcrtc, DIER, DIER_VBE);
 	rcrtc->vblank_enable = true;
 
-	return 0;
+	return ret;
 }
 
 static void rcar_du_crtc_disable_vblank(struct drm_crtc *crtc)

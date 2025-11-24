@@ -511,6 +511,7 @@ static int smsusb_probe(struct usb_interface *intf,
 	struct usb_device *udev = interface_to_usbdev(intf);
 	char devpath[32];
 	int i, rc;
+	int align = 0;
 
 	pr_info("board id=%lu, interface number %d\n",
 		 id->driver_info,

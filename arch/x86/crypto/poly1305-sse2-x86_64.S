@@ -215,6 +215,12 @@ ENTRY(poly1305_block_sse2)
 	paddq		t3,t1
 	movq		t1,d4
 
+	# Now do a partial reduction mod (2^130)-5, carrying h0 -> h1 -> h2 ->
+	# h3 -> h4 -> h0 -> h1 to get h0,h2,h3,h4 < 2^26 and h1 < 2^26 + a small
+	# amount.  Careful: we must not assume the carry bits 'd0 >> 26',
+	# 'd1 >> 26', 'd2 >> 26', 'd3 >> 26', and '(d4 >> 26) * 5' fit in 32-bit
+	# integers.  It's true in a single-block implementation, but not here.
+
 	# d1 += d0 >> 26
 	mov		d0,%rax
 	shr		$26,%rax

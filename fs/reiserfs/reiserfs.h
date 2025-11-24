@@ -1170,6 +1170,8 @@ static inline int bmap_would_wrap(unsigned bmap_nr)
 
 extern const struct xattr_handler *reiserfs_xattr_handlers[];
 
+extern const struct xattr_handler *reiserfs_xattr_handlers[];
+
 /*
  * this says about version of key of all items (but stat data) the
  * object consists of

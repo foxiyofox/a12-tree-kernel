@@ -1178,6 +1178,15 @@ static int cec_pin_adap_transmit(struct cec_adapter *adap, u8 attempts,
 	    signal_free_time > CEC_SIGNAL_FREE_TIME_NEW_INITIATOR)
 		signal_free_time = CEC_SIGNAL_FREE_TIME_NEW_INITIATOR;
 
+	/*
+	 * If a receive is in progress, then this transmit should use
+	 * a signal free time of max CEC_SIGNAL_FREE_TIME_NEW_INITIATOR
+	 * since when it starts transmitting it will have a new initiator.
+	 */
+	if (pin->state != CEC_ST_IDLE &&
+	    signal_free_time > CEC_SIGNAL_FREE_TIME_NEW_INITIATOR)
+		signal_free_time = CEC_SIGNAL_FREE_TIME_NEW_INITIATOR;
+
 	pin->tx_signal_free_time = signal_free_time;
 	pin->tx_extra_bytes = 0;
 	pin->tx_msg = *msg;

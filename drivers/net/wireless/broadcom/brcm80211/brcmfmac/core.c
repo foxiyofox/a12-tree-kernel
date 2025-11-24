@@ -438,7 +438,7 @@ static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
 	ret = brcmf_proto_hdrpull(drvr, true, skb, ifp);
 
 	if (ret || !(*ifp) || !(*ifp)->ndev) {
-		if (ret != -ENODATA && *ifp)
+		if (ret != -ENODATA && *ifp && (*ifp)->ndev)
 			(*ifp)->ndev->stats.rx_errors++;
 		brcmu_pkt_buf_free_skb(skb);
 		return -ENODATA;
@@ -655,6 +655,10 @@ void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on)
 		if (netif_carrier_ok(ndev))
 			netif_carrier_off(ndev);
 	}
+
+	drvr->iflist[bsscfgidx] = NULL;
+	if (drvr->if2bss[ifidx] == bsscfgidx)
+		drvr->if2bss[ifidx] = BRCMF_BSSIDX_INVALID;
 }
 
 static int brcmf_net_p2p_open(struct net_device *ndev)
@@ -1244,6 +1248,13 @@ void brcmf_detach(struct device *dev)
 		brcmf_p2p_detach(&drvr->config->p2p);
 
 	brcmf_bus_change_state(bus_if, BRCMF_BUS_DOWN);
+
+	brcmf_proto_detach_pre_delif(drvr);
+
+	if (drvr->mon_if) {
+		brcmf_net_detach(drvr->mon_if->ndev, false);
+		drvr->mon_if = NULL;
+	}
 
 	brcmf_proto_detach_pre_delif(drvr);
 

@@ -603,6 +603,9 @@ static void msm_start_rx_dma(struct msm_port *msm_port)
 	u32 val;
 	int ret;
 
+	if (IS_ENABLED(CONFIG_CONSOLE_POLL))
+		return;
+
 	if (!dma->chan)
 		return;
 
@@ -1163,6 +1166,7 @@ static int msm_set_baud_rate(struct uart_port *port, unsigned int baud,
 static void msm_init_clock(struct uart_port *port)
 {
 	struct msm_port *msm_port = UART_TO_MSM(port);
+	unsigned int mr;
 
 	clk_prepare_enable(msm_port->clk);
 	clk_prepare_enable(msm_port->pclk);

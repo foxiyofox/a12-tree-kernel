@@ -644,6 +644,9 @@ static int __die_walk_instances_cb(Dwarf_Die *inst, void *data)
 	if (!die_is_func_instance(inst))
 		return DIE_FIND_CB_CONTINUE;
 
+	if (!die_is_func_instance(inst))
+		return DIE_FIND_CB_CONTINUE;
+
 	attr = dwarf_attr(inst, DW_AT_abstract_origin, &attr_mem);
 	if (attr == NULL)
 		return DIE_FIND_CB_CONTINUE;

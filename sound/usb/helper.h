@@ -34,4 +34,8 @@ static inline int snd_usb_ctrl_intf(struct snd_usb_audio *chip)
 bool snd_usb_validate_audio_desc(void *p, int protocol);
 bool snd_usb_validate_midi_desc(void *p);
 
+/* in validate.c */
+bool snd_usb_validate_audio_desc(void *p, int protocol);
+bool snd_usb_validate_midi_desc(void *p);
+
 #endif /* __USBAUDIO_HELPER_H */

@@ -417,6 +417,21 @@ void __unwind_start(struct unwind_state *state, struct task_struct *task,
 		bp = ((unsigned long *)kernel_stack_pointer(regs)) - 1;
 	}
 
+	/*
+	 * If we crash with IP==0, the last successfully executed instruction
+	 * was probably an indirect function call with a NULL function pointer.
+	 * That means that SP points into the middle of an incomplete frame:
+	 * *SP is a return pointer, and *(SP-sizeof(unsigned long)) is where we
+	 * would have written a frame pointer if we hadn't crashed.
+	 * Pretend that the frame is complete and that BP points to it, but save
+	 * the real BP so that we can use it when looking for the next frame.
+	 */
+	if (regs && regs->ip == 0 &&
+	    (unsigned long *)kernel_stack_pointer(regs) >= first_frame) {
+		state->next_bp = bp;
+		bp = ((unsigned long *)kernel_stack_pointer(regs)) - 1;
+	}
+
 	/* Initialize stack info and make sure the frame data is accessible: */
 	get_stack_info(bp, state->task, &state->stack_info,
 		       &state->stack_mask);

@@ -81,7 +81,7 @@ static int nf_ip6_reroute(struct sk_buff *skb,
 		if (!ipv6_addr_equal(&iph->daddr, &rt_info->daddr) ||
 		    !ipv6_addr_equal(&iph->saddr, &rt_info->saddr) ||
 		    skb->mark != rt_info->mark)
-			return ip6_route_me_harder(entry->state.net, skb);
+			return ip6_route_me_harder(entry->state.net, entry->state.sk, skb);
 	}
 	return 0;
 }

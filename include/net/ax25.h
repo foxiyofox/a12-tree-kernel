@@ -213,6 +213,18 @@ static inline void ax25_route_lock_unuse(void)
 	read_unlock(&ax25_route_lock);
 }
 
+extern rwlock_t ax25_route_lock;
+
+static inline void ax25_route_lock_use(void)
+{
+	read_lock(&ax25_route_lock);
+}
+
+static inline void ax25_route_lock_unuse(void)
+{
+	read_unlock(&ax25_route_lock);
+}
+
 static inline void ax25_put_route(ax25_route *ax25_rt)
 {
 	if (refcount_dec_and_test(&ax25_rt->refcount))

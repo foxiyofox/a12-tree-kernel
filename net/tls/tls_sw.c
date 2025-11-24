@@ -630,6 +630,12 @@ static struct sk_buff *tls_wait_data(struct sock *sk, int flags,
 			return NULL;
 		}
 
+		if (!skb_queue_empty(&sk->sk_receive_queue)) {
+			__strp_unpause(&ctx->strp);
+			if (ctx->recv_pkt)
+				return ctx->recv_pkt;
+		}
+
 		if (sk->sk_shutdown & RCV_SHUTDOWN)
 			return NULL;
 
@@ -1119,6 +1125,9 @@ void tls_sw_release_resources_rx(struct sock *sk)
 {
 	struct tls_context *tls_ctx = tls_get_ctx(sk);
 	struct tls_sw_context_rx *ctx = tls_sw_ctx_rx(tls_ctx);
+
+	kfree(tls_ctx->rx.rec_seq);
+	kfree(tls_ctx->rx.iv);
 
 	kfree(tls_ctx->rx.rec_seq);
 	kfree(tls_ctx->rx.iv);

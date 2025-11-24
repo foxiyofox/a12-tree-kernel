@@ -130,6 +130,7 @@ static int save_trace(struct stackframe *frame, void *d)
 
 	return trace->nr_entries >= trace->max_entries;
 }
+NOKPROBE_SYMBOL(unwind_frame);
 
 void save_stack_trace_regs(struct pt_regs *regs, struct stack_trace *trace)
 {
@@ -150,6 +151,7 @@ void save_stack_trace_regs(struct pt_regs *regs, struct stack_trace *trace)
 	if (trace->nr_entries < trace->max_entries)
 		trace->entries[trace->nr_entries++] = ULONG_MAX;
 }
+NOKPROBE_SYMBOL(walk_stackframe);
 
 static noinline void __save_stack_trace(struct task_struct *tsk,
 	struct stack_trace *trace, unsigned int nosched)

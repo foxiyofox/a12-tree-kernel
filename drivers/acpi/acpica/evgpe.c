@@ -176,6 +176,10 @@ acpi_ev_add_gpe_reference(struct acpi_gpe_event_info *gpe_event_info,
 			(void)acpi_hw_clear_gpe(gpe_event_info);
 		}
 
+		if (clear_on_enable) {
+			(void)acpi_hw_clear_gpe(gpe_event_info);
+		}
+
 		status = acpi_ev_update_gpe_enable_mask(gpe_event_info);
 		if (ACPI_SUCCESS(status)) {
 			status = acpi_ev_enable_gpe(gpe_event_info);

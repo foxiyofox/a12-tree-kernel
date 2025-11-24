@@ -200,3 +200,7 @@
 &twl_keypad {
 	status = "disabled";
 };
+
+&twl_keypad {
+	status = "disabled";
+};

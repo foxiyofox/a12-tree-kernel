@@ -179,7 +179,7 @@ static void ff400_dump_sync_status(struct snd_ff *ff,
 	int err;
 
 	err = snd_fw_transaction(ff->unit, TCODE_READ_QUADLET_REQUEST,
-				 FF400_SYNC_STATUS, &reg, sizeof(reg), 0);
+				 FF400_CLOCK_CONFIG, &reg, sizeof(reg), 0);
 	if (err < 0)
 		return;
 

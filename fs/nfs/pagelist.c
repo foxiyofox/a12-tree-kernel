@@ -132,8 +132,43 @@ nfs_async_iocounter_wait(struct rpc_task *task, struct nfs_lock_context *l_ctx)
 EXPORT_SYMBOL_GPL(nfs_async_iocounter_wait);
 
 /*
+ * nfs_page_set_headlock - set the request PG_HEADLOCK
+ * @req: request that is to be locked
+ *
+ * this lock must be held when modifying req->wb_head
+ *
+ * return 0 on success, < 0 on error
+ */
+int
+nfs_page_set_headlock(struct nfs_page *req)
+{
+	if (!test_and_set_bit(PG_HEADLOCK, &req->wb_flags))
+		return 0;
+
+	set_bit(PG_CONTENDED1, &req->wb_flags);
+	smp_mb__after_atomic();
+	return wait_on_bit_lock(&req->wb_flags, PG_HEADLOCK,
+				TASK_UNINTERRUPTIBLE);
+}
+
+/*
+ * nfs_page_clear_headlock - clear the request PG_HEADLOCK
+ * @req: request that is to be locked
+ */
+void
+nfs_page_clear_headlock(struct nfs_page *req)
+{
+	smp_mb__before_atomic();
+	clear_bit(PG_HEADLOCK, &req->wb_flags);
+	smp_mb__after_atomic();
+	if (!test_bit(PG_CONTENDED1, &req->wb_flags))
+		return;
+	wake_up_bit(&req->wb_flags, PG_HEADLOCK);
+}
+
+/*
  * nfs_page_group_lock - lock the head of the page group
- * @req - request in group that is to be locked
+ * @req: request in group that is to be locked
  *
  * this lock must be held when traversing or modifying the page
  * group list
@@ -143,36 +178,24 @@ EXPORT_SYMBOL_GPL(nfs_async_iocounter_wait);
 int
 nfs_page_group_lock(struct nfs_page *req)
 {
-	struct nfs_page *head = req->wb_head;
+	int ret;
 
-	WARN_ON_ONCE(head != head->wb_head);
-
-	if (!test_and_set_bit(PG_HEADLOCK, &head->wb_flags))
-		return 0;
-
-	set_bit(PG_CONTENDED1, &head->wb_flags);
-	smp_mb__after_atomic();
-	return wait_on_bit_lock(&head->wb_flags, PG_HEADLOCK,
-				TASK_UNINTERRUPTIBLE);
+	ret = nfs_page_set_headlock(req);
+	if (ret || req->wb_head == req)
+		return ret;
+	return nfs_page_set_headlock(req->wb_head);
 }
 
 /*
  * nfs_page_group_unlock - unlock the head of the page group
- * @req - request in group that is to be unlocked
+ * @req: request in group that is to be unlocked
  */
 void
 nfs_page_group_unlock(struct nfs_page *req)
 {
-	struct nfs_page *head = req->wb_head;
-
-	WARN_ON_ONCE(head != head->wb_head);
-
-	smp_mb__before_atomic();
-	clear_bit(PG_HEADLOCK, &head->wb_flags);
-	smp_mb__after_atomic();
-	if (!test_bit(PG_CONTENDED1, &head->wb_flags))
-		return;
-	wake_up_bit(&head->wb_flags, PG_HEADLOCK);
+	if (req != req->wb_head)
+		nfs_page_clear_headlock(req->wb_head);
+	nfs_page_clear_headlock(req);
 }
 
 /*
@@ -865,15 +888,6 @@ static void nfs_pageio_setup_mirroring(struct nfs_pageio_descriptor *pgio,
 	pgio->pg_mirror_count = mirror_count;
 }
 
-/*
- * nfs_pageio_stop_mirroring - stop using mirroring (set mirror count to 1)
- */
-void nfs_pageio_stop_mirroring(struct nfs_pageio_descriptor *pgio)
-{
-	pgio->pg_mirror_count = 1;
-	pgio->pg_mirror_idx = 0;
-}
-
 static void nfs_pageio_cleanup_mirroring(struct nfs_pageio_descriptor *pgio)
 {
 	pgio->pg_mirror_count = 1;
@@ -1072,6 +1086,10 @@ out_cleanup_subreq:
 	if (req != subreq)
 		nfs_pageio_cleanup_request(desc, subreq);
 	return 0;
+out_cleanup_subreq:
+	if (req != subreq)
+		nfs_pageio_cleanup_request(desc, subreq);
+	return 0;
 }
 
 static int nfs_do_recoalesce(struct nfs_pageio_descriptor *desc)
@@ -1081,7 +1099,6 @@ static int nfs_do_recoalesce(struct nfs_pageio_descriptor *desc)
 
 	do {
 		list_splice_init(&mirror->pg_list, &head);
-		mirror->pg_bytes_written -= mirror->pg_count;
 		mirror->pg_count = 0;
 		mirror->pg_base = 0;
 		mirror->pg_recoalesce = 0;
@@ -1118,6 +1135,21 @@ static int nfs_pageio_add_request_mirror(struct nfs_pageio_descriptor *desc,
 	} while (ret);
 
 	return ret;
+}
+
+static void nfs_pageio_error_cleanup(struct nfs_pageio_descriptor *desc)
+{
+	u32 midx;
+	struct nfs_pgio_mirror *mirror;
+
+	if (!desc->pg_error)
+		return;
+
+	for (midx = 0; midx < desc->pg_mirror_count; midx++) {
+		mirror = &desc->pg_mirrors[midx];
+		desc->pg_completion_ops->error_cleanup(&mirror->pg_list,
+				desc->pg_error);
+	}
 }
 
 static void nfs_pageio_error_cleanup(struct nfs_pageio_descriptor *desc)
@@ -1300,6 +1332,14 @@ void nfs_pageio_cond_complete(struct nfs_pageio_descriptor *desc, pgoff_t index)
 			}
 		}
 	}
+}
+
+/*
+ * nfs_pageio_stop_mirroring - stop using mirroring (set mirror count to 1)
+ */
+void nfs_pageio_stop_mirroring(struct nfs_pageio_descriptor *pgio)
+{
+	nfs_pageio_complete(pgio);
 }
 
 int __init nfs_init_nfspagecache(void)

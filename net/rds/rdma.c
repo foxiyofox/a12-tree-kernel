@@ -254,7 +254,7 @@ static int __rds_rdma_map(struct rds_sock *rs, struct rds_get_mr_args *args,
 	sg = kcalloc(nents, sizeof(*sg), GFP_KERNEL);
 	if (!sg) {
 		ret = -ENOMEM;
-		goto out;
+		goto out_pages;
 	}
 	WARN_ON(!nents);
 	sg_init_table(sg, nents);

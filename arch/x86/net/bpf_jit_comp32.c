@@ -119,6 +119,8 @@ static bool is_simm32(s64 value)
 
 #define COND_JMP_OPCODE_INVALID	(0xFF)
 
+#define COND_JMP_OPCODE_INVALID	(0xFF)
+
 /*
  * Map eBPF registers to IA32 32bit registers or stack scratch space.
  *
@@ -1451,6 +1453,75 @@ static u8 get_cond_jmp_opcode(const u8 op, bool is_cmp_lo)
 	return jmp_cond;
 }
 
+static u8 get_cond_jmp_opcode(const u8 op, bool is_cmp_lo)
+{
+	u8 jmp_cond;
+
+	/* Convert BPF opcode to x86 */
+	switch (op) {
+	case BPF_JEQ:
+		jmp_cond = IA32_JE;
+		break;
+	case BPF_JSET:
+	case BPF_JNE:
+		jmp_cond = IA32_JNE;
+		break;
+	case BPF_JGT:
+		/* GT is unsigned '>', JA in x86 */
+		jmp_cond = IA32_JA;
+		break;
+	case BPF_JLT:
+		/* LT is unsigned '<', JB in x86 */
+		jmp_cond = IA32_JB;
+		break;
+	case BPF_JGE:
+		/* GE is unsigned '>=', JAE in x86 */
+		jmp_cond = IA32_JAE;
+		break;
+	case BPF_JLE:
+		/* LE is unsigned '<=', JBE in x86 */
+		jmp_cond = IA32_JBE;
+		break;
+	case BPF_JSGT:
+		if (!is_cmp_lo)
+			/* Signed '>', GT in x86 */
+			jmp_cond = IA32_JG;
+		else
+			/* GT is unsigned '>', JA in x86 */
+			jmp_cond = IA32_JA;
+		break;
+	case BPF_JSLT:
+		if (!is_cmp_lo)
+			/* Signed '<', LT in x86 */
+			jmp_cond = IA32_JL;
+		else
+			/* LT is unsigned '<', JB in x86 */
+			jmp_cond = IA32_JB;
+		break;
+	case BPF_JSGE:
+		if (!is_cmp_lo)
+			/* Signed '>=', GE in x86 */
+			jmp_cond = IA32_JGE;
+		else
+			/* GE is unsigned '>=', JAE in x86 */
+			jmp_cond = IA32_JAE;
+		break;
+	case BPF_JSLE:
+		if (!is_cmp_lo)
+			/* Signed '<=', LE in x86 */
+			jmp_cond = IA32_JLE;
+		else
+			/* LE is unsigned '<=', JBE in x86 */
+			jmp_cond = IA32_JBE;
+		break;
+	default: /* to silence GCC warning */
+		jmp_cond = COND_JMP_OPCODE_INVALID;
+		break;
+	}
+
+	return jmp_cond;
+}
+
 static int do_jit(struct bpf_prog *bpf_prog, int *addrs, u8 *image,
 		  int oldproglen, struct jit_context *ctx)
 {
@@ -1683,6 +1754,12 @@ static int do_jit(struct bpf_prog *bpf_prog, int *addrs, u8 *image,
 			i++;
 			break;
 		}
+		/* speculation barrier */
+		case BPF_ST | BPF_NOSPEC:
+			if (boot_cpu_has(X86_FEATURE_XMM2))
+				/* Emit 'lfence' */
+				EMIT3(0x0F, 0xAE, 0xE8);
+			break;
 		/* ST: *(u8*)(dst_reg + off) = imm */
 		case BPF_ST | BPF_MEM | BPF_H:
 		case BPF_ST | BPF_MEM | BPF_B:
@@ -1830,7 +1907,9 @@ static int do_jit(struct bpf_prog *bpf_prog, int *addrs, u8 *image,
 					      STACK_VAR(dst_hi));
 					EMIT(0x0, 4);
 				} else {
-					EMIT3(0xC7, add_1reg(0xC0, dst_hi), 0);
+					/* xor dst_hi,dst_hi */
+					EMIT2(0x33,
+					      add_2reg(0xC0, dst_hi, dst_hi));
 				}
 				break;
 			case BPF_DW:
@@ -1967,7 +2046,10 @@ static int do_jit(struct bpf_prog *bpf_prog, int *addrs, u8 *image,
 			EMIT2(0x39, add_2reg(0xC0, dreg_lo, sreg_lo));
 			goto emit_cond_jmp_signed;
 		}
-		case BPF_JMP | BPF_JSET | BPF_X: {
+		case BPF_JMP | BPF_JSGT | BPF_X:
+		case BPF_JMP | BPF_JSLE | BPF_X:
+		case BPF_JMP | BPF_JSLT | BPF_X:
+		case BPF_JMP | BPF_JSGE | BPF_X: {
 			u8 dreg_lo = dstk ? IA32_EAX : dst_lo;
 			u8 dreg_hi = dstk ? IA32_EDX : dst_hi;
 			u8 sreg_lo = sstk ? IA32_ECX : src_lo;
@@ -1976,8 +2058,45 @@ static int do_jit(struct bpf_prog *bpf_prog, int *addrs, u8 *image,
 			if (dstk) {
 				EMIT3(0x8B, add_2reg(0x40, IA32_EBP, IA32_EAX),
 				      STACK_VAR(dst_lo));
+				EMIT3(0x8B,
+				      add_2reg(0x40, IA32_EBP,
+					       IA32_EDX),
+				      STACK_VAR(dst_hi));
+			}
+
+			if (sstk) {
+				EMIT3(0x8B, add_2reg(0x40, IA32_EBP, IA32_ECX),
+				      STACK_VAR(src_lo));
+				EMIT3(0x8B,
+				      add_2reg(0x40, IA32_EBP,
+					       IA32_EBX),
+				      STACK_VAR(src_hi));
+			}
+
+			/* cmp dreg_hi,sreg_hi */
+			EMIT2(0x39, add_2reg(0xC0, dreg_hi, sreg_hi));
+			EMIT2(IA32_JNE, 10);
+			/* cmp dreg_lo,sreg_lo */
+			EMIT2(0x39, add_2reg(0xC0, dreg_lo, sreg_lo));
+			goto emit_cond_jmp_signed;
+		}
+		case BPF_JMP | BPF_JSET | BPF_X: {
+			u8 dreg_lo = IA32_EAX;
+			u8 dreg_hi = IA32_EDX;
+			u8 sreg_lo = sstk ? IA32_ECX : src_lo;
+			u8 sreg_hi = sstk ? IA32_EBX : src_hi;
+
+			if (dstk) {
+				EMIT3(0x8B, add_2reg(0x40, IA32_EBP, IA32_EAX),
+				      STACK_VAR(dst_lo));
 				EMIT3(0x8B, add_2reg(0x40, IA32_EBP, IA32_EDX),
 				      STACK_VAR(dst_hi));
+			} else {
+				/* mov dreg_lo,dst_lo */
+				EMIT2(0x89, add_2reg(0xC0, dreg_lo, dst_lo));
+				/* mov dreg_hi,dst_hi */
+				EMIT2(0x89,
+				      add_2reg(0xC0, dreg_hi, dst_hi));
 			}
 
 			if (sstk) {
@@ -1996,8 +2115,8 @@ static int do_jit(struct bpf_prog *bpf_prog, int *addrs, u8 *image,
 		}
 		case BPF_JMP | BPF_JSET | BPF_K: {
 			u32 hi;
-			u8 dreg_lo = dstk ? IA32_EAX : dst_lo;
-			u8 dreg_hi = dstk ? IA32_EDX : dst_hi;
+			u8 dreg_lo = IA32_EAX;
+			u8 dreg_hi = IA32_EDX;
 			u8 sreg_lo = IA32_ECX;
 			u8 sreg_hi = IA32_EBX;
 
@@ -2006,6 +2125,12 @@ static int do_jit(struct bpf_prog *bpf_prog, int *addrs, u8 *image,
 				      STACK_VAR(dst_lo));
 				EMIT3(0x8B, add_2reg(0x40, IA32_EBP, IA32_EDX),
 				      STACK_VAR(dst_hi));
+			} else {
+				/* mov dreg_lo,dst_lo */
+				EMIT2(0x89, add_2reg(0xC0, dreg_lo, dst_lo));
+				/* mov dreg_hi,dst_hi */
+				EMIT2(0x89,
+				      add_2reg(0xC0, dreg_hi, dst_hi));
 			}
 			hi = imm32 & (1<<31) ? (u32)~0 : 0;
 
@@ -2187,7 +2312,16 @@ notyet:
 		}
 
 		if (image) {
-			if (unlikely(proglen + ilen > oldproglen)) {
+			/*
+			 * When populating the image, assert that:
+			 *
+			 *  i) We do not write beyond the allocated space, and
+			 * ii) addrs[i] did not change from the prior run, in order
+			 *     to validate assumptions made for computing branch
+			 *     displacements.
+			 */
+			if (unlikely(proglen + ilen > oldproglen ||
+				     proglen + ilen != addrs[i])) {
 				pr_err("bpf_jit: fatal error\n");
 				return -EFAULT;
 			}

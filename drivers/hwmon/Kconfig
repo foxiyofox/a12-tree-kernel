@@ -1788,6 +1788,7 @@ config SENSORS_W83791D
 config SENSORS_W83792D
 	tristate "Winbond W83792D"
 	depends on I2C
+	select REGMAP_I2C
 	help
 	  If you say yes here you get support for the Winbond W83792D chip.
 

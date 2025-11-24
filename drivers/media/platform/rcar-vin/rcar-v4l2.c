@@ -275,7 +275,7 @@ static int rvin_s_fmt_vid_cap(struct file *file, void *priv,
 	vin->compose = compose;
 	vin->source = crop;
 
-	return 0;
+	return ret;
 }
 
 static int rvin_g_fmt_vid_cap(struct file *file, void *priv,

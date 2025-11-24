@@ -185,6 +185,11 @@ static struct sk_buff *cbs_dequeue_soft(struct Qdisc *sch)
 	s64 credits;
 	int len;
 
+	/* The previous packet is still being sent */
+	if (now < q->last) {
+		qdisc_watchdog_schedule_ns(&q->watchdog, q->last);
+		return NULL;
+	}
 	if (q->credits < 0) {
 		credits = timediff_to_credits(now - q->last, q->idleslope);
 
@@ -351,6 +356,58 @@ static int cbs_dev_notifier(struct notifier_block *nb, unsigned long event,
 	return NOTIFY_DONE;
 }
 
+static void cbs_set_port_rate(struct net_device *dev, struct cbs_sched_data *q)
+{
+	struct ethtool_link_ksettings ecmd;
+	int speed = SPEED_10;
+	int port_rate = -1;
+	int err;
+
+	err = __ethtool_get_link_ksettings(dev, &ecmd);
+	if (err < 0)
+		goto skip;
+
+	if (ecmd.base.speed && ecmd.base.speed != SPEED_UNKNOWN)
+		speed = ecmd.base.speed;
+
+skip:
+	port_rate = speed * 1000 * BYTES_PER_KBIT;
+
+	atomic64_set(&q->port_rate, port_rate);
+	netdev_dbg(dev, "cbs: set %s's port_rate to: %lld, linkspeed: %d\n",
+		   dev->name, (long long)atomic64_read(&q->port_rate),
+		   ecmd.base.speed);
+}
+
+static int cbs_dev_notifier(struct notifier_block *nb, unsigned long event,
+			    void *ptr)
+{
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
+	struct cbs_sched_data *q;
+	struct net_device *qdev;
+	bool found = false;
+
+	ASSERT_RTNL();
+
+	if (event != NETDEV_UP && event != NETDEV_CHANGE)
+		return NOTIFY_DONE;
+
+	spin_lock(&cbs_list_lock);
+	list_for_each_entry(q, &cbs_list, cbs_list) {
+		qdev = qdisc_dev(q->qdisc);
+		if (qdev == dev) {
+			found = true;
+			break;
+		}
+	}
+	spin_unlock(&cbs_list_lock);
+
+	if (found)
+		cbs_set_port_rate(dev, q);
+
+	return NOTIFY_DONE;
+}
+
 static int cbs_change(struct Qdisc *sch, struct nlattr *opt,
 		      struct netlink_ext_ack *extack)
 {
@@ -433,6 +490,7 @@ static void cbs_destroy(struct Qdisc *sch)
 {
 	struct cbs_sched_data *q = qdisc_priv(sch);
 	struct net_device *dev = qdisc_dev(sch);
+	int err;
 
 	spin_lock(&cbs_list_lock);
 	list_del(&q->cbs_list);

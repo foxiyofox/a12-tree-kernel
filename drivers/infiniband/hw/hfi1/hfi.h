@@ -156,6 +156,8 @@ extern const struct pci_error_handlers hfi1_pci_err_handler;
 
 extern int num_driver_cntrs;
 
+extern int num_driver_cntrs;
+
 /*
  * First-cut criterion for "device is active" is
  * two thousand dwords combined Tx, Rx traffic per
@@ -1092,6 +1094,8 @@ struct hfi1_devdata {
 	struct sc_config_sizes sc_sizes[SC_MAX];
 
 	char *boardname; /* human readable board info */
+
+	u64 ctx0_seq_drop;
 
 	u64 ctx0_seq_drop;
 

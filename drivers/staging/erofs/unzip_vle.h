@@ -224,5 +224,4 @@ extern int z_erofs_vle_unzip_vmap(struct page **compressed_pages,
 	unsigned clusterpages, void *vaddr, unsigned llen,
 	unsigned short pageofs, bool overlapped);
 
-#endif
 

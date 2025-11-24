@@ -188,6 +188,21 @@ static struct pernet_operations tee_net_ops = {
 	.size = sizeof(struct tee_net),
 };
 
+static int __net_init tee_net_init(struct net *net)
+{
+	struct tee_net *tn = net_generic(net, tee_net_id);
+
+	INIT_LIST_HEAD(&tn->priv_list);
+	mutex_init(&tn->lock);
+	return 0;
+}
+
+static struct pernet_operations tee_net_ops = {
+	.init = tee_net_init,
+	.id   = &tee_net_id,
+	.size = sizeof(struct tee_net),
+};
+
 static struct notifier_block tee_netdev_notifier = {
 	.notifier_call = tee_netdev_event,
 };

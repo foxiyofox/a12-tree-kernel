@@ -546,6 +546,7 @@ static int vidioc_enum_input(struct file *file, void *priv,
 static int vidioc_g_input(struct file *file, void *priv, unsigned int *input)
 {
 	struct usb_usbvision *usbvision = video_drvdata(file);
+	int r;
 
 	*input = usbvision->ctl_input;
 	return 0;
@@ -1032,6 +1033,7 @@ static int usbvision_mmap(struct file *file, struct vm_area_struct *vma)
 	void *pos;
 	u32 i;
 	struct usb_usbvision *usbvision = video_drvdata(file);
+	int r;
 
 	PDEBUG(DBG_MMAP, "mmap");
 

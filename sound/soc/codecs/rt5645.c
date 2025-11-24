@@ -3656,6 +3656,12 @@ static const struct rt5645_platform_data asus_t100ha_platform_data = {
 	.inv_jd1_1 = true,
 };
 
+static const struct rt5645_platform_data asus_t101ha_platform_data = {
+	.dmic1_data_pin = RT5645_DMIC_DATA_IN2N,
+	.dmic2_data_pin = RT5645_DMIC2_DISABLE,
+	.jd_mode = 3,
+};
+
 static const struct rt5645_platform_data lenovo_ideapad_miix_310_pdata = {
 	.jd_mode = 3,
 	.in2_diff = true,
@@ -3663,6 +3669,11 @@ static const struct rt5645_platform_data lenovo_ideapad_miix_310_pdata = {
 
 static const struct rt5645_platform_data jd_mode3_platform_data = {
 	.jd_mode = 3,
+};
+
+static const struct rt5645_platform_data lattepanda_board_platform_data = {
+	.jd_mode = 2,
+	.inv_jd1_1 = true
 };
 
 static const struct rt5645_platform_data lattepanda_board_platform_data = {
@@ -3734,6 +3745,14 @@ static const struct dmi_system_id dmi_platform_data[] = {
 		.driver_data = (void *)&asus_t100ha_platform_data,
 	},
 	{
+		.ident = "ASUS T101HA",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
+			DMI_MATCH(DMI_PRODUCT_NAME, "T101HA"),
+		},
+		.driver_data = (void *)&asus_t101ha_platform_data,
+	},
+	{
 		.ident = "MINIX Z83-4",
 		.matches = {
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "MINIX"),
@@ -3766,6 +3785,15 @@ static const struct dmi_system_id dmi_platform_data[] = {
 		  DMI_EXACT_MATCH(DMI_PRODUCT_VERSION, "Lenovo MIIX 320-10ICR"),
 		},
 		.driver_data = (void *)&intel_braswell_platform_data,
+	},
+	{
+		.ident = "LattePanda board",
+		.matches = {
+		  DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "AMI Corporation"),
+		  DMI_EXACT_MATCH(DMI_BOARD_NAME, "Cherry Trail CR"),
+		  DMI_EXACT_MATCH(DMI_BOARD_VERSION, "Default string"),
+		},
+		.driver_data = (void *)&lattepanda_board_platform_data,
 	},
 	{
 		.ident = "LattePanda board",

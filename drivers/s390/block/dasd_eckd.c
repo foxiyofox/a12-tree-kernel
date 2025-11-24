@@ -971,7 +971,6 @@ static unsigned char dasd_eckd_path_access(void *conf_data, int conf_len)
 static void dasd_eckd_clear_conf_data(struct dasd_device *device)
 {
 	struct dasd_eckd_private *private = device->private;
-	int i;
 
 	private->conf_data = NULL;
 	private->conf_len = 0;
@@ -4454,6 +4453,14 @@ static int dasd_symm_io(struct dasd_device *device, void __user *argp)
 			goto out;
 		usrparm.psf_data &= 0x7fffffffULL;
 		usrparm.rssd_result &= 0x7fffffffULL;
+	}
+	/* at least 2 bytes are accessed and should be allocated */
+	if (usrparm.psf_data_len < 2) {
+		DBF_DEV_EVENT(DBF_WARNING, device,
+			      "Symmetrix ioctl invalid data length %d",
+			      usrparm.psf_data_len);
+		rc = -EINVAL;
+		goto out;
 	}
 	/* at least 2 bytes are accessed and should be allocated */
 	if (usrparm.psf_data_len < 2) {

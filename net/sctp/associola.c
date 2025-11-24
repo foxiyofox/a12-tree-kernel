@@ -254,6 +254,10 @@ static struct sctp_association *sctp_association_init(
 	asoc->pathmtu = sp->pathmtu;
 	sctp_assoc_update_frag_point(asoc);
 
+	/* Initialize default path MTU. */
+	asoc->pathmtu = sp->pathmtu;
+	sctp_assoc_update_frag_point(asoc);
+
 	/* Assume that peer would support both address types unless we are
 	 * told otherwise.
 	 */
@@ -587,6 +591,10 @@ void sctp_assoc_rm_peer(struct sctp_association *asoc,
 					jiffies + active->rto))
 				sctp_transport_hold(active);
 	}
+
+	list_for_each_entry(ch, &asoc->outqueue.out_chunk_list, list)
+		if (ch->transport == peer)
+			ch->transport = NULL;
 
 	list_for_each_entry(ch, &asoc->outqueue.out_chunk_list, list)
 		if (ch->transport == peer)
@@ -1593,12 +1601,15 @@ void sctp_assoc_rwnd_decrease(struct sctp_association *asoc, unsigned int len)
 int sctp_assoc_set_bind_addr_from_ep(struct sctp_association *asoc,
 				     enum sctp_scope scope, gfp_t gfp)
 {
+	struct sock *sk = asoc->base.sk;
 	int flags;
 
 	/* Use scoping rules to determine the subset of addresses from
 	 * the endpoint.
 	 */
-	flags = (PF_INET6 == asoc->base.sk->sk_family) ? SCTP_ADDR6_ALLOWED : 0;
+	flags = (PF_INET6 == sk->sk_family) ? SCTP_ADDR6_ALLOWED : 0;
+	if (!inet_v6_ipv6only(sk))
+		flags |= SCTP_ADDR4_ALLOWED;
 	if (asoc->peer.ipv4_address)
 		flags |= SCTP_ADDR4_PEERSUPP;
 	if (asoc->peer.ipv6_address)

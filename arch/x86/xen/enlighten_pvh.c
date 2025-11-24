@@ -14,6 +14,8 @@
 #include <xen/interface/memory.h>
 #include <xen/interface/hvm/start_info.h>
 
+#include "xen-ops.h"
+
 /*
  * PVH variables.
  *

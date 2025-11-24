@@ -991,6 +991,62 @@ static void hns_dsaf_tcam_mc_cfg_vague(struct dsaf_device *dsaf_dev,
 }
 
 /**
+ * hns_dsaf_tcam_uc_cfg_vague - INT
+ * @dsaf_dev: dsa fabric device struct pointer
+ * @address,
+ * @ptbl_tcam_data,
+ */
+static void hns_dsaf_tcam_uc_cfg_vague(struct dsaf_device *dsaf_dev,
+				       u32 address,
+				       struct dsaf_tbl_tcam_data *tcam_data,
+				       struct dsaf_tbl_tcam_data *tcam_mask,
+				       struct dsaf_tbl_tcam_ucast_cfg *tcam_uc)
+{
+	spin_lock_bh(&dsaf_dev->tcam_lock);
+	hns_dsaf_tbl_tcam_addr_cfg(dsaf_dev, address);
+	hns_dsaf_tbl_tcam_data_cfg(dsaf_dev, tcam_data);
+	hns_dsaf_tbl_tcam_ucast_cfg(dsaf_dev, tcam_uc);
+	hns_dsaf_tbl_tcam_match_cfg(dsaf_dev, tcam_mask);
+	hns_dsaf_tbl_tcam_data_ucast_pul(dsaf_dev);
+
+	/*Restore Match Data*/
+	tcam_mask->tbl_tcam_data_high = 0xffffffff;
+	tcam_mask->tbl_tcam_data_low = 0xffffffff;
+	hns_dsaf_tbl_tcam_match_cfg(dsaf_dev, tcam_mask);
+
+	spin_unlock_bh(&dsaf_dev->tcam_lock);
+}
+
+/**
+ * hns_dsaf_tcam_mc_cfg_vague - INT
+ * @dsaf_dev: dsa fabric device struct pointer
+ * @address,
+ * @ptbl_tcam_data,
+ * @ptbl_tcam_mask
+ * @ptbl_tcam_mcast
+ */
+static void hns_dsaf_tcam_mc_cfg_vague(struct dsaf_device *dsaf_dev,
+				       u32 address,
+				       struct dsaf_tbl_tcam_data *tcam_data,
+				       struct dsaf_tbl_tcam_data *tcam_mask,
+				       struct dsaf_tbl_tcam_mcast_cfg *tcam_mc)
+{
+	spin_lock_bh(&dsaf_dev->tcam_lock);
+	hns_dsaf_tbl_tcam_addr_cfg(dsaf_dev, address);
+	hns_dsaf_tbl_tcam_data_cfg(dsaf_dev, tcam_data);
+	hns_dsaf_tbl_tcam_mcast_cfg(dsaf_dev, tcam_mc);
+	hns_dsaf_tbl_tcam_match_cfg(dsaf_dev, tcam_mask);
+	hns_dsaf_tbl_tcam_data_mcast_pul(dsaf_dev);
+
+	/*Restore Match Data*/
+	tcam_mask->tbl_tcam_data_high = 0xffffffff;
+	tcam_mask->tbl_tcam_data_low = 0xffffffff;
+	hns_dsaf_tbl_tcam_match_cfg(dsaf_dev, tcam_mask);
+
+	spin_unlock_bh(&dsaf_dev->tcam_lock);
+}
+
+/**
  * hns_dsaf_tcam_mc_invld - INT
  * @dsaf_id: dsa fabric id
  * @address
@@ -1544,6 +1600,27 @@ static u16 hns_dsaf_find_empty_mac_entry(struct dsaf_device *dsaf_dev)
 			return i;
 
 		soft_mac_entry++;
+	}
+	return DSAF_INVALID_ENTRY_IDX;
+}
+
+/**
+ * hns_dsaf_find_empty_mac_entry_reverse
+ * search dsa fabric soft empty-entry from the end
+ * @dsaf_dev: dsa fabric device struct pointer
+ */
+static u16 hns_dsaf_find_empty_mac_entry_reverse(struct dsaf_device *dsaf_dev)
+{
+	struct dsaf_drv_priv *priv = hns_dsaf_dev_priv(dsaf_dev);
+	struct dsaf_drv_soft_mac_tbl *soft_mac_entry;
+	int i;
+
+	soft_mac_entry = priv->soft_mac_tbl + (DSAF_TCAM_SUM - 1);
+	for (i = (DSAF_TCAM_SUM - 1); i > 0; i--) {
+		/* search all entry from end to start.*/
+		if (soft_mac_entry->index == DSAF_INVALID_ENTRY_IDX)
+			return i;
+		soft_mac_entry--;
 	}
 	return DSAF_INVALID_ENTRY_IDX;
 }
@@ -2715,6 +2792,9 @@ int hns_dsaf_get_sset_count(struct dsaf_device *dsaf_dev, int stringset)
 		else
 			return DSAF_V2_STATIC_NUM;
 	}
+
+	put_device(&pdev->dev);
+
 	return 0;
 }
 

@@ -155,6 +155,7 @@ struct rxe_req_info {
 
 struct rxe_comp_info {
 	u32			psn;
+	u32			ack_psn;
 	int			opcode;
 	int			timeout;
 	int			timeout_retry;

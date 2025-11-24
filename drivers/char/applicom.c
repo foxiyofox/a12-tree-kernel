@@ -479,6 +479,17 @@ static ssize_t ac_write(struct file *file, const char __user *buf, size_t count,
 	Dummy = readb(apbs[IndexCard].RamIO + VERS);
 	spin_unlock_irqrestore(&apbs[IndexCard].mutex, flags);
 	return 0;
+
+err:
+	if (warncount) {
+		pr_warn("APPLICOM driver IOCTL, bad board number %d\n",
+			(int)IndexCard + 1);
+		warncount--;
+	}
+	kfree(adgl);
+	mutex_unlock(&ac_mutex);
+	return -EINVAL;
+
 }
 
 static int do_ac_read(int IndexCard, char __user *buf,

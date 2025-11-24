@@ -432,6 +432,14 @@ static int mlxsw_sp_port_dcb_app_update(struct mlxsw_sp_port *mlxsw_sp_port)
 		return err;
 	}
 
+	if (!have_dscp) {
+		err = mlxsw_sp_port_dcb_toggle_trust(mlxsw_sp_port,
+					MLXSW_REG_QPTS_TRUST_STATE_PCP);
+		if (err)
+			netdev_err(mlxsw_sp_port->dev, "Couldn't switch to trust L2\n");
+		return err;
+	}
+
 	err = mlxsw_sp_port_dcb_toggle_trust(mlxsw_sp_port,
 					     MLXSW_REG_QPTS_TRUST_STATE_DSCP);
 	if (err) {

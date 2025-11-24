@@ -570,6 +570,9 @@ struct drm_i915_reg_descriptor {
 #define REG32(_reg, ...) \
 	{ .addr = (_reg), __VA_ARGS__ }
 
+#define REG32_IDX(_reg, idx) \
+	{ .addr = _reg(idx) }
+
 /*
  * Convenience macro for adding 64-bit registers.
  *
@@ -763,6 +766,17 @@ static u32 gen7_blt_get_cmd_length_mask(u32 cmd_header)
 	if (client == INSTR_MI_CLIENT)
 		return 0x3F;
 	else if (client == INSTR_BC_CLIENT)
+		return 0xFF;
+
+	DRM_DEBUG_DRIVER("CMD: Abnormal blt cmd length! 0x%08X\n", cmd_header);
+	return 0;
+}
+
+static u32 gen9_blt_get_cmd_length_mask(u32 cmd_header)
+{
+	u32 client = cmd_header >> INSTR_CLIENT_SHIFT;
+
+	if (client == INSTR_MI_CLIENT || client == INSTR_BC_CLIENT)
 		return 0xFF;
 
 	DRM_DEBUG_DRIVER("CMD: Abnormal blt cmd length! 0x%08X\n", cmd_header);
@@ -1338,6 +1352,8 @@ static int check_bbstart(const struct i915_gem_context *ctx,
 			  jump_target);
 		return -EINVAL;
 	}
+
+	init_whitelist(ctx, batch_len);
 
 	/*
 	 * This cannot overflow a u32 because we already checked jump_offset

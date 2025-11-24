@@ -152,6 +152,9 @@ static int _omap4_clkctrl_clk_enable(struct clk_hw *hw)
 	if (!clk->enable_bit)
 		return 0;
 
+	if (!clk->enable_bit)
+		return 0;
+
 	val = ti_clk_ll_ops->clk_readl(&clk->enable_reg);
 
 	val &= ~OMAP4_MODULEMODE_MASK;

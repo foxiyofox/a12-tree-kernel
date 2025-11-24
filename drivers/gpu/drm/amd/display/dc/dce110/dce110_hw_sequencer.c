@@ -1027,6 +1027,9 @@ void dce110_disable_audio_stream(struct pipe_ctx *pipe_ctx, int option)
 			/*only disalbe az_endpoint if power down or free*/
 			pipe_ctx->stream_res.audio->funcs->az_disable(pipe_ctx->stream_res.audio);
 		}
+		if (pp_smu != NULL && pp_smu->set_pme_wa_enable != NULL)
+			/*this is the first audio. apply the PME w/a in order to wake AZ from D3*/
+			pp_smu->set_pme_wa_enable(&pp_smu->pp_smu);
 
 		if (dc_is_dp_signal(pipe_ctx->stream->signal))
 			pipe_ctx->stream_res.stream_enc->funcs->dp_audio_disable(
@@ -2546,6 +2549,8 @@ static void pplib_apply_display_requirements(
 	pp_display_cfg->min_engine_clock_khz = determine_sclk_from_bounding_box(
 			dc,
 			context->bw.dce.sclk_khz);
+
+	pp_display_cfg->min_dcfclock_khz = pp_display_cfg->min_engine_clock_khz;
 
 	pp_display_cfg->min_dcfclock_khz = pp_display_cfg->min_engine_clock_khz;
 

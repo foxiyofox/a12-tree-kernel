@@ -793,6 +793,13 @@ static int i2s_hw_params(struct snd_pcm_substream *substream,
 	if (rclksrc && !IS_ERR(rclksrc))
 		i2s->rclk_srcrate = clk_get_rate(rclksrc);
 
+	rclksrc = i2s->clk_table[CLK_I2S_RCLK_SRC];
+	if (!rclksrc || IS_ERR(rclksrc))
+		rclksrc = other->clk_table[CLK_I2S_RCLK_SRC];
+
+	if (rclksrc && !IS_ERR(rclksrc))
+		i2s->rclk_srcrate = clk_get_rate(rclksrc);
+
 	return 0;
 }
 

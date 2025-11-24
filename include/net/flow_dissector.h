@@ -315,4 +315,12 @@ flow_dissector_init_keys(struct flow_dissector_key_control *key_control,
 	memset(key_basic, 0, sizeof(*key_basic));
 }
 
+static inline void
+flow_dissector_init_keys(struct flow_dissector_key_control *key_control,
+			 struct flow_dissector_key_basic *key_basic)
+{
+	memset(key_control, 0, sizeof(*key_control));
+	memset(key_basic, 0, sizeof(*key_basic));
+}
+
 #endif

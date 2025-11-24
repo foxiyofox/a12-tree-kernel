@@ -500,6 +500,11 @@ struct perf_addr_filter_range {
 	unsigned long		size;
 };
 
+struct perf_addr_filter_range {
+	unsigned long		start;
+	unsigned long		size;
+};
+
 /**
  * enum perf_event_state - the states of an event:
  */
@@ -751,6 +756,11 @@ struct perf_event_context {
 	int				nr_stat;
 	int				nr_freq;
 	int				rotate_disable;
+	/*
+	 * Set when nr_events != nr_active, except tolerant to events not
+	 * necessary to be active due to scheduling constraints, such as cgroups.
+	 */
+	int				rotate_necessary;
 	atomic_t			refcount;
 	struct task_struct		*task;
 
@@ -1037,6 +1047,11 @@ static inline int is_software_event(struct perf_event *event)
 static inline int in_software_context(struct perf_event *event)
 {
 	return event->ctx->pmu->task_ctx_nr == perf_sw_context;
+}
+
+static inline int is_exclusive_pmu(struct pmu *pmu)
+{
+	return pmu->capabilities & PERF_PMU_CAP_EXCLUSIVE;
 }
 
 static inline int is_exclusive_pmu(struct pmu *pmu)

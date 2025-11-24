@@ -270,6 +270,9 @@ is_upper_ndev_bond_master_filter(struct ib_device *ib_dev, u8 port,
 	if (!rdma_ndev)
 		return false;
 
+	if (!rdma_ndev)
+		return false;
+
 	rcu_read_lock();
 	if (netif_is_bond_master(cookie_ndev) &&
 	    rdma_is_upper_dev_rcu(rdma_ndev, cookie_ndev))

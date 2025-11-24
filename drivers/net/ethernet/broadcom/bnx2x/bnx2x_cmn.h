@@ -427,6 +427,8 @@ int bnx2x_init_hw_func_cnic(struct bnx2x *bp);
 
 void bnx2x_clear_vlan_info(struct bnx2x *bp);
 
+void bnx2x_clear_vlan_info(struct bnx2x *bp);
+
 /**
  * bnx2x_sp_event - handle ramrods completion.
  *

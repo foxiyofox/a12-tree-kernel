@@ -421,6 +421,7 @@ void hfsplus_delete_inode(struct inode *inode)
 	} else if (S_ISLNK(inode->i_mode)) {
 		inode->i_size = 0;
 		hfsplus_file_truncate(inode);
+		inode->i_mtime = inode->i_ctime = current_time(inode);
 	}
 	hfsplus_mark_mdb_dirty(sb);
 }

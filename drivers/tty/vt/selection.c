@@ -30,6 +30,8 @@
 
 #include <linux/sched/signal.h>
 
+#include <linux/sched/signal.h>
+
 /* Don't take this from <ctype.h>: 011-015 on the screen aren't spaces */
 #define isspace(c)	((c) == ' ')
 
@@ -83,6 +85,11 @@ void clear_selection(void)
 		highlight(sel_start, sel_end);
 		sel_start = -1;
 	}
+}
+
+bool vc_is_sel(struct vc_data *vc)
+{
+	return vc == sel_cons;
 }
 
 /*

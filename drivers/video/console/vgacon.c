@@ -382,11 +382,6 @@ static void vgacon_scrolldelta(struct vc_data *c, int lines)
 	vga_set_mem_top(c);
 }
 
-static void vgacon_flush_scrollback(struct vc_data *c)
-{
-}
-#endif /* CONFIG_VGACON_SOFT_SCROLLBACK */
-
 static const char *vgacon_startup(void)
 {
 	const char *display_desc = NULL;
@@ -569,10 +564,7 @@ static const char *vgacon_startup(void)
 	vgacon_xres = screen_info.orig_video_cols * VGA_FONTWIDTH;
 	vgacon_yres = vga_scan_lines;
 
-	if (!vga_init_done) {
-		vgacon_scrollback_startup();
-		vga_init_done = true;
-	}
+	vga_init_done = true;
 
 	return display_desc;
 }
@@ -582,11 +574,17 @@ static void vgacon_init(struct vc_data *c, int init)
 	struct uni_pagedir *p;
 
 	/*
-	 * We cannot be loaded as a module, therefore init is always 1,
-	 * but vgacon_init can be called more than once, and init will
-	 * not be 1.
+	 * We cannot be loaded as a module, therefore init will be 1
+	 * if we are the default console, however if we are a fallback
+	 * console, for example if fbcon has failed registration, then
+	 * init will be 0, so we need to make sure our boot parameters
+	 * have been copied to the console structure for vgacon_resize
+	 * ultimately called by vc_resize.  Any subsequent calls to
+	 * vgacon_init init will have init set to 0 too.
 	 */
 	c->vc_can_do_color = vga_can_do_color;
+	c->vc_scan_lines = vga_scan_lines;
+	c->vc_font.height = c->vc_cell_height = vga_video_font_height;
 
 	/* set dimensions manually if init != 0 since vc_resize() will fail */
 	if (init) {
@@ -595,8 +593,6 @@ static void vgacon_init(struct vc_data *c, int init)
 	} else
 		vc_resize(c, vga_video_num_columns, vga_video_num_lines);
 
-	c->vc_scan_lines = vga_scan_lines;
-	c->vc_font.height = vga_video_font_height;
 	c->vc_complement_mask = 0x7700;
 	if (vga_512_chars)
 		c->vc_hi_font_mask = 0x0800;
@@ -729,32 +725,32 @@ static void vgacon_cursor(struct vc_data *c, int mode)
 		switch (c->vc_cursor_type & 0x0f) {
 		case CUR_UNDERLINE:
 			vgacon_set_cursor_size(c->vc_x,
-					       c->vc_font.height -
-					       (c->vc_font.height <
+					       c->vc_cell_height -
+					       (c->vc_cell_height <
 						10 ? 2 : 3),
-					       c->vc_font.height -
-					       (c->vc_font.height <
+					       c->vc_cell_height -
+					       (c->vc_cell_height <
 						10 ? 1 : 2));
 			break;
 		case CUR_TWO_THIRDS:
 			vgacon_set_cursor_size(c->vc_x,
-					       c->vc_font.height / 3,
-					       c->vc_font.height -
-					       (c->vc_font.height <
+					       c->vc_cell_height / 3,
+					       c->vc_cell_height -
+					       (c->vc_cell_height <
 						10 ? 1 : 2));
 			break;
 		case CUR_LOWER_THIRD:
 			vgacon_set_cursor_size(c->vc_x,
-					       (c->vc_font.height * 2) / 3,
-					       c->vc_font.height -
-					       (c->vc_font.height <
+					       (c->vc_cell_height * 2) / 3,
+					       c->vc_cell_height -
+					       (c->vc_cell_height <
 						10 ? 1 : 2));
 			break;
 		case CUR_LOWER_HALF:
 			vgacon_set_cursor_size(c->vc_x,
-					       c->vc_font.height / 2,
-					       c->vc_font.height -
-					       (c->vc_font.height <
+					       c->vc_cell_height / 2,
+					       c->vc_cell_height -
+					       (c->vc_cell_height <
 						10 ? 1 : 2));
 			break;
 		case CUR_NONE:
@@ -765,7 +761,7 @@ static void vgacon_cursor(struct vc_data *c, int mode)
 			break;
 		default:
 			vgacon_set_cursor_size(c->vc_x, 1,
-					       c->vc_font.height);
+					       c->vc_cell_height);
 			break;
 		}
 		break;
@@ -776,13 +772,13 @@ static int vgacon_doresize(struct vc_data *c,
 		unsigned int width, unsigned int height)
 {
 	unsigned long flags;
-	unsigned int scanlines = height * c->vc_font.height;
+	unsigned int scanlines = height * c->vc_cell_height;
 	u8 scanlines_lo = 0, r7 = 0, vsync_end = 0, mode, max_scan;
 
 	raw_spin_lock_irqsave(&vga_lock, flags);
 
 	vgacon_xres = width * VGA_FONTWIDTH;
-	vgacon_yres = height * c->vc_font.height;
+	vgacon_yres = height * c->vc_cell_height;
 	if (vga_video_type >= VIDEO_TYPE_VGAC) {
 		outb_p(VGA_CRTC_MAX_SCAN, vga_video_port_reg);
 		max_scan = inb_p(vga_video_port_val);
@@ -837,9 +833,9 @@ static int vgacon_doresize(struct vc_data *c,
 static int vgacon_switch(struct vc_data *c)
 {
 	int x = c->vc_cols * VGA_FONTWIDTH;
-	int y = c->vc_rows * c->vc_font.height;
+	int y = c->vc_rows * c->vc_cell_height;
 	int rows = screen_info.orig_video_lines * vga_default_font_height/
-		c->vc_font.height;
+		c->vc_cell_height;
 	/*
 	 * We need to save screen size here as it's the only way
 	 * we can spot the screen has been resized and we need to
@@ -863,7 +859,6 @@ static int vgacon_switch(struct vc_data *c)
 			vgacon_doresize(c, c->vc_cols, c->vc_rows);
 	}
 
-	vgacon_scrollback_switch(c->vc_num);
 	return 0;		/* Redrawing not needed */
 }
 
@@ -1271,7 +1266,7 @@ static int vgacon_adjust_height(struct vc_data *vc, unsigned fontheight)
 				cursor_size_lastto = 0;
 				c->vc_sw->con_cursor(c, CM_DRAW);
 			}
-			c->vc_font.height = fontheight;
+			c->vc_font.height = c->vc_cell_height = fontheight;
 			vc_resize(c, 0, rows);	/* Adjust console size */
 		}
 	}
@@ -1380,7 +1375,6 @@ static bool vgacon_scroll(struct vc_data *c, unsigned int t, unsigned int b,
 	oldo = c->vc_origin;
 	delta = lines * c->vc_size_row;
 	if (dir == SM_UP) {
-		vgacon_scrollback_update(c, t, lines);
 		if (c->vc_scr_end + delta >= vga_vram_end) {
 			scr_memcpyw((u16 *) vga_vram_base,
 				    (u16 *) (oldo + delta),
@@ -1444,7 +1438,6 @@ const struct consw vga_con = {
 	.con_save_screen = vgacon_save_screen,
 	.con_build_attr = vgacon_build_attr,
 	.con_invert_region = vgacon_invert_region,
-	.con_flush_scrollback = vgacon_flush_scrollback,
 };
 EXPORT_SYMBOL(vga_con);
 

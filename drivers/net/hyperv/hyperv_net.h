@@ -146,6 +146,8 @@ struct hv_netvsc_packet {
 
 #define NETVSC_HASH_KEYLEN 40
 
+#define NETVSC_HASH_KEYLEN 40
+
 struct netvsc_device_info {
 	unsigned char mac_adr[ETH_ALEN];
 	u32  num_chn;
@@ -932,6 +934,8 @@ struct net_device_context {
 	u32 tx_checksum_mask;
 
 	u32 tx_table[VRSS_SEND_TAB_SIZE];
+
+	u16 rx_table[ITAB_NUM];
 
 	u16 rx_table[ITAB_NUM];
 

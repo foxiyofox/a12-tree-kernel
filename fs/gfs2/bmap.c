@@ -405,6 +405,19 @@ static sector_t metapath_to_block(struct gfs2_sbd *sdp, struct metapath *mp)
 	return block;
 }
 
+static sector_t metapath_to_block(struct gfs2_sbd *sdp, struct metapath *mp)
+{
+	sector_t factor = 1, block = 0;
+	int hgt;
+
+	for (hgt = mp->mp_fheight - 1; hgt >= 0; hgt--) {
+		if (hgt < mp->mp_aheight)
+			block += mp->mp_list[hgt] * factor;
+		factor *= sdp->sd_inptrs;
+	}
+	return block;
+}
+
 static void release_metapath(struct metapath *mp)
 {
 	int i;
@@ -879,10 +892,9 @@ static int gfs2_iomap_get(struct inode *inode, loff_t pos, loff_t length,
 					ret = -ENOENT;
 					goto unlock;
 				} else {
-					/* report a hole */
 					iomap->offset = pos;
 					iomap->length = length;
-					goto do_alloc;
+					goto hole_found;
 				}
 			}
 			iomap->length = size;
@@ -959,6 +971,9 @@ do_alloc:
 		if (pos < size && height == ip->i_height)
 			ret = gfs2_hole_size(inode, lblock, len, mp, iomap);
 	}
+hole_found:
+	iomap->addr = IOMAP_NULL_ADDR;
+	iomap->type = IOMAP_HOLE;
 	goto out;
 }
 

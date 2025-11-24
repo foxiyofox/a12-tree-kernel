@@ -114,6 +114,9 @@ struct afs_cell *afs_lookup_cell_rcu(struct afs_net *net,
 	if (ret != 0 && cell)
 		afs_put_cell(net, cell);
 
+	if (ret != 0 && cell)
+		afs_put_cell(net, cell);
+
 	return ret == 0 ? cell : ERR_PTR(ret);
 }
 

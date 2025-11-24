@@ -530,6 +530,8 @@ struct platform_device *platform_device_register_full(
 
 		kmemleak_ignore(pdev->dev.dma_mask);
 
+		kmemleak_ignore(pdev->dev.dma_mask);
+
 		*pdev->dev.dma_mask = pdevinfo->dma_mask;
 		pdev->dev.coherent_dma_mask = pdevinfo->dma_mask;
 	}
@@ -700,6 +702,8 @@ int __init_or_module __platform_driver_probe(struct platform_driver *drv,
 	/* temporary section violation during probe() */
 	drv->probe = probe;
 	retval = code = __platform_driver_register(drv, module);
+	if (retval)
+		return retval;
 
 	/*
 	 * Fixup that section violation, being paranoid about code scanning

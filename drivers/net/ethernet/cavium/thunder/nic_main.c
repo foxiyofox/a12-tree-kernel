@@ -1175,7 +1175,7 @@ static int nic_register_interrupts(struct nicpf *nic)
 		dev_err(&nic->pdev->dev,
 			"Request for #%d msix vectors failed, returned %d\n",
 			   nic->num_vec, ret);
-		return 1;
+		return ret;
 	}
 
 	/* Register mailbox interrupt handler */
@@ -1440,6 +1440,9 @@ err_disable_device:
 static void nic_remove(struct pci_dev *pdev)
 {
 	struct nicpf *nic = pci_get_drvdata(pdev);
+
+	if (!nic)
+		return;
 
 	if (!nic)
 		return;

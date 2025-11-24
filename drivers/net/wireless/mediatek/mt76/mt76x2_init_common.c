@@ -75,6 +75,9 @@ void mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable)
 	if (!enable)
 		goto out;
 
+	if (!enable)
+		goto out;
+
 	val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
 
 	val &= ~MT_WLAN_FUN_CTRL_FRC_WL_ANT_SEL;

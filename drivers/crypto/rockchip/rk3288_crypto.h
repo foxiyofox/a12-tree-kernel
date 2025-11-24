@@ -238,6 +238,7 @@ struct rk_ahash_ctx {
 struct rk_ahash_rctx {
 	struct ahash_request		fallback_req;
 	u32				mode;
+	u8				iv[AES_BLOCK_SIZE];
 };
 
 /* the private variable of cipher */

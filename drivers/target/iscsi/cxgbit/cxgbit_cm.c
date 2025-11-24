@@ -618,6 +618,13 @@ void cxgbit_free_np(struct iscsi_np *np)
 	}
 	spin_unlock_bh(&cnp->np_accept_lock);
 
+	spin_lock_bh(&cnp->np_accept_lock);
+	list_for_each_entry_safe(csk, tmp, &cnp->np_accept_list, accept_node) {
+		list_del_init(&csk->accept_node);
+		__cxgbit_free_conn(csk);
+	}
+	spin_unlock_bh(&cnp->np_accept_lock);
+
 	np->np_context = NULL;
 	cxgbit_put_cnp(cnp);
 }
@@ -752,6 +759,11 @@ static void __cxgbit_free_conn(struct cxgbit_sock *csk)
 
 	if (release)
 		cxgbit_put_csk(csk);
+}
+
+void cxgbit_free_conn(struct iscsi_conn *conn)
+{
+	__cxgbit_free_conn(conn->context);
 }
 
 void cxgbit_free_conn(struct iscsi_conn *conn)

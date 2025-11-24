@@ -420,6 +420,12 @@ static int hns_roce_table_mhop_get(struct hns_roce_dev *hr_dev,
 		return -EINVAL;
 	}
 
+	if (unlikely(hem_idx >= table->num_hem)) {
+		dev_err(dev, "Table %d exceed hem limt idx = %llu,max = %lu!\n",
+			     table->type, hem_idx, table->num_hem);
+		return -EINVAL;
+	}
+
 	mutex_lock(&table->mutex);
 
 	if (table->hem[hem_idx]) {

@@ -428,6 +428,10 @@ static int iguanair_probe(struct usb_interface *intf,
 	if (idesc->desc.bNumEndpoints < 2)
 		return -ENODEV;
 
+	idesc = intf->cur_altsetting;
+	if (idesc->desc.bNumEndpoints < 2)
+		return -ENODEV;
+
 	ir = kzalloc(sizeof(*ir), GFP_KERNEL);
 	rc = rc_allocate_device(RC_DRIVER_IR_RAW);
 	if (!ir || !rc) {

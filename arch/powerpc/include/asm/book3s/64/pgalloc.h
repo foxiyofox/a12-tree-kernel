@@ -125,6 +125,9 @@ static inline pud_t *pud_alloc_one(struct mm_struct *mm, unsigned long addr)
 
 	pud = kmem_cache_alloc(PGT_CACHE(PUD_CACHE_INDEX),
 			       pgtable_gfp_flags(mm, GFP_KERNEL));
+	if (unlikely(!pgd))
+		return pgd;
+
 	/*
 	 * Tell kmemleak to ignore the PUD, that means don't scan it for
 	 * pointers and don't consider it a leak. PUDs are typically only

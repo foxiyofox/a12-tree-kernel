@@ -47,6 +47,13 @@ static const char *dfl_pdata_key_strings[DFL_ID_MAX] = {
 	"dfl-port-pdata",
 };
 
+static struct lock_class_key dfl_pdata_keys[DFL_ID_MAX];
+
+static const char *dfl_pdata_key_strings[DFL_ID_MAX] = {
+	"dfl-fme-pdata",
+	"dfl-port-pdata",
+};
+
 /**
  * dfl_dev_info - dfl feature device information.
  * @name: name string of the feature platform device.

@@ -348,6 +348,8 @@ static void snapshot_buf(struct msm_rd_state *rd,
 
 	buf += offset;
 
+	buf += offset;
+
 	rd_write_section(rd, RD_BUFFER_CONTENTS, buf, size);
 
 	msm_gem_put_vaddr(&obj->base);

@@ -37,6 +37,9 @@
 #define MMP2_ICU_INT_ROUTE_PJ4_IRQ	(1 << 5)
 #define MMP2_ICU_INT_ROUTE_PJ4_FIQ	(1 << 6)
 
+#define MMP2_ICU_INT_ROUTE_PJ4_IRQ	(1 << 5)
+#define MMP2_ICU_INT_ROUTE_PJ4_FIQ	(1 << 6)
+
 struct icu_chip_data {
 	int			nr_irqs;
 	unsigned int		virq_base;
@@ -187,7 +190,8 @@ const struct irq_domain_ops mmp_irq_domain_ops = {
 static const struct mmp_intc_conf mmp_conf = {
 	.conf_enable	= 0x51,
 	.conf_disable	= 0x0,
-	.conf_mask	= 0x7f,
+	.conf_mask	= MMP2_ICU_INT_ROUTE_PJ4_IRQ |
+			  MMP2_ICU_INT_ROUTE_PJ4_FIQ,
 };
 
 static const struct mmp_intc_conf mmp2_conf = {

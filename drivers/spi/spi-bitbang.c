@@ -327,7 +327,7 @@ static int spi_bitbang_unprepare_hardware(struct spi_master *spi)
 	bitbang->busy = 0;
 	mutex_unlock(&bitbang->lock);
 
-	return 0;
+	return ret;
 }
 
 static void spi_bitbang_set_cs(struct spi_device *spi, bool enable)

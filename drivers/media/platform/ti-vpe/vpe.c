@@ -1485,6 +1485,9 @@ static irqreturn_t vpe_irq(int irq_vpe, void *data)
 	if (ctx->aborting)
 		goto finished;
 
+	if (ctx->aborting)
+		goto finished;
+
 	ctx->bufs_completed++;
 	if (ctx->bufs_completed < ctx->bufs_per_job && job_ready(ctx)) {
 		device_run(ctx);
@@ -1684,6 +1687,10 @@ static int __vpe_try_fmt(struct vpe_ctx *ctx, struct v4l2_format *f,
 		stride = (pix->width * fmt->vpdma_fmt[VPE_LUMA]->depth) >> 3;
 		if (stride > plane_fmt->bytesperline)
 			plane_fmt->bytesperline = stride;
+
+		plane_fmt->bytesperline = clamp_t(u32, plane_fmt->bytesperline,
+						  stride,
+						  VPDMA_MAX_STRIDE);
 
 		plane_fmt->bytesperline = clamp_t(u32, plane_fmt->bytesperline,
 						  stride,
@@ -2451,6 +2458,8 @@ static int vpe_runtime_get(struct platform_device *pdev)
 
 	r = pm_runtime_get_sync(&pdev->dev);
 	WARN_ON(r < 0);
+	if (r)
+		pm_runtime_put_noidle(&pdev->dev);
 	return r < 0 ? r : 0;
 }
 

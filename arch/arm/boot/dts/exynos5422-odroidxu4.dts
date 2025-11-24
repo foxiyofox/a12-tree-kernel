@@ -24,7 +24,7 @@
 			label = "blue:heartbeat";
 			pwms = <&pwm 2 2000000 0>;
 			pwm-names = "pwm2";
-			max_brightness = <255>;
+			max-brightness = <255>;
 			linux,default-trigger = "heartbeat";
 		};
 	};
@@ -49,7 +49,6 @@
 				<&clock_audss EXYNOS_MOUT_AUDSS>;
 
 		assigned-clock-rates = <0>,
-				<0>,
 				<0>,
 				<0>,
 				<0>,
@@ -89,6 +88,8 @@
 	pinctrl-names = "default";
 	samsung,pwm-outputs = <0>, <2>;
 	status = "okay";
+	assigned-clocks = <&i2s0 CLK_I2S_RCLK_SRC>;
+	assigned-clock-parents = <&clock_audss EXYNOS_SCLK_I2S>;
 };
 
 &usbdrd_dwc3_1 {

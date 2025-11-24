@@ -179,6 +179,11 @@ static u32 __i915_gem_park(struct drm_i915_private *i915)
 		intel_uncore_forcewake_put(i915, FORCEWAKE_ALL);
 	}
 
+	if (NEEDS_RC6_CTX_CORRUPTION_WA(i915)) {
+		i915_rc6_ctx_wa_check(i915);
+		intel_uncore_forcewake_put(i915, FORCEWAKE_ALL);
+	}
+
 	intel_display_power_put(i915, POWER_DOMAIN_GT_IRQ);
 
 	intel_runtime_pm_put(i915);
@@ -224,6 +229,9 @@ void i915_gem_unpark(struct drm_i915_private *i915)
 	 * GT activity, preventing any DC state transitions.
 	 */
 	intel_display_power_get(i915, POWER_DOMAIN_GT_IRQ);
+
+	if (NEEDS_RC6_CTX_CORRUPTION_WA(i915))
+		intel_uncore_forcewake_get(i915, FORCEWAKE_ALL);
 
 	if (NEEDS_RC6_CTX_CORRUPTION_WA(i915))
 		intel_uncore_forcewake_get(i915, FORCEWAKE_ALL);
@@ -1827,6 +1835,17 @@ i915_gem_sw_finish_ioctl(struct drm_device *dev, void *data,
 	i915_gem_object_put(obj);
 
 	return 0;
+}
+
+static inline bool
+__vma_matches(struct vm_area_struct *vma, struct file *filp,
+	      unsigned long addr, unsigned long size)
+{
+	if (vma->vm_file != filp)
+		return false;
+
+	return vma->vm_start == addr &&
+	       (vma->vm_end - vma->vm_start) == PAGE_ALIGN(size);
 }
 
 static inline bool
@@ -5601,6 +5620,7 @@ err_init_hw:
 
 	WARN_ON(i915_gem_suspend(dev_priv));
 	i915_gem_suspend_late(dev_priv);
+	intel_disable_gt_powersave(dev_priv);
 
 	i915_gem_drain_workqueue(dev_priv);
 
@@ -5668,6 +5688,8 @@ void i915_gem_fini(struct drm_i915_private *dev_priv)
 	i915_gem_cleanup_engines(dev_priv);
 	i915_gem_contexts_fini(dev_priv);
 	mutex_unlock(&dev_priv->drm.struct_mutex);
+
+	intel_cleanup_gt_powersave(dev_priv);
 
 	intel_cleanup_gt_powersave(dev_priv);
 

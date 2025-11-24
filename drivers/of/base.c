@@ -144,6 +144,7 @@ static void __of_free_phandle_cache(void)
 	kfree(phandle_cache);
 	phandle_cache = NULL;
 }
+EXPORT_SYMBOL(of_node_name_eq);
 
 int of_free_phandle_cache(void)
 {
@@ -182,6 +183,7 @@ void __of_free_phandle_cache_entry(phandle handle)
 		}
 	}
 }
+EXPORT_SYMBOL(of_node_name_prefix);
 
 void of_populate_phandle_cache(void)
 {

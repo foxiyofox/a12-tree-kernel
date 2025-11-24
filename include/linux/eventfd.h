@@ -49,6 +49,13 @@ static inline bool eventfd_signal_count(void)
 	return this_cpu_read(eventfd_wake_count);
 }
 
+DECLARE_PER_CPU(int, eventfd_wake_count);
+
+static inline bool eventfd_signal_count(void)
+{
+	return this_cpu_read(eventfd_wake_count);
+}
+
 #else /* CONFIG_EVENTFD */
 
 /*
@@ -75,6 +82,11 @@ static inline int eventfd_ctx_remove_wait_queue(struct eventfd_ctx *ctx,
 						wait_queue_entry_t *wait, __u64 *cnt)
 {
 	return -ENOSYS;
+}
+
+static inline bool eventfd_signal_count(void)
+{
+	return false;
 }
 
 static inline bool eventfd_signal_count(void)

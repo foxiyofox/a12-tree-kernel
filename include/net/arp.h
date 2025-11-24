@@ -17,6 +17,13 @@ static inline u32 arp_hashfn(const void *pkey, const struct net_device *dev, u32
 
 	return val * hash_rnd[0];
 }
+#else
+static inline
+struct neighbour *__ipv4_neigh_lookup_noref(struct net_device *dev, u32 key)
+{
+	return NULL;
+}
+#endif
 
 #ifdef CONFIG_INET
 static inline struct neighbour *__ipv4_neigh_lookup_noref(struct net_device *dev, u32 key)

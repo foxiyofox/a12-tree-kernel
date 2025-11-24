@@ -255,6 +255,13 @@ mediatek_gpio_bank_probe(struct device *dev,
 	rg->irq_chip.irq_mask_ack = mediatek_gpio_irq_mask;
 	rg->irq_chip.irq_set_type = mediatek_gpio_irq_type;
 
+	rg->irq_chip.name = dev_name(dev);
+	rg->irq_chip.parent_device = dev;
+	rg->irq_chip.irq_unmask = mediatek_gpio_irq_unmask;
+	rg->irq_chip.irq_mask = mediatek_gpio_irq_mask;
+	rg->irq_chip.irq_mask_ack = mediatek_gpio_irq_mask;
+	rg->irq_chip.irq_set_type = mediatek_gpio_irq_type;
+
 	if (mtk->gpio_irq) {
 		/*
 		 * Manually request the irq here instead of passing

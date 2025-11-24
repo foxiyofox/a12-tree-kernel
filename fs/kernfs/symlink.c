@@ -75,6 +75,9 @@ static int kernfs_get_target_path(struct kernfs_node *parent,
 		if ((s - path) + 3 >= PATH_MAX)
 			return -ENAMETOOLONG;
 
+		if ((s - path) + 3 >= PATH_MAX)
+			return -ENAMETOOLONG;
+
 		strcpy(s, "../");
 		s += 3;
 		base = base->parent;

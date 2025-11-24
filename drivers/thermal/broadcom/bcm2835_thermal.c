@@ -29,6 +29,8 @@
 
 #include "../thermal_hwmon.h"
 
+#include "../thermal_hwmon.h"
+
 #define BCM2835_TS_TSENSCTL			0x00
 #define BCM2835_TS_TSENSSTAT			0x04
 

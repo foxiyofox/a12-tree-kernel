@@ -20,6 +20,8 @@
 
 #define ARC_PATH_MAX	256
 
+#define ARC_PATH_MAX	256
+
 /*
  * Common routine to print scratch regs (r0-r12) or callee regs (r13-r25)
  *   -Prints 3 regs per line and a CR.

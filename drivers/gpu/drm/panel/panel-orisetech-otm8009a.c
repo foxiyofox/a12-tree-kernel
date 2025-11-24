@@ -251,6 +251,9 @@ static int otm8009a_init_sequence(struct otm8009a *ctx)
 	/* Wait a short while to let the panel be ready before the 1st frame */
 	mdelay(10);
 
+	/* Wait a short while to let the panel be ready before the 1st frame */
+	mdelay(10);
+
 	return 0;
 }
 

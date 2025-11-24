@@ -1440,6 +1440,8 @@ static void user_sdma_free_request(struct user_sdma_request *req, bool unpin)
 
 		req->iovs[i].node = NULL;
 
+		req->iovs[i].node = NULL;
+
 		if (unpin)
 			hfi1_mmu_rb_remove(req->pq->handler,
 					   &node->rb);

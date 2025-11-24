@@ -33,6 +33,11 @@
 	(FS_COMPR_FL | FS_SYNC_FL | FS_APPEND_FL | \
 	 FS_IMMUTABLE_FL | FS_DIRSYNC_FL)
 
+/* Need to be kept consistent with checked flags in ioctl2ubifs() */
+#define UBIFS_SUPPORTED_IOCTL_FLAGS \
+	(FS_COMPR_FL | FS_SYNC_FL | FS_APPEND_FL | \
+	 FS_IMMUTABLE_FL | FS_DIRSYNC_FL)
+
 /**
  * ubifs_set_inode_flags - set VFS inode flags.
  * @inode: VFS inode to set flags for
@@ -174,6 +179,9 @@ long ubifs_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
 		if (get_user(flags, (int __user *) arg))
 			return -EFAULT;
+
+		if (flags & ~UBIFS_SUPPORTED_IOCTL_FLAGS)
+			return -EOPNOTSUPP;
 
 		if (flags & ~UBIFS_SUPPORTED_IOCTL_FLAGS)
 			return -EOPNOTSUPP;

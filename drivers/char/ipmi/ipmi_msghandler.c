@@ -1092,6 +1092,15 @@ static void free_user_work(struct work_struct *work)
 	kfree(user);
 }
 
+static void free_user_work(struct work_struct *work)
+{
+	struct ipmi_user *user = container_of(work, struct ipmi_user,
+					      remove_work);
+
+	cleanup_srcu_struct(&user->release_barrier);
+	vfree(user);
+}
+
 int ipmi_create_user(unsigned int          if_num,
 		     const struct ipmi_user_hndl *handler,
 		     void                  *handler_data,
@@ -1170,7 +1179,7 @@ int ipmi_create_user(unsigned int          if_num,
 
 out_kfree:
 	srcu_read_unlock(&ipmi_interfaces_srcu, index);
-	kfree(new_user);
+	vfree(new_user);
 	return rv;
 }
 EXPORT_SYMBOL(ipmi_create_user);
@@ -3134,8 +3143,8 @@ static void __get_guid(struct ipmi_smi *intf)
 	if (rv)
 		/* Send failed, no GUID available. */
 		bmc->dyn_guid_set = 0;
-
-	wait_event(intf->waitq, bmc->dyn_guid_set != 2);
+	else
+		wait_event(intf->waitq, bmc->dyn_guid_set != 2);
 
 	/* dyn_guid_set makes the guid data available. */
 	smp_rmb();
@@ -5047,6 +5056,22 @@ static int panic_event(struct notifier_block *this,
 	}
 
 	return NOTIFY_DONE;
+}
+
+/* Must be called with ipmi_interfaces_mutex held. */
+static int ipmi_register_driver(void)
+{
+	int rv;
+
+	if (drvregistered)
+		return 0;
+
+	rv = driver_register(&ipmidriver.driver);
+	if (rv)
+		pr_err("Could not register IPMI driver\n");
+	else
+		drvregistered = true;
+	return rv;
 }
 
 /* Must be called with ipmi_interfaces_mutex held. */

@@ -835,7 +835,7 @@ static int rvin_mc_parse_of_graph(struct rvin_dev *vin)
 					   &vin->group->notifier);
 	if (ret < 0) {
 		vin_err(vin, "Notifier registration failed\n");
-		v4l2_async_notifier_cleanup(&vin->group->notifier);
+		v4l2_async_notifier_cleanup(&vin->notifier);
 		return ret;
 	}
 

@@ -1231,6 +1231,7 @@ static int dw_mci_edmac_start_dma(struct dw_mci *host, unsigned int sg_len)
 	int ret = 0;
 
 	/* Set external dma config: burst size, burst width */
+	memset(&cfg, 0, sizeof(cfg));
 	cfg.dst_addr = host->phy_regs + fifo_offset;
 	cfg.src_addr = cfg.dst_addr;
 	cfg.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
@@ -4966,6 +4967,10 @@ int dw_mci_probe(struct dw_mci *host, struct platform_device *pdev)
 	dw_mci_sicd_control(host, true);
 #endif
 	host->card_detect_cnt = 0;
+
+	/* Re-enable SDIO interrupts. */
+	if (sdio_irq_claimed(host->slot->mmc))
+		__dw_mci_enable_sdio_irq(host->slot, 1);
 
 	/* Now that slots are all setup, we can enable card detect */
 	dw_mci_enable_cd(host);

@@ -24,6 +24,8 @@
 
 DEFINE_PER_CPU(int, eventfd_wake_count);
 
+DEFINE_PER_CPU(int, eventfd_wake_count);
+
 struct eventfd_ctx {
 	struct kref kref;
 	wait_queue_head_t wqh;

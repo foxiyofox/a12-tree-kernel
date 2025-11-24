@@ -113,6 +113,11 @@ static void w9968cf_write_sb(struct sd *sd, u16 value)
 	if (ret < 0) {
 		pr_err("Write SB reg [01] %04x failed\n", value);
 		sd->gspca_dev.usb_err = ret;
+		/*
+		 * Make sure the buffer is zeroed to avoid uninitialized
+		 * values.
+		 */
+		memset(sd->gspca_dev.usb_buf, 0, 2);
 	}
 }
 

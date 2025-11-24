@@ -1180,6 +1180,10 @@ static const struct i2c_adapter_quirks omap_i2c_quirks = {
 	.flags = I2C_AQ_NO_ZERO_LEN,
 };
 
+static const struct i2c_adapter_quirks omap_i2c_quirks = {
+	.flags = I2C_AQ_NO_ZERO_LEN,
+};
+
 #ifdef CONFIG_OF
 static struct omap_i2c_bus_platform_data omap2420_pdata = {
 	.rev = OMAP_I2C_IP_VERSION_1,

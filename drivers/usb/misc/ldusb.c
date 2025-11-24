@@ -766,6 +766,9 @@ static void ld_usb_disconnect(struct usb_interface *intf)
 	usb_poison_urb(dev->interrupt_in_urb);
 	usb_poison_urb(dev->interrupt_out_urb);
 
+	usb_poison_urb(dev->interrupt_in_urb);
+	usb_poison_urb(dev->interrupt_out_urb);
+
 	mutex_lock(&dev->mutex);
 
 	/* if the device is not opened, then we clean up right now */

@@ -113,6 +113,9 @@
 #define SONIC_CR_ALL (SONIC_CR_LCAM | SONIC_CR_RRRA | \
 		      SONIC_CR_RXEN | SONIC_CR_TXP)
 
+#define SONIC_CR_ALL (SONIC_CR_LCAM | SONIC_CR_RRRA | \
+		      SONIC_CR_RXEN | SONIC_CR_TXP)
+
 /*
  * SONIC data configuration bits
  */
@@ -449,6 +452,22 @@ static inline __u16 sonic_rra_get(struct net_device* dev, int entry,
 	struct sonic_local *lp = netdev_priv(dev);
 	return sonic_buf_get(lp->rra, lp->dma_bitmode,
 			     (entry * SIZEOF_SONIC_RR) + offset);
+}
+
+static inline u16 sonic_rr_addr(struct net_device *dev, int entry)
+{
+	struct sonic_local *lp = netdev_priv(dev);
+
+	return lp->rra_laddr +
+	       entry * SIZEOF_SONIC_RR * SONIC_BUS_SCALE(lp->dma_bitmode);
+}
+
+static inline u16 sonic_rr_entry(struct net_device *dev, u16 addr)
+{
+	struct sonic_local *lp = netdev_priv(dev);
+
+	return (addr - (u16)lp->rra_laddr) / (SIZEOF_SONIC_RR *
+					      SONIC_BUS_SCALE(lp->dma_bitmode));
 }
 
 static inline u16 sonic_rr_addr(struct net_device *dev, int entry)

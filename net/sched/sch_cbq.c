@@ -1158,6 +1158,32 @@ static int cbq_opt_parse(struct nlattr *tb[TCA_CBQ_MAX + 1],
 	return err;
 }
 
+static int cbq_opt_parse(struct nlattr *tb[TCA_CBQ_MAX + 1],
+			 struct nlattr *opt,
+			 struct netlink_ext_ack *extack)
+{
+	int err;
+
+	if (!opt) {
+		NL_SET_ERR_MSG(extack, "CBQ options are required for this operation");
+		return -EINVAL;
+	}
+
+	err = nla_parse_nested(tb, TCA_CBQ_MAX, opt, cbq_policy, extack);
+	if (err < 0)
+		return err;
+
+	if (tb[TCA_CBQ_WRROPT]) {
+		const struct tc_cbq_wrropt *wrr = nla_data(tb[TCA_CBQ_WRROPT]);
+
+		if (wrr->priority > TC_CBQ_MAXPRIO) {
+			NL_SET_ERR_MSG(extack, "priority is bigger than TC_CBQ_MAXPRIO");
+			err = -EINVAL;
+		}
+	}
+	return err;
+}
+
 static int cbq_init(struct Qdisc *sch, struct nlattr *opt,
 		    struct netlink_ext_ack *extack)
 {
@@ -1616,7 +1642,7 @@ cbq_change_class(struct Qdisc *sch, u32 classid, u32 parentid, struct nlattr **t
 	err = tcf_block_get(&cl->block, &cl->filter_list, sch, extack);
 	if (err) {
 		kfree(cl);
-		return err;
+		goto failure;
 	}
 
 	if (tca[TCA_RATE]) {

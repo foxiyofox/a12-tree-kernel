@@ -864,8 +864,7 @@ static void __init kexec_enter_virtual_mode(void)
 	if (efi_memmap_init_late(efi.memmap.phys_map,
 				 efi.memmap.desc_size * efi.memmap.nr_map)) {
 		pr_err("Failed to remap late EFI memory map\n");
-		clear_bit(EFI_RUNTIME_SERVICES, &efi.flags);
-		return;
+		goto err;
 	}
 
 	BUG_ON(!efi.systab);

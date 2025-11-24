@@ -315,6 +315,18 @@ static int __init maybe_link(void)
 	return 0;
 }
 
+static int __init maybe_link(void)
+{
+	if (nlink >= 2) {
+		char *old = find_link(major, minor, ino, mode, collected);
+		if (old) {
+			clean_path(collected, 0);
+			return (ksys_link(old, collected) < 0) ? -1 : 1;
+		}
+	}
+	return 0;
+}
+
 static __initdata int wfd;
 
 static int __init do_name(void)

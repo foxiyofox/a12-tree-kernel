@@ -445,6 +445,8 @@ static __always_inline ssize_t __mcopy_atomic(struct mm_struct *dst_mm,
 	unsigned long src_addr, dst_addr;
 	long copied;
 	struct page *page;
+	pgoff_t offset, max_off;
+	struct inode *inode;
 
 	/*
 	 * Sanitize the command parameters:

@@ -38,6 +38,10 @@ static void set_slot_off(struct controller *ctrl, struct slot *pslot)
 		 * removed from the slot/adapter.
 		 */
 		msleep(1000);
+
+		/* Ignore link or presence changes caused by power off */
+		atomic_and(~(PCI_EXP_SLTSTA_DLLSC | PCI_EXP_SLTSTA_PDC),
+			   &ctrl->pending_events);
 	}
 
 	pciehp_green_led_off(pslot);

@@ -1119,6 +1119,9 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
 	if (!(hw_info->hw_capab & QLINK_HW_CAPAB_OBSS_SCAN))
 		wiphy->features |= NL80211_FEATURE_NEED_OBSS_SCAN;
 
+	if (!(hw_info->hw_capab & QLINK_HW_CAPAB_OBSS_SCAN))
+		wiphy->features |= NL80211_FEATURE_NEED_OBSS_SCAN;
+
 #ifdef CONFIG_PM
 	if (macinfo->wowlan)
 		wiphy->wowlan = macinfo->wowlan;
@@ -1131,6 +1134,15 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
 		wiphy_apply_custom_regulatory(wiphy, hw_info->rd);
 	} else {
 		wiphy->regulatory_flags |= REGULATORY_WIPHY_SELF_MANAGED;
+	}
+
+	if (mac->macinfo.extended_capabilities_len) {
+		wiphy->extended_capabilities =
+			mac->macinfo.extended_capabilities;
+		wiphy->extended_capabilities_mask =
+			mac->macinfo.extended_capabilities_mask;
+		wiphy->extended_capabilities_len =
+			mac->macinfo.extended_capabilities_len;
 	}
 
 	if (mac->macinfo.extended_capabilities_len) {

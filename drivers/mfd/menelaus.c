@@ -1108,6 +1108,12 @@ static inline void menelaus_rtc_init(struct menelaus_chip *m)
 
 	m->rtc->ops = &menelaus_rtc_ops;
 
+	m->rtc = devm_rtc_allocate_device(&m->client->dev);
+	if (IS_ERR(m->rtc))
+		return;
+
+	m->rtc->ops = &menelaus_rtc_ops;
+
 	/* support RTC alarm; it can issue wakeups */
 	if (alarm) {
 		if (menelaus_add_irq_work(MENELAUS_RTCALM_IRQ,

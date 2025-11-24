@@ -243,6 +243,8 @@ static irqreturn_t uniphier_fi2c_interrupt(int irq, void *dev_id)
 
 	spin_unlock(&priv->lock);
 
+	spin_unlock(&priv->lock);
+
 	return IRQ_NONE;
 
 data_done:
@@ -305,6 +307,8 @@ static void uniphier_fi2c_rx_init(struct uniphier_fi2c_priv *priv, u16 addr)
 		priv->flags |= UNIPHIER_FI2C_MANUAL_NACK;
 		priv->enabled_irqs |= UNIPHIER_FI2C_INT_RF;
 	}
+
+	uniphier_fi2c_set_irqs(priv);
 
 	uniphier_fi2c_set_irqs(priv);
 

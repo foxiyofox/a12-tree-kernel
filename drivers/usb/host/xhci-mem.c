@@ -2294,6 +2294,7 @@ static void xhci_create_rhub_port_array(struct xhci_hcd *xhci,
 	int port_index = 0;
 	int i;
 	struct device *dev = xhci_to_hcd(xhci)->self.sysdev;
+	struct xhci_port_cap *port_cap;
 
 	if (!rhub->num_ports)
 		return;
@@ -2371,6 +2372,11 @@ static int xhci_setup_port_arrays(struct xhci_hcd *xhci, gfp_t flags)
 	xhci->ext_caps = kcalloc_node(cap_count, sizeof(*xhci->ext_caps),
 				flags, dev_to_node(dev));
 	if (!xhci->ext_caps)
+		return -ENOMEM;
+
+	xhci->port_caps = kcalloc_node(cap_count, sizeof(*xhci->port_caps),
+				flags, dev_to_node(dev));
+	if (!xhci->port_caps)
 		return -ENOMEM;
 
 	xhci->port_caps = kcalloc_node(cap_count, sizeof(*xhci->port_caps),

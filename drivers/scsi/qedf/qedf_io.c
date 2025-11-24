@@ -1534,6 +1534,7 @@ void qedf_flush_active_ios(struct qedf_rport *fcport, int lun)
 
 free_cmd:
 		kref_put(&io_req->refcount, qedf_release_cmd);
+		return -EINVAL;
 	}
 }
 

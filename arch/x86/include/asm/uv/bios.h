@@ -173,4 +173,9 @@ extern struct kobject *sgi_uv_kobj;	/* /sys/firmware/sgi_uv */
  */
 extern struct semaphore __efi_uv_runtime_lock;
 
+/*
+ * EFI runtime lock; cf. firmware/efi/runtime-wrappers.c for details
+ */
+extern struct semaphore __efi_uv_runtime_lock;
+
 #endif /* _ASM_X86_UV_BIOS_H */

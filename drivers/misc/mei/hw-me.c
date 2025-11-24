@@ -449,6 +449,8 @@ static int mei_me_hw_start(struct mei_device *dev)
 	return ret;
 }
 
+#define MEI_CFG_FW_VER_SUPP                     \
+	.fw_ver_supported = 1
 
 /**
  * mei_hbuf_filled_slots - gets number of device filled buffer slots

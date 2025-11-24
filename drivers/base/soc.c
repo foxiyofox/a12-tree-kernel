@@ -205,6 +205,7 @@ static int soc_device_match_attr(const struct soc_device_attribute *attr,
 
 	return 1;
 }
+EXPORT_SYMBOL_GPL(soc_device_register);
 
 static int soc_device_match_one(struct device *dev, void *arg)
 {
@@ -212,6 +213,7 @@ static int soc_device_match_one(struct device *dev, void *arg)
 
 	return soc_device_match_attr(soc_dev->attr, arg);
 }
+EXPORT_SYMBOL_GPL(soc_device_unregister);
 
 /*
  * soc_device_match - identify the SoC in the machine

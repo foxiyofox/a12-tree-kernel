@@ -219,6 +219,10 @@ static const struct of_device_id inv_of_match[] = {
 		.compatible = "invensense,icm20602",
 		.data = (void *)INV_ICM20602
 	},
+	{
+		.compatible = "invensense,icm20602",
+		.data = (void *)INV_ICM20602
+	},
 	{ }
 };
 MODULE_DEVICE_TABLE(of, inv_of_match);

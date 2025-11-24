@@ -171,6 +171,7 @@ static struct spi_driver ir_spi_driver = {
 		.of_match_table = ir_spi_of_match,
 	},
 };
+MODULE_DEVICE_TABLE(of, ir_spi_of_match);
 
 module_spi_driver(ir_spi_driver);
 

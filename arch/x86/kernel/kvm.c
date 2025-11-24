@@ -585,6 +585,7 @@ static int kvm_cpu_down_prepare(unsigned int cpu)
 	return 0;
 }
 #endif
+	long ret;
 
 static void __init kvm_apf_trap_init(void)
 {

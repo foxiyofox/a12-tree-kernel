@@ -243,6 +243,8 @@ static void buffer_work_cb(struct work_struct *work)
 
 	atomic_dec(&msg_context->u.bulk.port->buffers_with_vpu);
 
+	atomic_dec(&msg_context->u.bulk.port->buffers_with_vpu);
+
 	msg_context->u.bulk.port->buffer_cb(msg_context->u.bulk.instance,
 					    msg_context->u.bulk.port,
 					    msg_context->u.bulk.status,
@@ -383,6 +385,8 @@ buffer_from_host(struct vchiq_mmal_instance *instance,
 
 	atomic_inc(&port->buffers_with_vpu);
 
+	atomic_inc(&port->buffers_with_vpu);
+
 	/* prep the buffer from host message */
 	memset(&m, 0xbc, sizeof(m));	/* just to make debug clearer */
 
@@ -450,6 +454,9 @@ static void buffer_to_host_cb(struct vchiq_mmal_instance *instance,
 		pr_err("MMAL_MSG_TYPE_BUFFER_TO_HOST with bad magic\n");
 		return;
 	}
+
+	msg_context->u.bulk.mmal_flags =
+				msg->u.buffer_from_host.buffer_header.flags;
 
 	msg_context->u.bulk.mmal_flags =
 				msg->u.buffer_from_host.buffer_header.flags;

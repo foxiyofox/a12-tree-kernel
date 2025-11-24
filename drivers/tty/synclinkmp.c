@@ -1351,7 +1351,7 @@ static inline void line_info(struct seq_file *m, SLMP_INFO *info)
 
 	/* output current serial signal states */
 	spin_lock_irqsave(&info->lock,flags);
- 	get_signals(info);
+	get_signals(info);
 	spin_unlock_irqrestore(&info->lock,flags);
 
 	stat_buf[0] = 0;

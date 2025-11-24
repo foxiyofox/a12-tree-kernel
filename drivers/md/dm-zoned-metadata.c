@@ -583,6 +583,9 @@ static int dmz_write_mblock(struct dmz_metadata *zmd, struct dmz_mblock *mblk,
 	if (dmz_bdev_is_dying(zmd->dev))
 		return -EIO;
 
+	if (dmz_bdev_is_dying(zmd->dev))
+		return -EIO;
+
 	bio = bio_alloc(GFP_NOIO, 1);
 	if (!bio) {
 		set_bit(DMZ_META_ERROR, &mblk->state);
@@ -661,6 +664,8 @@ static int dmz_write_sb(struct dmz_metadata *zmd, unsigned int set)
 	if (ret == 0)
 		ret = blkdev_issue_flush(zmd->dev->bdev, GFP_NOIO, NULL);
 
+	if (ret)
+		dmz_check_bdev(zmd->dev);
 	return ret;
 }
 
@@ -757,6 +762,11 @@ int dmz_flush_metadata(struct dmz_metadata *zmd)
 	 * Concurrent execution is not allowed.
 	 */
 	dmz_lock_flush(zmd);
+
+	if (dmz_bdev_is_dying(zmd->dev)) {
+		ret = -EIO;
+		goto out;
+	}
 
 	if (dmz_bdev_is_dying(zmd->dev)) {
 		ret = -EIO;
@@ -1105,7 +1115,6 @@ static int dmz_init_zone(struct dmz_metadata *zmd, struct dm_zone *zone,
 
 	if (blkz->type == BLK_ZONE_TYPE_CONVENTIONAL) {
 		set_bit(DMZ_RND, &zone->flags);
-		zmd->nr_rnd_zones++;
 	} else if (blkz->type == BLK_ZONE_TYPE_SEQWRITE_REQ ||
 		   blkz->type == BLK_ZONE_TYPE_SEQWRITE_PREF) {
 		set_bit(DMZ_SEQ, &zone->flags);
@@ -1203,6 +1212,9 @@ static int dmz_init_zones(struct dmz_metadata *zmd)
 			dmz_dev_err(dev, "Report zones failed %d", ret);
 			goto out;
 		}
+
+		if (!nr_blkz)
+			break;
 
 		if (!nr_blkz)
 			break;

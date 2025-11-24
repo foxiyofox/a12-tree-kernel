@@ -310,6 +310,10 @@ int hclge_cmd_queue_init(struct hclge_dev *hdev)
 	spin_lock_init(&hdev->hw.cmq.csq.lock);
 	spin_lock_init(&hdev->hw.cmq.crq.lock);
 
+	/* Setup the lock for command queue */
+	spin_lock_init(&hdev->hw.cmq.csq.lock);
+	spin_lock_init(&hdev->hw.cmq.crq.lock);
+
 	/* Setup the queue entries for use cmd queue */
 	hdev->hw.cmq.csq.desc_num = HCLGE_NIC_CMQ_DESC_NUM;
 	hdev->hw.cmq.crq.desc_num = HCLGE_NIC_CMQ_DESC_NUM;

@@ -114,7 +114,6 @@ static const struct snd_pcm_hardware snd_sh_dac_pcm_hw = {
 static int snd_sh_dac_pcm_open(struct snd_pcm_substream *substream)
 {
 	struct snd_sh_dac *chip = snd_pcm_substream_chip(substream);
-	struct snd_pcm_runtime *runtime = substream->runtime;
 
 	runtime->hw = snd_sh_dac_pcm_hw;
 

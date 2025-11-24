@@ -229,6 +229,11 @@ static int meson_gxl_config_intr(struct phy_device *phydev)
 	if (ret)
 		return ret;
 
+	/* Ack any pending IRQ */
+	ret = meson_gxl_ack_interrupt(phydev);
+	if (ret)
+		return ret;
+
 	return phy_write(phydev, INTSRC_MASK, val);
 }
 

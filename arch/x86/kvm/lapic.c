@@ -212,6 +212,9 @@ static void recalculate_apic_map(struct kvm *kvm)
 		if (!kvm_apic_sw_enabled(apic))
 			continue;
 
+		if (!kvm_apic_sw_enabled(apic))
+			continue;
+
 		ldr = kvm_lapic_get_reg(apic, APIC_LDR);
 
 		if (apic_x2apic_mode(apic)) {
@@ -576,6 +579,11 @@ int kvm_pv_send_ipi(struct kvm *kvm, unsigned long ipi_bitmap_low,
 
 	rcu_read_lock();
 	map = rcu_dereference(kvm->arch.apic_map);
+
+	if (unlikely(!map)) {
+		count = -EOPNOTSUPP;
+		goto out;
+	}
 
 	if (unlikely(!map)) {
 		count = -EOPNOTSUPP;
@@ -2034,7 +2042,7 @@ void kvm_set_lapic_tscdeadline_msr(struct kvm_vcpu *vcpu, u64 data)
 {
 	struct kvm_lapic *apic = vcpu->arch.apic;
 
-	if (!lapic_in_kernel(vcpu) || apic_lvtt_oneshot(apic) ||
+	if (!kvm_apic_present(vcpu) || apic_lvtt_oneshot(apic) ||
 			apic_lvtt_period(apic))
 		return;
 

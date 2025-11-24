@@ -1313,6 +1313,7 @@ static void dwc2_unreserve_timer_fn(struct timer_list *t)
 		dwc2_do_unreserve(hsotg, qh);
 
 	spin_unlock_irqrestore(&hsotg->lock, flags);
+	return HRTIMER_NORESTART;
 }
 
 /**
@@ -1773,6 +1774,7 @@ int dwc2_hcd_qh_add(struct dwc2_hsotg *hsotg, struct dwc2_qh *qh)
 void dwc2_hcd_qh_unlink(struct dwc2_hsotg *hsotg, struct dwc2_qh *qh)
 {
 	u32 intr_mask;
+	ktime_t delay;
 
 	dev_vdbg(hsotg->dev, "%s()\n", __func__);
 

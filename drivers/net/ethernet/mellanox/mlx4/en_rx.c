@@ -622,6 +622,8 @@ static int get_fixed_ipv6_csum(__wsum hw_checksum, struct sk_buff *skb,
 
 #define short_frame(size) ((size) <= ETH_ZLEN + ETH_FCS_LEN)
 
+#define short_frame(size) ((size) <= ETH_ZLEN + ETH_FCS_LEN)
+
 /* We reach this function only after checking that any of
  * the (IPv4 | IPv6) bits are set in cqe->status.
  */
@@ -944,6 +946,9 @@ int mlx4_en_poll_rx_cq(struct napi_struct *napi, int budget)
 	struct mlx4_en_cq *xdp_tx_cq = NULL;
 	bool clean_complete = true;
 	int done;
+
+	if (!budget)
+		return 0;
 
 	if (priv->tx_ring_num[TX_XDP]) {
 		xdp_tx_cq = priv->tx_cq[TX_XDP][cq->ring];

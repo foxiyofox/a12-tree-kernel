@@ -774,6 +774,9 @@ static bool check_can_switch(void)
 			pr_err("client %x refused switch\n", client->id);
 			return false;
 		}
+		/* notify if GPU has been already bound */
+		if (ops->gpu_bound)
+			ops->gpu_bound(pdev, id);
 	}
 	return true;
 }

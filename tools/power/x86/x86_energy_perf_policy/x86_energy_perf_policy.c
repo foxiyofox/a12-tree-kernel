@@ -808,6 +808,15 @@ int ratio_2_sysfs_khz(int ratio)
 
 	return ratio * bclk_khz;
 }
+
+static void get_cpuid_or_exit(unsigned int leaf,
+			     unsigned int *eax, unsigned int *ebx,
+			     unsigned int *ecx, unsigned int *edx)
+{
+	if (!__get_cpuid(leaf, eax, ebx, ecx, edx))
+		errx(1, "Processor not supported\n");
+}
+
 /*
  * If HWP is enabled and cpufreq sysfs attribtes are present,
  * then update sysfs, so that it will not become

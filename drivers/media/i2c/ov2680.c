@@ -507,6 +507,8 @@ static int ov2680_mode_set(struct ov2680_dev *sensor)
 		ret = ov2680_exposure_set(sensor, true);
 		if (ret < 0)
 			return ret;
+
+		ret = ov2680_mode_restore(sensor);
 	}
 
 	sensor->mode_pending_changes = false;

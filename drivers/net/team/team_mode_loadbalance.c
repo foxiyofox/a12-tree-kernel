@@ -339,6 +339,20 @@ static void lb_bpf_func_free(struct team *team)
 	bpf_prog_destroy(fp);
 }
 
+static void lb_bpf_func_free(struct team *team)
+{
+	struct lb_priv *lb_priv = get_lb_priv(team);
+	struct bpf_prog *fp;
+
+	if (!lb_priv->ex->orig_fprog)
+		return;
+
+	__fprog_destroy(lb_priv->ex->orig_fprog);
+	fp = rcu_dereference_protected(lb_priv->fp,
+				       lockdep_is_held(&team->lock));
+	bpf_prog_destroy(fp);
+}
+
 static int lb_tx_method_get(struct team *team, struct team_gsetter_ctx *ctx)
 {
 	struct lb_priv *lb_priv = get_lb_priv(team);

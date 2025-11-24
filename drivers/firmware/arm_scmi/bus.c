@@ -100,6 +100,9 @@ int scmi_driver_register(struct scmi_driver *driver, struct module *owner,
 {
 	int retval;
 
+	if (!driver->probe)
+		return -EINVAL;
+
 	driver->driver.bus = &scmi_bus_type;
 	driver->driver.name = driver->name;
 	driver->driver.owner = owner;
@@ -118,6 +121,11 @@ void scmi_driver_unregister(struct scmi_driver *driver)
 	driver_unregister(&driver->driver);
 }
 EXPORT_SYMBOL_GPL(scmi_driver_unregister);
+
+static void scmi_device_release(struct device *dev)
+{
+	kfree(to_scmi_dev(dev));
+}
 
 static void scmi_device_release(struct device *dev)
 {

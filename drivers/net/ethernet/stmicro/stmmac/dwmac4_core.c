@@ -462,6 +462,9 @@ static void dwmac4_set_filter(struct mac_device_info *hw,
 			writel(0, ioaddr + GMAC_ADDR_LOW(reg));
 			reg++;
 		}
+	} else {
+		for (queue = 0; queue < tx_cnt; queue++)
+			writel(0, ioaddr + GMAC_QX_TX_FLOW_CTRL(queue));
 	}
 
 	writel(value, ioaddr + GMAC_PACKET_FILTER);

@@ -957,7 +957,7 @@ static u8 qlcnic_dcb_get_dcbx(struct net_device *netdev)
 	struct qlcnic_dcb_cfg *cfg = adapter->dcb->cfg;
 
 	if (!test_bit(QLCNIC_DCB_STATE, &adapter->dcb->state))
-		return 0;
+		return 1;
 
 	return cfg->capability.dcb_capability;
 }

@@ -1315,6 +1315,7 @@ static int net2280_dequeue(struct usb_ep *_ep, struct usb_request *_req)
 				start_dma(ep, list_entry(ep->queue.next,
 					struct net2280_request, queue));
 		}
+		stop_out_naking(ep);
 	}
 
 	spin_unlock_irqrestore(&ep->dev->lock, flags);
@@ -3782,8 +3783,10 @@ static int net2280_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	return 0;
 
 done:
-	if (dev)
+	if (dev) {
 		net2280_remove(pdev);
+		kfree(dev);
+	}
 	return retval;
 }
 

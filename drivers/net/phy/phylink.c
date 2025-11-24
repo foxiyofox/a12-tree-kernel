@@ -523,6 +523,17 @@ static void phylink_run_resolve_and_disable(struct phylink *pl, int bit)
 	}
 }
 
+static void phylink_run_resolve_and_disable(struct phylink *pl, int bit)
+{
+	unsigned long state = pl->phylink_disable_state;
+
+	set_bit(bit, &pl->phylink_disable_state);
+	if (state == 0) {
+		queue_work(system_power_efficient_wq, &pl->resolve);
+		flush_work(&pl->resolve);
+	}
+}
+
 static void phylink_fixed_poll(struct timer_list *t)
 {
 	struct phylink *pl = container_of(t, struct phylink, link_poll);
@@ -931,6 +942,9 @@ void phylink_start(struct phylink *pl)
 	/* Always set the carrier off */
 	netif_carrier_off(pl->netdev);
 
+	/* Always set the carrier off */
+	netif_carrier_off(pl->netdev);
+
 	/* Apply the link configuration to the MAC when starting. This allows
 	 * a fixed-link to start with the correct parameters, and also
 	 * ensures that we set the appropriate advertisement for Serdes links.
@@ -1259,7 +1273,7 @@ int phylink_ethtool_set_pauseparam(struct phylink *pl,
 		return -EOPNOTSUPP;
 
 	if (!phylink_test(pl->supported, Asym_Pause) &&
-	    !pause->autoneg && pause->rx_pause != pause->tx_pause)
+	    pause->rx_pause != pause->tx_pause)
 		return -EINVAL;
 
 	config->pause &= ~(MLO_PAUSE_AN | MLO_PAUSE_TXRX_MASK);

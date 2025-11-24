@@ -530,6 +530,9 @@ static int etnaviv_bind(struct device *dev)
 	dev->dma_parms = &priv->dma_parms;
 	dma_set_max_seg_size(dev, SZ_2G);
 
+	dev->dma_parms = &priv->dma_parms;
+	dma_set_max_seg_size(dev, SZ_2G);
+
 	mutex_init(&priv->gem_lock);
 	INIT_LIST_HEAD(&priv->gem_list);
 	priv->num_gpus = 0;
@@ -566,6 +569,8 @@ static void etnaviv_unbind(struct device *dev)
 	drm_dev_unregister(drm);
 
 	component_unbind_all(dev, drm);
+
+	dev->dma_parms = NULL;
 
 	dev->dma_parms = NULL;
 

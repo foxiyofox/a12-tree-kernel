@@ -207,6 +207,12 @@ static inline int qeth_is_adp_supported(struct qeth_ipa_info *ipa,
 	return (ipa->supported_funcs & func);
 }
 
+static inline int qeth_is_adp_supported(struct qeth_ipa_info *ipa,
+		enum qeth_ipa_setadp_cmd func)
+{
+	return (ipa->supported_funcs & func);
+}
+
 static inline int qeth_is_ipa_supported(struct qeth_ipa_info *ipa,
 		enum qeth_ipa_funcs func)
 {
@@ -830,6 +836,11 @@ struct qeth_trap_id {
 
 /*some helper functions*/
 #define QETH_CARD_IFNAME(card) (((card)->dev)? (card)->dev->name : "")
+
+static inline bool qeth_netdev_is_registered(struct net_device *dev)
+{
+	return dev->netdev_ops != NULL;
+}
 
 static inline bool qeth_netdev_is_registered(struct net_device *dev)
 {

@@ -273,6 +273,12 @@ static int hdmi_cec_adap_log_addr(struct cec_adapter *adap, u8 log_addr)
 		hdmi_write_reg(core->base, HDMI_CEC_CA_15_8, v);
 	}
 	return 0;
+
+err_disable_clk:
+	REG_FLD_MOD(core->wp->base, HDMI_WP_CLK, 0, 5, 0);
+	hdmi4_core_disable(core);
+
+	return err;
 }
 
 static int hdmi_cec_adap_transmit(struct cec_adapter *adap, u8 attempts,

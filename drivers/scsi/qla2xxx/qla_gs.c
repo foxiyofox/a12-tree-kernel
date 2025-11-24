@@ -3266,6 +3266,11 @@ static void qla24xx_async_gpsc_sp_done(void *s, int res)
 	if (res == QLA_FUNCTION_TIMEOUT)
 		goto done;
 
+	fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
+
+	if (res == QLA_FUNCTION_TIMEOUT)
+		goto done;
+
 	if (res == (DID_ERROR << 16)) {
 		/* entry status error */
 		goto done;
@@ -4573,6 +4578,7 @@ static void qla2x00_async_gnnid_sp_done(void *s, int res)
 
 	qla2x00_fcport_event_handler(vha, &ea);
 
+done:
 	sp->free(sp);
 }
 
@@ -4755,8 +4761,12 @@ int qla24xx_async_gfpnid(scsi_qla_host_t *vha, fc_port_t *fcport)
 	sp->done = qla2x00_async_gfpnid_sp_done;
 
 	rval = qla2x00_start_sp(sp);
-	if (rval != QLA_SUCCESS)
+	if (rval != QLA_SUCCESS) {
+		spin_lock_irqsave(&vha->work_lock, flags);
+		vha->scan.scan_flags &= ~SF_SCANNING;
+		spin_unlock_irqrestore(&vha->work_lock, flags);
 		goto done_free_sp;
+	}
 
 	ql_dbg(ql_dbg_disc, vha, 0xffff,
 	    "Async-%s - %8phC hdl=%x loopid=%x portid %06x.\n",

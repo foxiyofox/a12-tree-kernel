@@ -228,6 +228,8 @@ static void iwl_mvm_pass_packet_to_mac80211(struct iwl_mvm *mvm,
 		__skb_push(skb, radiotap_len);
 		ieee80211_rx_napi(mvm->hw, sta, skb, napi);
 	}
+
+	return 0;
 }
 
 static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
@@ -1197,6 +1199,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 
 			iwl_mvm_agg_rx_received(mvm, reorder_data, baid);
 		}
+		rx_status->ampdu_reference = mvm->ampdu_ref;
 	}
 
 	switch (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) {

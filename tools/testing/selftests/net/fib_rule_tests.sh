@@ -252,4 +252,9 @@ if [ "$TESTS" != "none" ]; then
 	printf "Tests failed: %3d\n"   ${nfail}
 fi
 
+if [ "$TESTS" != "none" ]; then
+	printf "\nTests passed: %3d\n" ${nsuccess}
+	printf "Tests failed: %3d\n"   ${nfail}
+fi
+
 exit $ret

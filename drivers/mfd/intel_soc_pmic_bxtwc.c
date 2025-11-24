@@ -494,6 +494,16 @@ static int bxtwc_probe(struct platform_device *pdev)
 	}
 
 	ret = bxtwc_add_chained_irq_chip(pmic, pmic->irq_chip_data,
+					 BXTWC_PWRBTN_LVL1_IRQ,
+					 IRQF_ONESHOT,
+					 &bxtwc_regmap_irq_chip_pwrbtn,
+					 &pmic->irq_chip_data_pwrbtn);
+	if (ret) {
+		dev_err(&pdev->dev, "Failed to add PWRBTN IRQ chip\n");
+		return ret;
+	}
+
+	ret = bxtwc_add_chained_irq_chip(pmic, pmic->irq_chip_data,
 					 BXTWC_TMU_LVL1_IRQ,
 					 IRQF_ONESHOT,
 					 &bxtwc_regmap_irq_chip_tmu,

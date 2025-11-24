@@ -53,6 +53,8 @@ static void quirk_limit_mrrs(struct pci_dev *dev)
 		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
 		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2G),
 		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
+		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2G),
+		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
 		{ 0, },
 	};
 
@@ -239,6 +241,7 @@ static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
 	if (ks_pcie->error_irq > 0)
 		ks_dw_pcie_enable_error_irq(ks_pcie);
 }
+#endif
 
 #ifdef CONFIG_ARM
 /*

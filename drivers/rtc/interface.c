@@ -111,7 +111,7 @@ static int __rtc_read_time(struct rtc_device *rtc, struct rtc_time *tm)
 
 int rtc_read_time(struct rtc_device *rtc, struct rtc_time *tm)
 {
-	int err;
+	int err, uie;
 
 	err = mutex_lock_interruptible(&rtc->ops_lock);
 	if (err)
@@ -153,6 +153,17 @@ static int __rtc_read_hrtime(struct rtc_device *rtc, struct rtc_hrtime *tm)
 int rtc_read_hrtime(struct rtc_device *rtc, struct rtc_hrtime *tm)
 {
 	int err;
+
+#ifdef CONFIG_RTC_INTF_DEV_UIE_EMUL
+	uie = rtc->uie_rtctimer.enabled || rtc->uie_irq_active;
+#else
+	uie = rtc->uie_rtctimer.enabled;
+#endif
+	if (uie) {
+		err = rtc_update_irq_enable(rtc, 0);
+		if (err)
+			return err;
+	}
 
 	err = mutex_lock_interruptible(&rtc->ops_lock);
 	if (err)
@@ -213,6 +224,12 @@ int rtc_set_time(struct rtc_device *rtc, struct rtc_time *tm)
 	mutex_unlock(&rtc->ops_lock);
 	/* A timer might have just expired */
 	schedule_work(&rtc->irqwork);
+
+	if (uie) {
+		err = rtc_update_irq_enable(rtc, 1);
+		if (err)
+			return err;
+	}
 
 	if (uie) {
 		err = rtc_update_irq_enable(rtc, 1);

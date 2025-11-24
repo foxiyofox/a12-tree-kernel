@@ -796,6 +796,9 @@ static struct opp_table *_allocate_opp_table(struct device *dev)
 	/* Mark regulator count uninitialized */
 	opp_table->regulator_count = -1;
 
+	/* Mark regulator count uninitialized */
+	opp_table->regulator_count = -1;
+
 	opp_dev = _add_opp_dev(dev, opp_table);
 	if (!opp_dev) {
 		kfree(opp_table);
@@ -978,6 +981,9 @@ static bool _opp_supported_by_regulators(struct dev_pm_opp *opp,
 {
 	struct regulator *reg;
 	int i;
+
+	if (!opp_table->regulators)
+		return true;
 
 	if (!opp_table->regulators)
 		return true;
@@ -1547,6 +1553,9 @@ int dev_pm_opp_add(struct device *dev, unsigned long freq, unsigned long u_volt)
 	opp_table = dev_pm_opp_get_opp_table(dev);
 	if (!opp_table)
 		return -ENOMEM;
+
+	/* Fix regulator count for dynamic OPPs */
+	opp_table->regulator_count = 1;
 
 	/* Fix regulator count for dynamic OPPs */
 	opp_table->regulator_count = 1;

@@ -32,6 +32,12 @@ static inline void afs_set_lock_state(struct afs_vnode *vnode, enum afs_lock_sta
 	vnode->lock_state = state;
 }
 
+static inline void afs_set_lock_state(struct afs_vnode *vnode, enum afs_lock_state state)
+{
+	_debug("STATE %u -> %u", vnode->lock_state, state);
+	vnode->lock_state = state;
+}
+
 /*
  * if the callback is broken on this vnode, then the lock may now be available
  */

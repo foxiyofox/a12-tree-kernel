@@ -457,6 +457,10 @@ static int rpi_touchscreen_remove(struct i2c_client *i2c)
 	kfree(ts->dsi);
 
 	return 0;
+
+error:
+	of_node_put(endpoint);
+	return -ENODEV;
 }
 
 static int rpi_touchscreen_dsi_probe(struct mipi_dsi_device *dsi)

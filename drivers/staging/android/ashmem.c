@@ -78,6 +78,9 @@ static LIST_HEAD(ashmem_lru_list);
 static atomic_t ashmem_shrink_inflight = ATOMIC_INIT(0);
 static DECLARE_WAIT_QUEUE_HEAD(ashmem_shrink_wait);
 
+static atomic_t ashmem_shrink_inflight = ATOMIC_INIT(0);
+static DECLARE_WAIT_QUEUE_HEAD(ashmem_shrink_wait);
+
 /*
  * long lru_count - The count of pages on our LRU list.
  *
@@ -94,6 +97,15 @@ static DEFINE_MUTEX(ashmem_mutex);
 
 static struct kmem_cache *ashmem_area_cachep __read_mostly;
 static struct kmem_cache *ashmem_range_cachep __read_mostly;
+
+/*
+ * A separate lockdep class for the backing shmem inodes to resolve the lockdep
+ * warning about the race between kswapd taking fs_reclaim before inode_lock
+ * and write syscall taking inode_lock and then fs_reclaim.
+ * Note that such race is impossible because ashmem does not support write
+ * syscalls operating on the backing shmem.
+ */
+static struct lock_class_key backing_shmem_inode_class;
 
 static inline unsigned long range_size(struct ashmem_range *range)
 {
@@ -395,6 +407,7 @@ static int ashmem_mmap(struct file *file, struct vm_area_struct *vma)
 	if (!asma->file) {
 		char *name = ASHMEM_NAME_DEF;
 		struct file *vmfile;
+		struct inode *inode;
 
 		if (asma->name[ASHMEM_NAME_PREFIX_LEN] != '\0')
 			name = asma->name;
@@ -602,6 +615,8 @@ static int get_name(struct ashmem_area *asma, void __user *name)
 		memcpy(local_name, ASHMEM_NAME_DEF, len);
 	}
 	mutex_unlock(&ashmem_mutex);
+	if (range)
+		kmem_cache_free(ashmem_range_cachep, range);
 
 	/*
 	 * Now we are just copying from the stack variable to userland

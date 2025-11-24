@@ -134,6 +134,8 @@ ENTRY(ftrace_regs_caller)
 
 	ENCODE_FRAME_POINTER
 
+	ENCODE_FRAME_POINTER
+
 	movl	12*4(%esp), %eax		/* Load ip (1st parameter) */
 	subl	$MCOUNT_INSN_SIZE, %eax		/* Adjust ip */
 #ifdef CC_USING_FENTRY

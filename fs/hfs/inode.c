@@ -45,6 +45,8 @@ static void hfs_write_failed(struct address_space *mapping, loff_t to)
 	if (to > inode->i_size) {
 		truncate_pagecache(inode, inode->i_size);
 		hfs_file_truncate(inode);
+		inode->i_atime = inode->i_mtime = inode->i_ctime =
+						  current_time(inode);
 	}
 }
 

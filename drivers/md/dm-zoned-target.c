@@ -396,6 +396,11 @@ static void dmz_handle_bio(struct dmz_target *dmz, struct dm_chunk_work *cw,
 		goto out;
 	}
 
+	if (dmz->dev->flags & DMZ_BDEV_DYING) {
+		ret = -EIO;
+		goto out;
+	}
+
 	/*
 	 * Get the data zone mapping the chunk. There may be no
 	 * mapping for read and discard. If a mapping is obtained,
@@ -789,7 +794,7 @@ static int dmz_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 	}
 
 	/* Set target (no write same support) */
-	ti->max_io_len = dev->zone_nr_sectors << 9;
+	ti->max_io_len = dev->zone_nr_sectors;
 	ti->num_flush_bios = 1;
 	ti->num_discard_bios = 1;
 	ti->num_write_zeroes_bios = 1;
@@ -923,6 +928,9 @@ static void dmz_io_hints(struct dm_target *ti, struct queue_limits *limits)
 static int dmz_prepare_ioctl(struct dm_target *ti, struct block_device **bdev)
 {
 	struct dmz_target *dmz = ti->private;
+
+	if (!dmz_check_bdev(dmz->dev))
+		return -EIO;
 
 	if (!dmz_check_bdev(dmz->dev))
 		return -EIO;

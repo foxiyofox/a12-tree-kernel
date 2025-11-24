@@ -294,6 +294,8 @@ void dlm_callback_suspend(struct dlm_ls *ls)
 
 #define MAX_CB_QUEUE 25
 
+#define MAX_CB_QUEUE 25
+
 void dlm_callback_resume(struct dlm_ls *ls)
 {
 	struct dlm_lkb *lkb, *safe;

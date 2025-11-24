@@ -1897,6 +1897,8 @@ static int aic3x_i2c_remove(struct i2c_client *client)
 
 	list_del(&aic3x->list);
 
+	list_del(&aic3x->list);
+
 	if (gpio_is_valid(aic3x->gpio_reset) &&
 	    !aic3x_is_shared_reset(aic3x)) {
 		gpio_set_value(aic3x->gpio_reset, 0);

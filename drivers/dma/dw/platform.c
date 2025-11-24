@@ -175,6 +175,12 @@ dw_dma_parse_dt(struct platform_device *pdev)
 		pdata->protctl = tmp;
 	}
 
+	if (!of_property_read_u32(np, "snps,dma-protection-control", &tmp)) {
+		if (tmp > CHAN_PROTCTL_MASK)
+			return NULL;
+		pdata->protctl = tmp;
+	}
+
 	return pdata;
 }
 #else
@@ -255,6 +261,9 @@ err_dw_dma_probe:
 static int dw_remove(struct platform_device *pdev)
 {
 	struct dw_dma_chip *chip = platform_get_drvdata(pdev);
+
+	if (ACPI_HANDLE(&pdev->dev))
+		dw_dma_acpi_controller_free(chip->dw);
 
 	if (ACPI_HANDLE(&pdev->dev))
 		dw_dma_acpi_controller_free(chip->dw);

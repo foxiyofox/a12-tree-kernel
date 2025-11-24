@@ -785,9 +785,6 @@ int mesh_pathtbl_init(struct ieee80211_sub_if_data *sdata)
 		goto free_path;
 	}
 
-	rhashtable_init(&tbl_path->rhead, &mesh_rht_params);
-	rhashtable_init(&tbl_mpp->rhead, &mesh_rht_params);
-
 	sdata->u.mesh.mesh_paths = tbl_path;
 	sdata->u.mesh.mpp_paths = tbl_mpp;
 

@@ -270,6 +270,10 @@ static int k3_dma_start_txd(struct k3_dma_chan *c)
 	if (c->phy->ds_run)
 		return -EAGAIN;
 
+	/* Avoid losing track of  ds_run if a transaction is in flight */
+	if (c->phy->ds_run)
+		return -EAGAIN;
+
 	if (vd) {
 		struct k3_dma_desc_sw *ds =
 			container_of(vd, struct k3_dma_desc_sw, vd);

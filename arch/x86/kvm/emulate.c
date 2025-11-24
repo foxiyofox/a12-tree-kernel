@@ -2384,6 +2384,7 @@ static int rsm_load_seg_32(struct x86_emulate_ctxt *ctxt, u64 smbase, int n)
 	ctxt->ops->set_segment(ctxt, selector, &desc, 0, n);
 	return X86EMUL_CONTINUE;
 }
+#endif
 
 #ifdef CONFIG_X86_64
 static int rsm_load_seg_64(struct x86_emulate_ctxt *ctxt, u64 smbase, int n)
@@ -2504,6 +2505,7 @@ static int rsm_load_state_32(struct x86_emulate_ctxt *ctxt, u64 smbase)
 
 	return rsm_enter_protected_mode(ctxt, cr0, cr3, cr4);
 }
+#endif
 
 #ifdef CONFIG_X86_64
 static int rsm_load_state_64(struct x86_emulate_ctxt *ctxt, u64 smbase)
@@ -3561,7 +3563,7 @@ static int em_rdpid(struct x86_emulate_ctxt *ctxt)
 	u64 tsc_aux = 0;
 
 	if (ctxt->ops->get_msr(ctxt, MSR_TSC_AUX, &tsc_aux))
-		return emulate_gp(ctxt, 0);
+		return emulate_ud(ctxt);
 	ctxt->dst.val = tsc_aux;
 	return X86EMUL_CONTINUE;
 }
@@ -3991,6 +3993,12 @@ static int em_bswap(struct x86_emulate_ctxt *ctxt)
 static int em_clflush(struct x86_emulate_ctxt *ctxt)
 {
 	/* emulating clflush regardless of cpuid */
+	return X86EMUL_CONTINUE;
+}
+
+static int em_clflushopt(struct x86_emulate_ctxt *ctxt)
+{
+	/* emulating clflushopt regardless of cpuid */
 	return X86EMUL_CONTINUE;
 }
 
@@ -4507,7 +4515,7 @@ static const struct opcode group11[] = {
 };
 
 static const struct gprefix pfx_0f_ae_7 = {
-	I(SrcMem | ByteOp, em_clflush), N, N, N,
+	I(SrcMem | ByteOp, em_clflush), I(SrcMem | ByteOp, em_clflushopt), N, N,
 };
 
 static const struct group_dual group15 = { {

@@ -239,6 +239,9 @@ static int nft_tunnel_obj_erspan_init(const struct nlattr *attr,
 	if (!tb[NFTA_TUNNEL_KEY_ERSPAN_VERSION])
 		 return -EINVAL;
 
+	if (!tb[NFTA_TUNNEL_KEY_ERSPAN_VERSION])
+		 return -EINVAL;
+
 	version = ntohl(nla_get_be32(tb[NFTA_TUNNEL_KEY_ERSPAN_VERSION]));
 	switch (version) {
 	case ERSPAN_VERSION:

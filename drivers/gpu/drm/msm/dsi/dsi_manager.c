@@ -516,6 +516,10 @@ static void dsi_mgr_bridge_post_disable(struct drm_bridge *bridge)
 	src_pll = msm_dsi_phy_get_pll(msm_dsi->phy);
 	msm_dsi_pll_save_state(src_pll);
 
+	/* Save PLL status if it is a clock source */
+	src_pll = msm_dsi_phy_get_pll(msm_dsi->phy);
+	msm_dsi_pll_save_state(src_pll);
+
 	ret = msm_dsi_host_power_off(host);
 	if (ret)
 		pr_err("%s: host %d power off failed,%d\n", __func__, id, ret);

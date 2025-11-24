@@ -329,6 +329,18 @@ bool is_discard_enabled(struct cache_set *s)
 	return false;
 }
 
+bool is_discard_enabled(struct cache_set *s)
+{
+	struct cache *ca;
+	unsigned int i;
+
+	for_each_cache(ca, s, i)
+		if (ca->discard)
+			return true;
+
+	return false;
+}
+
 int bch_journal_replay(struct cache_set *s, struct list_head *list)
 {
 	int ret = 0, keys = 0, entries = 0;
@@ -685,6 +697,9 @@ static void journal_write_unlocked(struct closure *cl)
 	/* If KEY_PTRS(k) == 0, this jset gets lost in air */
 	BUG_ON(i == 0);
 
+	/* If KEY_PTRS(k) == 0, this jset gets lost in air */
+	BUG_ON(i == 0);
+
 	atomic_dec_bug(&fifo_back(&c->journal.pin));
 	bch_journal_next(&c->journal);
 	journal_reclaim(c);
@@ -800,6 +815,10 @@ atomic_t *bch_journal(struct cache_set *c,
 {
 	struct journal_write *w;
 	atomic_t *ret;
+
+	/* No journaling if CACHE_SET_IO_DISABLE set already */
+	if (unlikely(test_bit(CACHE_SET_IO_DISABLE, &c->flags)))
+		return NULL;
 
 	/* No journaling if CACHE_SET_IO_DISABLE set already */
 	if (unlikely(test_bit(CACHE_SET_IO_DISABLE, &c->flags)))

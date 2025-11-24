@@ -400,6 +400,7 @@ again:
 			rec_off = tree->node_size - (rec + 2) * 2;
 			end_rec_off = tree->node_size - (parent->num_recs + 1) * 2;
 		}
+		new_node = NULL;
 	}
 
 	end_off = start_off = hfs_bnode_read_u16(parent, rec_off);

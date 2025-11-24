@@ -65,6 +65,8 @@
 
 unsigned int xb_dev_generation_id;
 
+unsigned int xb_dev_generation_id;
+
 /*
  * An element of a list of outstanding transactions, for which we're
  * still waiting a reply.
@@ -334,6 +336,18 @@ static void xenbus_worker(struct work_struct *wq)
 		kfree(rb);
 	}
 	kfree(u);
+}
+
+static void xenbus_file_free(struct kref *kref)
+{
+	struct xenbus_file_priv *u;
+
+	/*
+	 * We might be called in xenbus_thread().
+	 * Use workqueue to avoid deadlock.
+	 */
+	u = container_of(kref, struct xenbus_file_priv, kref);
+	schedule_work(&u->wq);
 }
 
 static void xenbus_file_free(struct kref *kref)

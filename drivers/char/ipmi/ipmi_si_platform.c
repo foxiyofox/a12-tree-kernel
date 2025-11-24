@@ -370,6 +370,9 @@ static int acpi_ipmi_probe(struct platform_device *pdev)
 	io.regsize = DEFAULT_REGSIZE;
 	io.regshift = 0;
 
+	io.regsize = DEFAULT_REGSIZE;
+	io.regshift = 0;
+
 	res = ipmi_get_info_from_resources(pdev, &io);
 	if (!res) {
 		rv = -EINVAL;
@@ -430,6 +433,11 @@ static int ipmi_remove(struct platform_device *pdev)
 {
 	return ipmi_si_remove_by_dev(&pdev->dev);
 }
+
+static const struct platform_device_id si_plat_ids[] = {
+    { "hardcode-ipmi-si", 0 },
+    { }
+};
 
 static const struct platform_device_id si_plat_ids[] = {
     { "hardcode-ipmi-si", 0 },

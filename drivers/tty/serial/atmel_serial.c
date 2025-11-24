@@ -165,6 +165,8 @@ struct atmel_uart_port {
 
 	bool			hd_start_rx;	/* can start RX during half-duplex operation */
 
+	bool			hd_start_rx;	/* can start RX during half-duplex operation */
+
 #ifdef CONFIG_PM
 	struct {
 		u32		cr;
@@ -225,6 +227,12 @@ static inline u8 atmel_uart_read_char(struct uart_port *port)
 static inline void atmel_uart_write_char(struct uart_port *port, u8 value)
 {
 	__raw_writeb(value, port->membase + ATMEL_US_THR);
+}
+
+static inline int atmel_uart_is_half_duplex(struct uart_port *port)
+{
+	return (port->rs485.flags & SER_RS485_ENABLED) &&
+		!(port->rs485.flags & SER_RS485_RX_DURING_TX);
 }
 
 static inline int atmel_uart_is_half_duplex(struct uart_port *port)

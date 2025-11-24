@@ -292,6 +292,7 @@ int cfg80211_mgd_wext_giwap(struct net_device *dev,
 			    struct sockaddr *ap_addr, char *extra)
 {
 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+	int ret = 0;
 
 	/* call only for station! */
 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION))
@@ -306,7 +307,7 @@ int cfg80211_mgd_wext_giwap(struct net_device *dev,
 		eth_zero_addr(ap_addr->sa_data);
 	wdev_unlock(wdev);
 
-	return 0;
+	return ret;
 }
 
 int cfg80211_wext_siwgenie(struct net_device *dev,

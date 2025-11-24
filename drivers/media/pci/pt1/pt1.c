@@ -294,6 +294,46 @@ static int pt1_demod_block_init(struct pt1 *pt1)
 	return 0;
 }
 
+/*
+ * Init registers for (each pair of) terrestrial/satellite block in demod.
+ * Note that resetting terr. block also resets its peer sat. block as well.
+ * This function must be called before configuring any demod block
+ * (before pt1_wakeup(), fe->ops.init()).
+ */
+static int pt1_demod_block_init(struct pt1 *pt1)
+{
+	struct i2c_client *cl;
+	u8 buf[2] = {0x01, 0x80};
+	int ret;
+	int i;
+
+	/* reset all terr. & sat. pairs first */
+	for (i = 0; i < PT1_NR_ADAPS; i++) {
+		cl = pt1->adaps[i]->demod_i2c_client;
+		if (strncmp(cl->name, TC90522_I2C_DEV_TER,
+			    strlen(TC90522_I2C_DEV_TER)))
+			continue;
+
+		ret = i2c_master_send(cl, buf, 2);
+		if (ret < 0)
+			return ret;
+		usleep_range(30000, 50000);
+	}
+
+	for (i = 0; i < PT1_NR_ADAPS; i++) {
+		cl = pt1->adaps[i]->demod_i2c_client;
+		if (strncmp(cl->name, TC90522_I2C_DEV_SAT,
+			    strlen(TC90522_I2C_DEV_SAT)))
+			continue;
+
+		ret = i2c_master_send(cl, buf, 2);
+		if (ret < 0)
+			return ret;
+		usleep_range(30000, 50000);
+	}
+	return 0;
+}
+
 static void pt1_write_reg(struct pt1 *pt1, int reg, u32 data)
 {
 	writel(data, pt1->regs + reg * 4);
@@ -1308,6 +1348,10 @@ static int pt1_resume(struct device *dev)
 		pt1->adaps[i]->packet_count = 0;
 		pt1->adaps[i]->st_count = -1;
 	}
+
+	ret = pt1_demod_block_init(pt1);
+	if (ret < 0)
+		goto fe_unregister;
 
 	return 0;
 

@@ -37,6 +37,12 @@ static struct proto pvcalls_proto = {
 	.obj_size = sizeof(struct sock),
 };
 
+static struct proto pvcalls_proto = {
+	.name	= "PVCalls",
+	.owner	= THIS_MODULE,
+	.obj_size = sizeof(struct sock),
+};
+
 struct pvcalls_bedata {
 	struct xen_pvcalls_front_ring ring;
 	grant_ref_t ref;
@@ -339,6 +345,42 @@ int pvcalls_front_socket(struct socket *sock)
 
 	pvcalls_exit();
 	return ret;
+}
+
+static void free_active_ring(struct sock_mapping *map)
+{
+	if (!map->active.ring)
+		return;
+
+	free_pages((unsigned long)map->active.data.in,
+			map->active.ring->ring_order);
+	free_page((unsigned long)map->active.ring);
+}
+
+static int alloc_active_ring(struct sock_mapping *map)
+{
+	void *bytes;
+
+	map->active.ring = (struct pvcalls_data_intf *)
+		get_zeroed_page(GFP_KERNEL);
+	if (!map->active.ring)
+		goto out;
+
+	map->active.ring->ring_order = PVCALLS_RING_ORDER;
+	bytes = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
+					PVCALLS_RING_ORDER);
+	if (!bytes)
+		goto out;
+
+	map->active.data.in = bytes;
+	map->active.data.out = bytes +
+		XEN_FLEX_RING_SIZE(PVCALLS_RING_ORDER);
+
+	return 0;
+
+out:
+	free_active_ring(map);
+	return -ENOMEM;
 }
 
 static void free_active_ring(struct sock_mapping *map)
@@ -721,7 +763,6 @@ int pvcalls_front_bind(struct socket *sock, struct sockaddr *addr, int addr_len)
 
 int pvcalls_front_listen(struct socket *sock, int backlog)
 {
-	struct pvcalls_bedata *bedata;
 	struct sock_mapping *map;
 	struct xen_pvcalls_request *req;
 	int notify, req_id, ret;
@@ -729,7 +770,6 @@ int pvcalls_front_listen(struct socket *sock, int backlog)
 	map = pvcalls_enter_sock(sock);
 	if (IS_ERR(map))
 		return PTR_ERR(map);
-	bedata = dev_get_drvdata(&pvcalls_front_dev->dev);
 
 	if (map->passive.status != PVCALLS_STATUS_BIND) {
 		pvcalls_exit_sock(sock);
@@ -779,7 +819,6 @@ int pvcalls_front_accept(struct socket *sock, struct socket *newsock, int flags)
 	map = pvcalls_enter_sock(sock);
 	if (IS_ERR(map))
 		return PTR_ERR(map);
-	bedata = dev_get_drvdata(&pvcalls_front_dev->dev);
 
 	if (map->passive.status != PVCALLS_STATUS_LISTEN) {
 		pvcalls_exit_sock(sock);

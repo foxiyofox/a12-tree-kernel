@@ -873,6 +873,15 @@ static int ks8851_net_open(struct net_device *dev)
 static int ks8851_net_stop(struct net_device *dev)
 {
 	struct ks8851_net *ks = netdev_priv(dev);
+	int ret;
+
+	ret = request_threaded_irq(dev->irq, NULL, ks8851_irq,
+				   IRQF_TRIGGER_LOW | IRQF_ONESHOT,
+				   dev->name, ks);
+	if (ret < 0) {
+		netdev_err(dev, "failed to get irq\n");
+		return ret;
+	}
 
 	netif_info(ks, ifdown, dev, "shutting down\n");
 
@@ -1371,6 +1380,8 @@ static int ks8851_read_selftest(struct ks8851_net *ks)
 		netdev_err(ks->netdev, "RX memory selftest fail\n");
 		ret |= 2;
 	}
+
+	free_irq(dev->irq, ks);
 
 	return 0;
 }

@@ -508,6 +508,9 @@ struct dc_plane_state {
 	/* HACK: Workaround for forcing full reprogramming under some conditions */
 	bool force_full_update;
 
+	/* HACK: Workaround for forcing full reprogramming under some conditions */
+	bool force_full_update;
+
 	/* private to dc_surface.c */
 	enum dc_irq_source irq_source;
 	struct kref refcount;

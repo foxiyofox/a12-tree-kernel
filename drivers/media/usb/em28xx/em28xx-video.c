@@ -1095,6 +1095,8 @@ int em28xx_start_analog_streaming(struct vb2_queue *vq, unsigned int count)
 
 	dev->v4l2->field_count = 0;
 
+	dev->v4l2->field_count = 0;
+
 	/*
 	 * Make sure streaming is not already in progress for this type
 	 * of filehandle (e.g. video, vbi)
@@ -1687,6 +1689,12 @@ static int vidioc_enum_input(struct file *file, void *priv,
 	/* webcams do not have the STD API */
 	if (dev->is_webcam)
 		i->capabilities = 0;
+
+	/* Dynamically generates an audioset bitmask */
+	i->audioset = 0;
+	for (j = 0; j < MAX_EM28XX_INPUT; j++)
+		if (dev->amux_map[j] != EM28XX_AMUX_UNUSED)
+			i->audioset |= 1 << j;
 
 	/* Dynamically generates an audioset bitmask */
 	i->audioset = 0;

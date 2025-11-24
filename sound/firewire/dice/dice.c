@@ -392,6 +392,15 @@ static const struct ieee1394_device_id dice_id_table[] = {
 		.vendor_id	= OUI_SSL,
 		.model_id	= 0x000070,
 	},
+	// Solid State Logic, Duende Classic and Mini.
+	// NOTE: each field of GUID in config ROM is not compliant to standard
+	// DICE scheme.
+	{
+		.match_flags	= IEEE1394_MATCH_VENDOR_ID |
+				  IEEE1394_MATCH_MODEL_ID,
+		.vendor_id	= OUI_SSL,
+		.model_id	= 0x000070,
+	},
 	{
 		.match_flags = IEEE1394_MATCH_VERSION,
 		.version     = DICE_INTERFACE,

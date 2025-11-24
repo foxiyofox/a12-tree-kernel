@@ -127,6 +127,26 @@ void setup_spectre_v2(void)
 }
 #endif /* CONFIG_PPC_FSL_BOOK3E */
 
+#if defined(CONFIG_PPC_FSL_BOOK3E) || defined(CONFIG_PPC_BOOK3S_64)
+static int __init handle_nospectre_v2(char *p)
+{
+	no_spectrev2 = true;
+
+	return 0;
+}
+early_param("nospectre_v2", handle_nospectre_v2);
+#endif /* CONFIG_PPC_FSL_BOOK3E || CONFIG_PPC_BOOK3S_64 */
+
+#ifdef CONFIG_PPC_FSL_BOOK3E
+void setup_spectre_v2(void)
+{
+	if (no_spectrev2 || cpu_mitigations_off())
+		do_btb_flush_fixups();
+	else
+		btb_flush_enabled = true;
+}
+#endif /* CONFIG_PPC_FSL_BOOK3E */
+
 #ifdef CONFIG_PPC_BOOK3S_64
 ssize_t cpu_show_meltdown(struct device *dev, struct device_attribute *attr, char *buf)
 {
@@ -247,6 +267,11 @@ static int __init handle_no_stf_barrier(char *p)
 }
 
 early_param("no_stf_barrier", handle_no_stf_barrier);
+
+enum stf_barrier_type stf_barrier_type_get(void)
+{
+	return stf_enabled_flush_types;
+}
 
 /* This is the generic flag used by other architectures */
 static int __init handle_ssbd(char *p)

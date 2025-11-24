@@ -531,6 +531,10 @@ static int dln2_adc_triggered_buffer_postenable(struct iio_dev *indio_dev)
 	if (ret)
 		return ret;
 
+	ret = iio_triggered_buffer_postenable(indio_dev);
+	if (ret)
+		return ret;
+
 	mutex_lock(&dln2->mutex);
 
 	/* Enable ADC */

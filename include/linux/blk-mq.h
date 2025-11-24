@@ -172,6 +172,12 @@ struct blk_mq_ops {
 	 */
 	cleanup_rq_fn		*cleanup_rq;
 
+	/*
+	 * Called before freeing one request which isn't completed yet,
+	 * and usually for freeing the driver private data
+	 */
+	cleanup_rq_fn		*cleanup_rq;
+
 	map_queues_fn		*map_queues;
 
 #ifdef CONFIG_BLK_DEBUG_FS
@@ -336,6 +342,12 @@ static inline void *blk_mq_rq_to_pdu(struct request *rq)
 #define hctx_for_each_ctx(hctx, ctx, i)					\
 	for ((i) = 0; (i) < (hctx)->nr_ctx &&				\
 	     ({ ctx = (hctx)->ctxs[(i)]; 1; }); (i)++)
+
+static inline void blk_mq_cleanup_rq(struct request *rq)
+{
+	if (rq->q->mq_ops->cleanup_rq)
+		rq->q->mq_ops->cleanup_rq(rq);
+}
 
 static inline void blk_mq_cleanup_rq(struct request *rq)
 {

@@ -567,8 +567,8 @@ static int dmatest_func(void *data)
 	flags = DMA_CTRL_ACK | DMA_PREP_INTERRUPT;
 
 	ktime = ktime_get();
-	while (!kthread_should_stop()
-	       && !(params->iterations && total_tests >= params->iterations)) {
+	while (!(kthread_should_stop() ||
+	       (params->iterations && total_tests >= params->iterations))) {
 		struct dma_async_tx_descriptor *tx = NULL;
 		struct dmaengine_unmap_data *um;
 		dma_addr_t *dsts;
@@ -910,6 +910,12 @@ static int dmatest_add_channel(struct dmatest_info *info,
 			cnt = dmatest_add_threads(info, dtc, DMA_MEMCPY);
 			thread_count += cnt > 0 ? cnt : 0;
 		}
+
+		continue;
+
+error_unmap_continue:
+		dmaengine_unmap_put(um);
+		failed_tests++;
 	}
 
 	if (dma_has_cap(DMA_MEMSET, dma_dev->cap_mask)) {

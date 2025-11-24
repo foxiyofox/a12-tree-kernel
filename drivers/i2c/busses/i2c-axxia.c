@@ -328,6 +328,21 @@ static irqreturn_t axxia_i2c_isr(int irq, void *_dev)
 		idev->msg_err = -ETIMEDOUT;
 		i2c_int_disable(idev, ~MST_STATUS_TSS);
 		complete(&idev->msg_complete);
+	} else if (status & MST_STATUS_SCC) {
+		/* Stop completed */
+		i2c_int_disable(idev, ~MST_STATUS_TSS);
+		complete(&idev->msg_complete);
+	} else if (status & MST_STATUS_SNS) {
+		/* Transfer done */
+		i2c_int_disable(idev, ~MST_STATUS_TSS);
+		if (i2c_m_rd(idev->msg) && idev->msg_xfrd < idev->msg->len)
+			axxia_i2c_empty_rx_fifo(idev);
+		complete(&idev->msg_complete);
+	} else if (status & MST_STATUS_TSS) {
+		/* Transfer timeout */
+		idev->msg_err = -ETIMEDOUT;
+		i2c_int_disable(idev, ~MST_STATUS_TSS);
+		complete(&idev->msg_complete);
 	}
 
 out:
@@ -451,6 +466,9 @@ axxia_i2c_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 	struct axxia_i2c_dev *idev = i2c_get_adapdata(adap);
 	int i;
 	int ret = 0;
+
+	idev->msg_err = 0;
+	i2c_int_enable(idev, MST_STATUS_TSS);
 
 	idev->msg_err = 0;
 	i2c_int_enable(idev, MST_STATUS_TSS);

@@ -197,16 +197,16 @@ __CMPXCHG_GEN(_mb)
 	__ret; \
 })
 
-#define __CMPWAIT_CASE(w, sz, name)					\
-static inline void __cmpwait_case_##name(volatile void *ptr,		\
-					 unsigned long val)		\
+#define __CMPWAIT_CASE(w, sfx, sz)					\
+static inline void __cmpwait_case_##sz(volatile void *ptr,		\
+				       unsigned long val)		\
 {									\
 	unsigned long tmp;						\
 									\
 	asm volatile(							\
 	"	sevl\n"							\
 	"	wfe\n"							\
-	"	ldxr" #sz "\t%" #w "[tmp], %[v]\n"			\
+	"	ldxr" #sfx "\t%" #w "[tmp], %[v]\n"			\
 	"	eor	%" #w "[tmp], %" #w "[tmp], %" #w "[val]\n"	\
 	"	cbnz	%" #w "[tmp], 1f\n"				\
 	"	wfe\n"							\

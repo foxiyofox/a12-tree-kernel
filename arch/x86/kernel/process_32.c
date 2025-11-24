@@ -61,6 +61,8 @@
 
 #include "process.h"
 
+#include "process.h"
+
 void __show_regs(struct pt_regs *regs, enum show_regs_mode mode)
 {
 	unsigned long cr0 = 0L, cr2 = 0L, cr3 = 0L, cr4 = 0L;

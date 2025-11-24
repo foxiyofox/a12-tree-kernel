@@ -786,6 +786,7 @@ static inline int process_rcv_packet(struct hfi1_packet *packet, int thread)
 	packet->rcd->rhf_rcv_function_map[packet->etype](packet);
 	packet->numpkt++;
 
+	packet->rcd->dd->ctx0_seq_drop++;
 	/* Set up for the next packet */
 	packet->rhqoff += packet->rsize;
 	if (packet->rhqoff >= packet->maxcnt)

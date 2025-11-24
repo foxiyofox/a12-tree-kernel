@@ -2324,6 +2324,10 @@ static int tegra_pcie_ports_open(struct inode *inode, struct file *file)
 	s->private = pcie;
 
 	return 0;
+
+err_node_put:
+	of_node_put(port);
+	return err;
 }
 
 static const struct file_operations tegra_pcie_ports_ops = {
@@ -2527,6 +2531,7 @@ static const struct dev_pm_ops tegra_pcie_pm_ops = {
 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
 				      tegra_pcie_pm_resume)
 };
+MODULE_DEVICE_TABLE(of, tegra_pcie_of_match);
 
 static struct platform_driver tegra_pcie_driver = {
 	.driver = {

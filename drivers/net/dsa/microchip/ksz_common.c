@@ -1206,6 +1206,11 @@ int ksz_switch_register(struct ksz_device *dev)
 	mutex_init(&dev->alu_mutex);
 	mutex_init(&dev->vlan_mutex);
 
+	mutex_init(&dev->reg_mutex);
+	mutex_init(&dev->stats_mutex);
+	mutex_init(&dev->alu_mutex);
+	mutex_init(&dev->vlan_mutex);
+
 	if (ksz_switch_detect(dev))
 		return -EINVAL;
 

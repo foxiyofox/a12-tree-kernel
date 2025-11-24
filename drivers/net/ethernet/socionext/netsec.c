@@ -1288,6 +1288,7 @@ static int netsec_netdev_open(struct net_device *ndev)
 {
 	struct netsec_priv *priv = netdev_priv(ndev);
 	int ret;
+	u16 data;
 
 	pm_runtime_get_sync(priv->dev);
 
@@ -1390,9 +1391,17 @@ static int netsec_netdev_init(struct net_device *ndev)
 		BMCR_PDOWN;
 	netsec_phy_write(priv->mii_bus, priv->phy_addr, MII_BMCR, data);
 
+	/* set phy power down */
+	data = netsec_phy_read(priv->mii_bus, priv->phy_addr, MII_BMCR);
+	netsec_phy_write(priv->mii_bus, priv->phy_addr, MII_BMCR,
+			 data | BMCR_PDOWN);
+
 	ret = netsec_reset_hardware(priv, true);
 	if (ret)
 		goto err2;
+
+	/* Restore phy power state */
+	netsec_phy_write(priv->mii_bus, priv->phy_addr, MII_BMCR, data);
 
 	return 0;
 err2:
@@ -1446,6 +1455,8 @@ static int netsec_of_probe(struct platform_device *pdev,
 		dev_err(&pdev->dev, "missing required property 'phy-handle'\n");
 		return -EINVAL;
 	}
+
+	*phy_addr = of_mdio_parse_addr(&pdev->dev, priv->phy_np);
 
 	*phy_addr = of_mdio_parse_addr(&pdev->dev, priv->phy_np);
 

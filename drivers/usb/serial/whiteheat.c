@@ -800,6 +800,10 @@ static int start_command_port(struct usb_serial *serial)
 
 	command_port = serial->port[COMMAND_PORT];
 	command_info = usb_get_serial_port_data(command_port);
+
+	if (command_port->bulk_out_size < datasize + 1)
+		return -EIO;
+
 	mutex_lock(&command_info->mutex);
 	if (!command_info->port_running) {
 		/* Work around HCD bugs */

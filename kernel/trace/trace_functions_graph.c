@@ -511,6 +511,8 @@ void trace_graph_return(struct ftrace_graph_ret *trace)
 
 	ftrace_graph_addr_finish(trace);
 
+	ftrace_graph_addr_finish(trace);
+
 	local_irq_save(flags);
 	cpu = raw_smp_processor_id();
 	data = per_cpu_ptr(tr->trace_buffer.data, cpu);

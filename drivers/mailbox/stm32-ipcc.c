@@ -224,6 +224,8 @@ static int stm32_ipcc_probe(struct platform_device *pdev)
 
 	spin_lock_init(&ipcc->lock);
 
+	spin_lock_init(&ipcc->lock);
+
 	/* proc_id */
 	if (of_property_read_u32(np, "st,proc-id", &ipcc->proc_id)) {
 		dev_err(dev, "Missing st,proc-id\n");

@@ -1700,6 +1700,7 @@ TRACE_EVENT(qgroup_meta_convert,
 	TP_fast_assign_btrfs(root->fs_info,
 		__entry->refroot	= root->objectid;
 		__entry->diff		= diff;
+		__entry->type		= type;
 	),
 
 	TP_printk_btrfs("refroot=%llu(%s) type=%s->%s diff=%lld",
@@ -1718,7 +1719,6 @@ TRACE_EVENT(qgroup_meta_free_all_pertrans,
 	TP_STRUCT__entry_btrfs(
 		__field(	u64,	refroot			)
 		__field(	s64,	diff			)
-		__field(	int,	type			)
 	),
 
 	TP_fast_assign_btrfs(root->fs_info,

@@ -2610,6 +2610,10 @@ static int vmw_cmd_dx_set_index_buffer(struct vmw_private *dev_priv,
 	}
 
 	cmd = container_of(header, typeof(*cmd), header);
+	if (unlikely(cmd->sid == SVGA3D_INVALID_ID)) {
+		DRM_ERROR("Invalid surface id.\n");
+		return -EINVAL;
+	}
 	ret = vmw_cmd_res_check(dev_priv, sw_context, vmw_res_surface,
 				user_surface_converter,
 				&cmd->body.sid, &res_node);
@@ -3803,7 +3807,7 @@ static int vmw_resize_cmd_bounce(struct vmw_sw_context *sw_context,
 		return -ENOMEM;
 	}
 
-	return 0;
+	return ret;
 }
 
 /**

@@ -868,6 +868,10 @@ struct notifier_block cip_netdev_notifier = {
 	.notifier_call = clusterip_netdev_event
 };
 
+struct notifier_block cip_netdev_notifier = {
+	.notifier_call = clusterip_netdev_event
+};
+
 static int __init clusterip_tg_init(void)
 {
 	int ret;

@@ -48,6 +48,14 @@ static int pcf8523_read(struct i2c_client *client, u8 reg, u8 *valuep)
 	u8 value = 0;
 	int err;
 
+	err = pcf8523_voltage_low(client);
+	if (err < 0) {
+		return err;
+	} else if (err > 0) {
+		dev_err(dev, "low voltage detected, time is unreliable\n");
+		return -EINVAL;
+	}
+
 	msgs[0].addr = client->addr;
 	msgs[0].flags = 0;
 	msgs[0].len = sizeof(reg);

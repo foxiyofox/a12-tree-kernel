@@ -657,6 +657,12 @@ static void lru_add_drain_per_cpu(struct work_struct *dummy)
 {
 	lru_add_drain();
 }
+#else
+void lru_add_drain_all(void)
+{
+	lru_add_drain();
+}
+#endif
 
 /*
  * Doesn't need any cpu hotplug locking because we do rely on per-cpu

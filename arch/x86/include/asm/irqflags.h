@@ -8,6 +8,8 @@
 
 #include <asm/nospec-branch.h>
 
+#include <asm/nospec-branch.h>
+
 /* Provide __cpuidle; we can't safely include <linux/cpu.h> */
 #define __cpuidle __attribute__((__section__(".cpuidle.text")))
 

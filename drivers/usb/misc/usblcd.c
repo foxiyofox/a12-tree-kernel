@@ -152,6 +152,13 @@ static ssize_t lcd_read(struct file *file, char __user * buffer,
 		goto out_up_io;
 	}
 
+	down_read(&dev->io_rwsem);
+
+	if (dev->disconnected) {
+		retval = -ENODEV;
+		goto out_up_io;
+	}
+
 	/* do a blocking bulk read to get data from the device */
 	retval = usb_bulk_msg(dev->udev,
 			      usb_rcvbulkpipe(dev->udev,
@@ -167,6 +174,9 @@ static ssize_t lcd_read(struct file *file, char __user * buffer,
 		else
 			retval = bytes_read;
 	}
+
+out_up_io:
+	up_read(&dev->io_rwsem);
 
 out_up_io:
 	up_read(&dev->io_rwsem);
@@ -444,6 +454,12 @@ static void lcd_disconnect(struct usb_interface *interface)
 
 	/* give back our minor */
 	usb_deregister_dev(interface, &lcd_class);
+
+	down_write(&dev->io_rwsem);
+	dev->disconnected = 1;
+	up_write(&dev->io_rwsem);
+
+	usb_kill_anchored_urbs(&dev->submitted);
 
 	down_write(&dev->io_rwsem);
 	dev->disconnected = 1;

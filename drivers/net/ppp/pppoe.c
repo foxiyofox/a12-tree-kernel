@@ -504,6 +504,7 @@ static int pppoe_disc_rcv(struct sk_buff *skb, struct net_device *dev,
 	if (ph->code != PADT_CODE)
 		goto abort;
 
+	ph = pppoe_hdr(skb);
 	pn = pppoe_pernet(dev_net(dev));
 	po = get_item(pn, ph->sid, eth_hdr(skb)->h_source, dev->ifindex);
 	if (po)

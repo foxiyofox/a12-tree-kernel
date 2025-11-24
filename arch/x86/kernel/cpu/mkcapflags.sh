@@ -6,6 +6,8 @@
 
 set -e
 
+set -e
+
 IN=$1
 OUT=$2
 

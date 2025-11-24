@@ -407,6 +407,11 @@ int qed_eq_completion(struct qed_hwfn *p_hwfn, void *cookie)
 	rc = qed_spq_pend_post(p_hwfn);
 	spin_unlock_bh(&p_hwfn->p_spq->lock);
 
+	/* Attempt to post pending requests */
+	spin_lock_bh(&p_hwfn->p_spq->lock);
+	rc = qed_spq_pend_post(p_hwfn);
+	spin_unlock_bh(&p_hwfn->p_spq->lock);
+
 	return rc;
 }
 
@@ -771,6 +776,25 @@ int qed_spq_pend_post(struct qed_hwfn *p_hwfn)
 
 	return qed_spq_post_list(p_hwfn, &p_spq->pending,
 				 SPQ_HIGH_PRI_RESERVE_DEFAULT);
+}
+
+/* Avoid overriding of SPQ entries when getting out-of-order completions, by
+ * marking the completions in a bitmap and increasing the chain consumer only
+ * for the first successive completed entries.
+ */
+static void qed_spq_comp_bmap_update(struct qed_hwfn *p_hwfn, __le16 echo)
+{
+	u16 pos = le16_to_cpu(echo) % SPQ_RING_SIZE;
+	struct qed_spq *p_spq = p_hwfn->p_spq;
+
+	__set_bit(pos, p_spq->p_comp_bitmap);
+	while (test_bit(p_spq->comp_bitmap_idx,
+			p_spq->p_comp_bitmap)) {
+		__clear_bit(p_spq->comp_bitmap_idx,
+			    p_spq->p_comp_bitmap);
+		p_spq->comp_bitmap_idx++;
+		qed_chain_return_produced(&p_spq->chain);
+	}
 }
 
 /* Avoid overriding of SPQ entries when getting out-of-order completions, by

@@ -1921,6 +1921,7 @@ static int fiji_setup_dpm_led_config(struct pp_hwmgr *hwmgr)
 			}
 			tmp >>= 1;
 		}
+		break;
 	}
 	if (mask)
 		smum_send_msg_to_smc_with_parameter(hwmgr,

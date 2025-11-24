@@ -847,6 +847,7 @@ static struct domain_device *sas_ex_discover_end_dev(
 		res = sas_get_ata_info(child, phy);
 		if (res)
 			goto out_free;
+		rphy->identify.phy_identifier = phy_id;
 
 		sas_init_dev(child);
 		res = sas_ata_init(child);
@@ -2057,6 +2058,11 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
 	case SMP_RESP_PHY_VACANT:
 		phy->phy_state = PHY_VACANT;
 		sas_unregister_devs_sas_addr(dev, phy_id, last);
+		/*
+		 * Even though the PHY is empty, for convenience we discover
+		 * the PHY to update the PHY info, like negotiated linkrate.
+		 */
+		sas_ex_phy_discover(dev, phy_id);
 		return res;
 	case SMP_RESP_FUNC_ACC:
 		break;

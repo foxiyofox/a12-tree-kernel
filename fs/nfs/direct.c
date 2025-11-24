@@ -1023,11 +1023,15 @@ ssize_t nfs_file_direct_write(struct kiocb *iocb, struct iov_iter *iter)
 	l_ctx = nfs_get_lock_context(dreq->ctx);
 	if (IS_ERR(l_ctx)) {
 		result = PTR_ERR(l_ctx);
+		nfs_direct_req_release(dreq);
 		goto out_release;
 	}
 	dreq->l_ctx = l_ctx;
 	if (!is_sync_kiocb(iocb))
 		dreq->iocb = iocb;
+
+	if (iter_is_iovec(iter))
+		dreq->flags = NFS_ODIRECT_SHOULD_DIRTY;
 
 	nfs_start_io_direct(inode);
 

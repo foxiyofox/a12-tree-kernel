@@ -153,6 +153,11 @@ static const struct nla_policy nft_flow_offload_policy[NFTA_FLOW_MAX + 1] = {
 				    .len = NFT_NAME_MAXLEN - 1 },
 };
 
+static const struct nla_policy nft_flow_offload_policy[NFTA_FLOW_MAX + 1] = {
+	[NFTA_FLOW_TABLE_NAME]	= { .type = NLA_STRING,
+				    .len = NFT_NAME_MAXLEN - 1 },
+};
+
 static int nft_flow_offload_init(const struct nft_ctx *ctx,
 				 const struct nft_expr *expr,
 				 const struct nlattr * const tb[])

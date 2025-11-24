@@ -453,6 +453,9 @@ kprobe_single_step_handler(struct pt_regs *regs, unsigned int esr)
 	if (user_mode(regs))
 		return DBG_HOOK_ERROR;
 
+	if (user_mode(regs))
+		return DBG_HOOK_ERROR;
+
 	/* return error if this is not our step */
 	retval = kprobe_ss_hit(kcb, instruction_pointer(regs));
 

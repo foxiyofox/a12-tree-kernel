@@ -214,6 +214,10 @@ static int __vb2_buf_mem_alloc(struct vb2_buffer *vb)
 		if (size < vb->planes[plane].length)
 			goto free;
 
+		/* Did it wrap around? */
+		if (size < vb->planes[plane].length)
+			goto free;
+
 		mem_priv = call_ptr_memop(vb, alloc,
 				q->alloc_devs[plane] ? : q->dev,
 				q->dma_attrs, size, q->dma_dir, q->gfp_flags,
@@ -677,6 +681,11 @@ int vb2_core_reqbufs(struct vb2_queue *q, enum vb2_memory memory,
 
 	if (q->streaming) {
 		dprintk(1, "streaming active\n");
+		return -EBUSY;
+	}
+
+	if (q->waiting_in_dqbuf && *count) {
+		dprintk(1, "another dup()ped fd is waiting for a buffer\n");
 		return -EBUSY;
 	}
 
@@ -1407,6 +1416,7 @@ EXPORT_SYMBOL_GPL(vb2_core_prepare_buf);
 static int vb2_start_streaming(struct vb2_queue *q)
 {
 	struct vb2_buffer *vb;
+	enum vb2_buffer_state orig_state;
 	int ret;
 
 	/*
@@ -1580,6 +1590,7 @@ int vb2_core_qbuf(struct vb2_queue *q, unsigned int index, void *pb,
 	 * Add to the queued buffers list, a buffer will stay on it until
 	 * dequeued in dqbuf.
 	 */
+	orig_state = vb->state;
 	list_add_tail(&vb->queued_entry, &q->queued_list);
 	q->queued_count++;
 	q->waiting_for_buffers = false;
@@ -2041,8 +2052,17 @@ int vb2_core_streamon(struct vb2_queue *q, unsigned int type)
 		if (ret)
 			return ret;
 		ret = vb2_start_streaming(q);
-		if (ret)
+		if (ret) {
+			/*
+			 * Since vb2_core_qbuf will return with an error,
+			 * we should return it to state DEQUEUED since
+			 * the error indicates that the buffer wasn't queued.
+			 */
+			list_del(&vb->queued_entry);
+			q->queued_count--;
+			vb->state = orig_state;
 			return ret;
+		}
 	}
 
 	q->streaming = 1;
@@ -2669,6 +2689,7 @@ static size_t __vb2_perform_fileio(struct vb2_queue *q, char __user *data, size_
 	if (index >= q->num_buffers) {
 		struct vb2_buffer *b;
 
+		q->waiting_in_dqbuf = 1;
 		/*
 		 * Call vb2_dqbuf to get buffer back.
 		 */
@@ -2774,6 +2795,12 @@ static size_t __vb2_perform_fileio(struct vb2_queue *q, char __user *data, size_
 		 * all the 'first time' buffers.
 		 */
 		fileio->cur_index = fileio->initial_index;
+	}
+
+	if (q->waiting_in_dqbuf) {
+		dprintk(3, "another dup()ped fd is %s\n",
+			read ? "reading" : "writing");
+		return -EBUSY;
 	}
 
 	/*

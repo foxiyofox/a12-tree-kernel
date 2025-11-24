@@ -909,6 +909,9 @@ static void be_self_test(struct net_device *netdev, struct ethtool_test *test,
 	/* check link status before offline tests */
 	link_status = netif_carrier_ok(netdev);
 
+	/* check link status before offline tests */
+	link_status = netif_carrier_ok(netdev);
+
 	if (test->flags & ETH_TEST_FL_OFFLINE) {
 		if (be_loopback_test(adapter, BE_MAC_LOOPBACK, &data[0]) != 0)
 			test->flags |= ETH_TEST_FL_FAILED;

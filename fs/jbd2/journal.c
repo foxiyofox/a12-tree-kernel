@@ -1682,6 +1682,11 @@ int jbd2_journal_load(journal_t *journal)
 			return -EINVAL;
 		}
 	}
+	/*
+	 * clear JBD2_ABORT flag initialized in journal_init_common
+	 * here to update log tail information with the newest seq.
+	 */
+	journal->j_flags &= ~JBD2_ABORT;
 
 	/*
 	 * Create a slab for this blocksize

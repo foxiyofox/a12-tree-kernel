@@ -187,6 +187,12 @@ static int register_stop_handler(void)
 				    NMI_FLAG_FIRST, "smp_stop");
 }
 
+static int register_stop_handler(void)
+{
+	return register_nmi_handler(NMI_LOCAL, smp_stop_nmi_callback,
+				    NMI_FLAG_FIRST, "smp_stop");
+}
+
 static void native_stop_other_cpus(int wait)
 {
 	unsigned long flags;

@@ -277,6 +277,8 @@ static int rangetr_cmp(struct hashtab *h, const void *k1, const void *k2)
 
 static int (*destroy_f[SYM_NUM]) (void *key, void *datum, void *datap);
 
+static int (*destroy_f[SYM_NUM]) (void *key, void *datum, void *datap);
+
 /*
  * Initialize a policy database structure.
  */
@@ -2922,7 +2924,8 @@ static int write_cons_helper(struct policydb *p, struct constraint_node *node,
 				break;
 			default:
 				break;
-			}
+			} /* end case */
+			} /* end switch */
 		}
 	}
 

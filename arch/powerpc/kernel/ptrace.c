@@ -1136,6 +1136,7 @@ static int tm_cvmx_get(struct task_struct *target,
 		/*
 		 * Copy out only the low-order word of vrsave.
 		 */
+		int start, end;
 		union {
 			elf_vrreg_t reg;
 			u32 word;
@@ -1197,6 +1198,7 @@ static int tm_cvmx_set(struct task_struct *target,
 		/*
 		 * We use only the low-order word of vrsave.
 		 */
+		int start, end;
 		union {
 			elf_vrreg_t reg;
 			u32 word;

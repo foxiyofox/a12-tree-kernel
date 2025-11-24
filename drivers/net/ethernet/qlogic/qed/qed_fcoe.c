@@ -651,6 +651,10 @@ qed_fcoe_acquire_connection(struct qed_hwfn *p_hwfn,
 	*p_out_conn = p_conn;
 
 	return rc;
+
+err:
+	qed_sp_destroy_request(p_hwfn, p_ent);
+	return rc;
 }
 
 static void qed_fcoe_release_connection(struct qed_hwfn *p_hwfn,

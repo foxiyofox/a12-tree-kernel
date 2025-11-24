@@ -424,6 +424,9 @@ out:
  * associated with the @eventfd (but the @eventfd itself is not freed).
  *
  * To be used as memcg event method.
+ *
+ * Return: 0 on success, -ENOMEM on memory failure or -EINVAL if @args could
+ * not be parsed.
  */
 void vmpressure_unregister_event(struct mem_cgroup *memcg,
 				 struct eventfd_ctx *eventfd)

@@ -306,7 +306,7 @@ static int synquacer_i2c_master_start(struct synquacer_i2c *i2c,
 		return -EAGAIN;
 	}
 
-	return 0;
+	return ret;
 }
 
 static int synquacer_i2c_doxfer(struct synquacer_i2c *i2c,

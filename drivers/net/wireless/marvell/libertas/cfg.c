@@ -1604,6 +1604,9 @@ static int lbs_change_intf(struct wiphy *wiphy, struct net_device *dev,
 {
 	struct lbs_private *priv = wiphy_priv(wiphy);
 	int ret = 0;
+	int hw, i;
+	u8 rates_max;
+	u8 *rates;
 
 	if (dev == priv->mesh_dev)
 		return -EOPNOTSUPP;

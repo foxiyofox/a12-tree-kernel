@@ -173,6 +173,17 @@ void nfs_readdir_init_array(struct page *page)
 	kunmap_atomic(array);
 }
 
+static
+void nfs_readdir_init_array(struct page *page)
+{
+	struct nfs_cache_array *array;
+
+	array = kmap_atomic(page);
+	memset(array, 0, sizeof(struct nfs_cache_array));
+	array->eof_index = -1;
+	kunmap_atomic(array);
+}
+
 /*
  * we are freeing strings created by nfs_add_to_readdir_array()
  */
@@ -553,6 +564,9 @@ int nfs_readdir_page_filler(nfs_readdir_descriptor_t *desc, struct nfs_entry *en
 	xdr_set_scratch_buffer(&stream, page_address(scratch), PAGE_SIZE);
 
 	do {
+		if (entry->label)
+			entry->label->len = NFS4_MAXLABELLEN;
+
 		status = xdr_decode(desc, entry, &stream);
 		if (status != 0) {
 			if (status == -EAGAIN)
@@ -621,6 +635,8 @@ int nfs_readdir_xdr_to_array(nfs_readdir_descriptor_t *desc, struct page *page, 
 	struct nfs_cache_array *array;
 	int status = -ENOMEM;
 	unsigned int array_size = ARRAY_SIZE(pages);
+
+	nfs_readdir_init_array(page);
 
 	nfs_readdir_init_array(page);
 
@@ -1092,6 +1108,100 @@ int nfs_neg_need_reval(struct inode *dir, struct dentry *dentry,
 	if (NFS_SERVER(dir)->flags & NFS_MOUNT_LOOKUP_CACHE_NONEG)
 		return 1;
 	return !nfs_check_verifier(dir, dentry, flags & LOOKUP_RCU);
+}
+
+static int
+nfs_lookup_revalidate_done(struct inode *dir, struct dentry *dentry,
+			   struct inode *inode, int error)
+{
+	switch (error) {
+	case 1:
+		dfprintk(LOOKUPCACHE, "NFS: %s(%pd2) is valid\n",
+			__func__, dentry);
+		return 1;
+	case 0:
+		nfs_mark_for_revalidate(dir);
+		if (inode && S_ISDIR(inode->i_mode)) {
+			/* Purge readdir caches. */
+			nfs_zap_caches(inode);
+			/*
+			 * We can't d_drop the root of a disconnected tree:
+			 * its d_hash is on the s_anon list and d_drop() would hide
+			 * it from shrink_dcache_for_unmount(), leading to busy
+			 * inodes on unmount and further oopses.
+			 */
+			if (IS_ROOT(dentry))
+				return 1;
+		}
+		dfprintk(LOOKUPCACHE, "NFS: %s(%pd2) is invalid\n",
+				__func__, dentry);
+		return 0;
+	}
+	dfprintk(LOOKUPCACHE, "NFS: %s(%pd2) lookup returned error %d\n",
+				__func__, dentry, error);
+	return error;
+}
+
+static int
+nfs_lookup_revalidate_negative(struct inode *dir, struct dentry *dentry,
+			       unsigned int flags)
+{
+	int ret = 1;
+	if (nfs_neg_need_reval(dir, dentry, flags)) {
+		if (flags & LOOKUP_RCU)
+			return -ECHILD;
+		ret = 0;
+	}
+	return nfs_lookup_revalidate_done(dir, dentry, NULL, ret);
+}
+
+static int
+nfs_lookup_revalidate_delegated(struct inode *dir, struct dentry *dentry,
+				struct inode *inode)
+{
+	nfs_set_verifier(dentry, nfs_save_change_attribute(dir));
+	return nfs_lookup_revalidate_done(dir, dentry, inode, 1);
+}
+
+static int
+nfs_lookup_revalidate_dentry(struct inode *dir, struct dentry *dentry,
+			     struct inode *inode)
+{
+	struct nfs_fh *fhandle;
+	struct nfs_fattr *fattr;
+	struct nfs4_label *label;
+	int ret;
+
+	ret = -ENOMEM;
+	fhandle = nfs_alloc_fhandle();
+	fattr = nfs_alloc_fattr();
+	label = nfs4_label_alloc(NFS_SERVER(inode), GFP_KERNEL);
+	if (fhandle == NULL || fattr == NULL || IS_ERR(label))
+		goto out;
+
+	ret = NFS_PROTO(dir)->lookup(dir, &dentry->d_name, fhandle, fattr, label);
+	if (ret < 0) {
+		if (ret == -ESTALE || ret == -ENOENT)
+			ret = 0;
+		goto out;
+	}
+	ret = 0;
+	if (nfs_compare_fh(NFS_FH(inode), fhandle))
+		goto out;
+	if (nfs_refresh_inode(inode, fattr) < 0)
+		goto out;
+
+	nfs_setsecurity(inode, fattr, label);
+	nfs_set_verifier(dentry, nfs_save_change_attribute(dir));
+
+	/* set a readdirplus hint that we had a cache miss */
+	nfs_force_use_readdirplus(dir);
+	ret = 1;
+out:
+	nfs_free_fattr(fattr);
+	nfs_free_fhandle(fhandle);
+	nfs4_label_free(label);
+	return nfs_lookup_revalidate_done(dir, dentry, inode, ret);
 }
 
 static int

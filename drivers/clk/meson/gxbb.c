@@ -239,10 +239,16 @@ static struct clk_regmap gxbb_hdmi_pll = {
 			.shift   = 9,
 			.width   = 5,
 		},
+		/*
+		 * On gxl, there is a register shift due to
+		 * HHI_HDMI_PLL_CNTL1 which does not exist on gxbb,
+		 * so we use the HHI_HDMI_PLL_CNTL2 define from GXBB
+		 * instead which is defined at the same offset.
+		 */
 		.frac = {
 			.reg_off = HHI_HDMI_PLL_CNTL2,
 			.shift   = 0,
-			.width   = 12,
+			.width   = 10,
 		},
 		.od = {
 			.reg_off = HHI_HDMI_PLL_CNTL2,
@@ -483,6 +489,18 @@ static struct clk_regmap gxl_gp0_pll = {
 		.ops = &meson_clk_pll_ops,
 		.parent_names = (const char *[]){ "xtal" },
 		.num_parents = 1,
+		/*
+		 * FIXME:
+		 * This clock, as fdiv2, is used by the SCPI FW and is required
+		 * by the platform to operate correctly.
+		 * Until the following condition are met, we need this clock to
+		 * be marked as critical:
+		 * a) The SCPI generic driver claims and enable all the clocks
+		 *    it needs
+		 * b) CCF has a clock hand-off mechanism to make the sure the
+		 *    clock stays on until the proper driver comes along
+		 */
+		.flags = CLK_IS_CRITICAL,
 	},
 };
 
@@ -793,6 +811,7 @@ static struct clk_regmap gxbb_mpeg_clk_div = {
 		.ops = &clk_regmap_divider_ro_ops,
 		.parent_names = (const char *[]){ "mpeg_clk_sel" },
 		.num_parents = 1,
+		.flags = CLK_SET_RATE_PARENT,
 	},
 };
 
@@ -1441,6 +1460,7 @@ static struct clk_regmap gxbb_vapb_0_div = {
 		.offset = HHI_VAPBCLK_CNTL,
 		.shift = 0,
 		.width = 7,
+		.flags = CLK_DIVIDER_ROUND_CLOSEST,
 	},
 	.hw.init = &(struct clk_init_data){
 		.name = "vapb_0_div",
@@ -1489,6 +1509,7 @@ static struct clk_regmap gxbb_vapb_1_div = {
 		.offset = HHI_VAPBCLK_CNTL,
 		.shift = 16,
 		.width = 7,
+		.flags = CLK_DIVIDER_ROUND_CLOSEST,
 	},
 	.hw.init = &(struct clk_init_data){
 		.name = "vapb_1_div",

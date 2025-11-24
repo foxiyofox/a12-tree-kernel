@@ -702,6 +702,20 @@ int rxe_completer(void *arg)
 				goto done;
 			}
 
+			/* if we've started a retry, don't start another
+			 * retry sequence, unless this is a timeout.
+			 */
+			if (qp->comp.started_retry &&
+			    !qp->comp.timeout_retry) {
+				if (pkt) {
+					rxe_drop_ref(pkt->qp);
+					kfree_skb(skb);
+					skb = NULL;
+				}
+
+				goto done;
+			}
+
 			if (qp->comp.retry_cnt > 0) {
 				if (qp->comp.retry_cnt != 7)
 					qp->comp.retry_cnt--;

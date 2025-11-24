@@ -201,6 +201,8 @@ static int ctr_encrypt(struct skcipher_request *req)
 	int err;
 
 	err = skcipher_walk_virt(&walk, req, true);
+	if (err)
+		return err;
 
 	kernel_neon_begin();
 	while (walk.nbytes > 0) {

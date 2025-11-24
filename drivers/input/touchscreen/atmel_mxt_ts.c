@@ -3185,6 +3185,8 @@ static int __maybe_unused mxt_resume(struct device *dev)
 
 	mutex_unlock(&input_dev->mutex);
 
+	disable_irq(data->irq);
+
 	return 0;
 }
 

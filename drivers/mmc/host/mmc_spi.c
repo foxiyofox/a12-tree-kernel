@@ -685,6 +685,10 @@ mmc_spi_writeblock(struct mmc_spi_host *host, struct spi_transfer *t,
 				DMA_BIDIRECTIONAL);
 
 	status = spi_sync_locked(spi, &host->m);
+	if (status < 0) {
+		dev_dbg(&spi->dev, "read error %d\n", status);
+		return status;
+	}
 
 	if (status != 0) {
 		dev_dbg(&spi->dev, "write error (%d)\n", status);
@@ -1332,6 +1336,7 @@ static int mmc_spi_probe(struct spi_device *spi)
 				status);
 		return status;
 	}
+	mmc_detect_change(mmc, 0);
 
 	/* We need a supply of ones to transmit.  This is the only time
 	 * the CPU touches these, so cache coherency isn't a concern.

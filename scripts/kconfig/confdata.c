@@ -864,6 +864,9 @@ next:
 	for_all_symbols(i, sym)
 		sym->flags &= ~SYMBOL_WRITTEN;
 
+	for_all_symbols(i, sym)
+		sym->flags &= ~SYMBOL_WRITTEN;
+
 	if (*tmpname) {
 		strcat(dirname, basename);
 		strcat(dirname, ".old");

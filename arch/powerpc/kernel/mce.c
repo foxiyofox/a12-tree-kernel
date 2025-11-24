@@ -57,6 +57,10 @@ static struct irq_work mce_ue_event_irq_work = {
 	.func = machine_check_ue_irq_work,
 };
 
+static struct irq_work mce_ue_event_irq_work = {
+	.func = machine_check_ue_irq_work,
+};
+
 DECLARE_WORK(mce_ue_event_work, machine_process_ue_event);
 
 static void mce_set_error_info(struct machine_check_event *mce,

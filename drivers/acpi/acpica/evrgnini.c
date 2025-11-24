@@ -91,7 +91,6 @@ acpi_ev_system_memory_region_setup(acpi_handle handle,
  * DESCRIPTION: Setup a IO operation region
  *
  ******************************************************************************/
-
 acpi_status
 acpi_ev_io_space_region_setup(acpi_handle handle,
 			      u32 function,

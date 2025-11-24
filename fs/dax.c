@@ -220,6 +220,9 @@ static inline void *unlock_slot(struct address_space *mapping, void **slot)
 static void put_unlocked_mapping_entry(struct address_space *mapping,
 				       pgoff_t index, void *entry);
 
+static void put_unlocked_mapping_entry(struct address_space *mapping,
+				       pgoff_t index, void *entry);
+
 /*
  * Lookup entry in radix tree, wait for it to become unlocked if it is
  * exceptional entry and return it. The caller must call
@@ -1300,6 +1303,9 @@ dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
 	} else {
 		lockdep_assert_held(&inode->i_rwsem);
 	}
+
+	if (iocb->ki_flags & IOCB_NOWAIT)
+		flags |= IOMAP_NOWAIT;
 
 	if (iocb->ki_flags & IOCB_NOWAIT)
 		flags |= IOMAP_NOWAIT;

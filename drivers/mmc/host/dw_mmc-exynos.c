@@ -1527,6 +1527,18 @@ static ssize_t sd_count_show(struct device *dev,
 	}
 	len = snprintf(buf, PAGE_SIZE, "%lld\n", total_cnt);
 
+	/*
+	 * If there is no cadiates value, then it needs to return -EIO.
+	 * If there are candiates values and don't find bset clk sample value,
+	 * then use a first candiates clock sample value.
+	 */
+	for (i = 0; i < iter; i++) {
+		__c = ror8(candiates, i);
+		if ((__c & 0x1) == 0x1) {
+			loc = i;
+			goto out;
+		}
+	}
 out:
 	return len;
 }

@@ -942,6 +942,7 @@ static void ablkcipher_decrypt_done(struct device *jrdev, u32 *desc, u32 err,
 	struct ablkcipher_edesc *edesc;
 #ifdef DEBUG
 	struct crypto_ablkcipher *ablkcipher = crypto_ablkcipher_reqtfm(req);
+	struct caam_ctx *ctx = crypto_ablkcipher_ctx(ablkcipher);
 	int ivsize = crypto_ablkcipher_ivsize(ablkcipher);
 
 	dev_err(jrdev, "%s %d: err 0x%x\n", __func__, __LINE__, err);
@@ -1142,6 +1143,7 @@ static void init_ablkcipher_job(u32 *sh_desc, dma_addr_t ptr,
 	} else {
 		if (edesc->dst_nents == 1) {
 			dst_dma = sg_dma_address(req->dst);
+			out_options = 0;
 		} else {
 			dst_dma = edesc->sec4_sg_dma + (edesc->src_nents + 1) *
 				  sizeof(struct sec4_sg_entry);

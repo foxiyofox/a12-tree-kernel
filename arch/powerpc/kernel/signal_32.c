@@ -883,6 +883,8 @@ static long restore_tm_user_regs(struct pt_regs *regs,
 
 	preempt_enable();
 
+	preempt_enable();
+
 	return 0;
 }
 #endif

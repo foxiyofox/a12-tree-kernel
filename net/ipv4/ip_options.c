@@ -474,8 +474,9 @@ error:
 	return -EINVAL;
 }
 
-int ip_options_compile(struct net *net,
-		       struct ip_options *opt, struct sk_buff *skb)
+int __ip_options_compile(struct net *net,
+			 struct ip_options *opt, struct sk_buff *skb,
+			 __be32 *info)
 {
 	int ret;
 	__be32 info;

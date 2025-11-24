@@ -315,6 +315,12 @@ results in an error.
 (*) redirect_dir=follow only conflicts with metacopy=on if upperdir=... is
 given.
 
+Note: redirect_dir={off|nofollow|follow(*)} conflicts with metacopy=on, and
+results in an error.
+
+(*) redirect_dir=follow only conflicts with metacopy=on if upperdir=... is
+given.
+
 Sharing and copying layers
 --------------------------
 

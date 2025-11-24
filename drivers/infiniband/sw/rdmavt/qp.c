@@ -761,6 +761,27 @@ static void rvt_reset_qp(struct rvt_dev_info *rdi, struct rvt_qp *qp,
 	spin_unlock_irq(&qp->r_lock);
 }
 
+/**
+ * rvt_reset_qp - initialize the QP state to the reset state
+ * @rdi: the device info
+ * @qp: the QP to reset
+ * @type: the QP type
+ *
+ * This is the wrapper function to acquire the r_lock, s_hlock, and s_lock
+ * before calling _rvt_reset_qp().
+ */
+static void rvt_reset_qp(struct rvt_dev_info *rdi, struct rvt_qp *qp,
+			 enum ib_qp_type type)
+{
+	spin_lock_irq(&qp->r_lock);
+	spin_lock(&qp->s_hlock);
+	spin_lock(&qp->s_lock);
+	_rvt_reset_qp(rdi, qp, type);
+	spin_unlock(&qp->s_lock);
+	spin_unlock(&qp->s_hlock);
+	spin_unlock_irq(&qp->r_lock);
+}
+
 /** rvt_free_qpn - Free a qpn from the bit map
  * @qpt: QP table
  * @qpn: queue pair number to free

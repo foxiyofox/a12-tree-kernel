@@ -136,6 +136,9 @@ static unsigned long clk_pll_recalc_rate(struct clk_hw *hw,
 	if (!pll->div || !pll->mul)
 		return 0;
 
+	if (!pll->div || !pll->mul)
+		return 0;
+
 	return (parent_rate / pll->div) * (pll->mul + 1);
 }
 

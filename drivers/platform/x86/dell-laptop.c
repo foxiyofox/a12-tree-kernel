@@ -82,6 +82,10 @@ static struct quirk_entry quirk_dell_inspiron_1012 = {
 	.kbd_led_not_present = true,
 };
 
+static struct quirk_entry quirk_dell_inspiron_1012 = {
+	.kbd_led_not_present = true,
+};
+
 static struct platform_driver platform_driver = {
 	.driver = {
 		.name = "dell-laptop",
@@ -318,6 +322,24 @@ static const struct dmi_system_id dell_quirks[] __initconst = {
 			DMI_MATCH(DMI_PRODUCT_NAME, "Latitude E6410"),
 		},
 		.driver_data = &quirk_dell_latitude_e6410,
+	},
+	{
+		.callback = dmi_matched,
+		.ident = "Dell Inspiron 1012",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
+			DMI_MATCH(DMI_PRODUCT_NAME, "Inspiron 1012"),
+		},
+		.driver_data = &quirk_dell_inspiron_1012,
+	},
+	{
+		.callback = dmi_matched,
+		.ident = "Dell Inspiron 1018",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
+			DMI_MATCH(DMI_PRODUCT_NAME, "Inspiron 1018"),
+		},
+		.driver_data = &quirk_dell_inspiron_1012,
 	},
 	{
 		.callback = dmi_matched,
@@ -1519,6 +1541,9 @@ static inline void kbd_init_tokens(void)
 static void kbd_init(void)
 {
 	int ret;
+
+	if (quirks && quirks->kbd_led_not_present)
+		return;
 
 	if (quirks && quirks->kbd_led_not_present)
 		return;

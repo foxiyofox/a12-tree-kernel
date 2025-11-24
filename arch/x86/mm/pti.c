@@ -586,6 +586,8 @@ static void pti_clone_kernel_text(void)
 
 void pti_set_kernel_image_nonglobal(void)
 {
+	if (!boot_cpu_has(X86_FEATURE_PTI))
+		return;
 	/*
 	 * The identity map is created with PMDs, regardless of the
 	 * actual length of the kernel.  We need to clear

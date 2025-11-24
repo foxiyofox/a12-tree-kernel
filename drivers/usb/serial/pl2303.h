@@ -22,6 +22,7 @@
 #define PL2303_PRODUCT_ID_ZTEK		0xe1f1
 
 
+
 #define ATEN_VENDOR_ID		0x0557
 #define ATEN_VENDOR_ID2		0x0547
 #define ATEN_PRODUCT_ID		0x2008

@@ -175,6 +175,8 @@ struct ccp_aes_engine {
 
 	u32 authsize;
 
+	u32 authsize;
+
 	struct scatterlist *key;
 	u32 key_len;		/* In bytes */
 

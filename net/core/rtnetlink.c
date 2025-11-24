@@ -2155,6 +2155,8 @@ static int do_setvfinfo(struct net_device *dev, struct nlattr **tb)
 		struct nlattr *attr;
 		int rem, len = 0;
 
+		if (ivm->vf >= INT_MAX)
+			return -EINVAL;
 		err = -EOPNOTSUPP;
 		if (!ops->ndo_set_vf_vlan)
 			return err;
@@ -2193,6 +2195,8 @@ static int do_setvfinfo(struct net_device *dev, struct nlattr **tb)
 		if (err < 0)
 			return err;
 
+		if (ivv->vf >= INT_MAX)
+			return -EINVAL;
 		err = -EOPNOTSUPP;
 		if (ops->ndo_set_vf_rate)
 			err = ops->ndo_set_vf_rate(dev, ivt->vf,
@@ -2245,6 +2249,8 @@ static int do_setvfinfo(struct net_device *dev, struct nlattr **tb)
 	if (tb[IFLA_VF_RSS_QUERY_EN]) {
 		struct ifla_vf_rss_query_en *ivrssq_en;
 
+		if (ivt->vf >= INT_MAX)
+			return -EINVAL;
 		err = -EOPNOTSUPP;
 		ivrssq_en = nla_data(tb[IFLA_VF_RSS_QUERY_EN]);
 		if (ivrssq_en->vf >= INT_MAX)
@@ -2544,6 +2550,8 @@ static int do_setlink(const struct sk_buff *skb,
 		int vf;
 		int rem;
 
+		if (ivt->vf >= INT_MAX)
+			return -EINVAL;
 		err = -EOPNOTSUPP;
 		if (!ops->ndo_set_vf_port)
 			goto errout;
@@ -2580,6 +2588,8 @@ static int do_setlink(const struct sk_buff *skb,
 		if (err < 0)
 			goto errout;
 
+		if (ivs->vf >= INT_MAX)
+			return -EINVAL;
 		err = -EOPNOTSUPP;
 		if (ops->ndo_set_vf_port)
 			err = ops->ndo_set_vf_port(dev, PORT_SELF_VF, port);
@@ -3146,7 +3156,8 @@ replay:
 			 */
 			if (err < 0) {
 				/* If device is not registered at all, free it now */
-				if (dev->reg_state == NETREG_UNINITIALIZED)
+				if (dev->reg_state == NETREG_UNINITIALIZED ||
+				    dev->reg_state == NETREG_UNREGISTERED)
 					free_netdev(dev);
 				goto out;
 			}
@@ -3569,6 +3580,11 @@ static int rtnl_fdb_add(struct sk_buff *skb, struct nlmsghdr *nlh,
 		return -EINVAL;
 	}
 
+	if (dev->type != ARPHRD_ETHER) {
+		NL_SET_ERR_MSG(extack, "FDB delete only supported for Ethernet devices");
+		return -EINVAL;
+	}
+
 	addr = nla_data(tb[NDA_LLADDR]);
 
 	err = fdb_vid_parse(tb[NDA_VLAN], &vid, extack);
@@ -3678,6 +3694,11 @@ static int rtnl_fdb_del(struct sk_buff *skb, struct nlmsghdr *nlh,
 		return -EINVAL;
 	}
 
+	if (dev->type != ARPHRD_ETHER) {
+		NL_SET_ERR_MSG(extack, "FDB add only supported for Ethernet devices");
+		return -EINVAL;
+	}
+
 	addr = nla_data(tb[NDA_LLADDR]);
 
 	err = fdb_vid_parse(tb[NDA_VLAN], &vid, extack);
@@ -3763,6 +3784,9 @@ int ndo_dflt_fdb_dump(struct sk_buff *skb,
 		      int *idx)
 {
 	int err;
+
+	if (dev->type != ARPHRD_ETHER)
+		return -EINVAL;
 
 	if (dev->type != ARPHRD_ETHER)
 		return -EINVAL;
@@ -4101,6 +4125,10 @@ static int rtnl_bridge_notify(struct net_device *dev)
 	if (err < 0)
 		goto errout;
 
+	/* Notification info is only filled for bridge ports, not the bridge
+	 * device itself. Therefore, a zero notification length is valid and
+	 * should not result in an error.
+	 */
 	if (!skb->len)
 		goto errout;
 
@@ -4507,7 +4535,7 @@ nla_put_failure:
 static size_t if_nlmsg_stats_size(const struct net_device *dev,
 				  u32 filter_mask)
 {
-	size_t size = 0;
+	size_t size = NLMSG_ALIGN(sizeof(struct if_stats_msg));
 
 	if (stats_attr_valid(filter_mask, IFLA_STATS_LINK_64, 0))
 		size += nla_total_size_64bit(sizeof(struct rtnl_link_stats64));

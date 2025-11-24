@@ -87,6 +87,22 @@ void stub_complete(struct urb *urb)
 			return;
 	}
 
+	/*
+	 * If the server breaks single SG request into the several URBs, the
+	 * URBs must be reassembled before sending completed URB to the vhci.
+	 * Don't wake up the tx thread until all the URBs are completed.
+	 */
+	if (priv->sgl) {
+		priv->completed_urbs++;
+
+		/* Only save the first error status */
+		if (urb->status && !priv->urb_status)
+			priv->urb_status = urb->status;
+
+		if (priv->completed_urbs < priv->num_urbs)
+			return;
+	}
+
 	/* link a urb to the queue of tx. */
 	spin_lock_irqsave(&sdev->priv_lock, flags);
 	if (sdev->ud.tcp_socket == NULL) {

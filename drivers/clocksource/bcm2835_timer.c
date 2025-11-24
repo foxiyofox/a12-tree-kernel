@@ -146,6 +146,9 @@ static int __init bcm2835_timer_init(struct device_node *node)
 err_timer_free:
 	kfree(timer);
 
+err_timer_free:
+	kfree(timer);
+
 err_iounmap:
 	iounmap(base);
 	return ret;

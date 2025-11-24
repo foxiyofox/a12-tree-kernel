@@ -2053,6 +2053,8 @@ int smbd_recv(struct smbd_connection *info, struct msghdr *msg)
 	struct page *page;
 	unsigned int to_read, page_offset;
 	int rc;
+	struct smb_rqst *rqst;
+	int rqst_idx;
 
 	info->smbd_recv_pending++;
 
@@ -2246,6 +2248,10 @@ next_rqst:
 				goto done;
 		}
 	}
+
+	rqst_idx++;
+	if (rqst_idx < num_rqst)
+		goto next_rqst;
 
 	rqst_idx++;
 	if (rqst_idx < num_rqst)

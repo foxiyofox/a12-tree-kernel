@@ -2949,6 +2949,7 @@ static int tonga_copy_vbios_smc_reg_table(const pp_atomctrl_mc_reg_table *table,
 			ni_table->mc_reg_table_entry[i].mc_data[j] =
 				table->mc_reg_table_entry[i].mc_data[j];
 		}
+		break;
 	}
 
 	ni_table->num_entries = table->num_entries;

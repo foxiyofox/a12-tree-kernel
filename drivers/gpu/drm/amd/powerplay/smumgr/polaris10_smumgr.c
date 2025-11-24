@@ -1982,6 +1982,12 @@ static int polaris10_program_mem_timing_parameters(struct pp_hwmgr *hwmgr)
 		(DPMTABLE_OD_UPDATE_SCLK + DPMTABLE_OD_UPDATE_MCLK))
 		return polaris10_program_memory_timing_parameters(hwmgr);
 
+	/* Apply avfs cks-off voltages to avoid the overshoot
+	 * when switching to the highest sclk frequency
+	 */
+	if (data->apply_avfs_cks_off_voltage)
+		smum_send_msg_to_smc(hwmgr, PPSMC_MSG_ApplyAvfsCksOffVoltage);
+
 	return 0;
 }
 
@@ -2037,6 +2043,10 @@ static int polaris10_thermal_setup_fan_table(struct pp_hwmgr *hwmgr)
 				PHM_PlatformCaps_MicrocodeFanControl);
 		return 0;
 	}
+
+	/* use hardware fan control */
+	if (hwmgr->thermal_controller.use_hw_fan_control)
+		return 0;
 
 	/* use hardware fan control */
 	if (hwmgr->thermal_controller.use_hw_fan_control)

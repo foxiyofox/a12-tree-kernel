@@ -681,6 +681,7 @@ static int sun4i_tcon_init_clocks(struct device *dev,
 			return PTR_ERR(tcon->sclk1);
 		}
 	}
+	clk_prepare_enable(tcon->sclk0);
 
 	return 0;
 }

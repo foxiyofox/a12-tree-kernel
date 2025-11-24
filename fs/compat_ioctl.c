@@ -356,6 +356,7 @@ struct compat_sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
 	unsigned int duration;
 	int unused;
 };
+#define VIDEO_GET_EVENT32 _IOR('o', 28, struct compat_video_event)
 
 static int sg_grt_trans(struct file *file,
 		unsigned int cmd, struct compat_sg_req_info __user *o)
@@ -385,6 +386,7 @@ struct sock_fprog32 {
 	unsigned short	len;
 	compat_caddr_t	filter;
 };
+#define VIDEO_STILLPICTURE32 _IOW('o', 30, struct compat_video_still_picture)
 
 #define PPPIOCSPASS32	_IOW('t', 71, struct sock_fprog32)
 #define PPPIOCSACTIVE32	_IOW('t', 70, struct sock_fprog32)

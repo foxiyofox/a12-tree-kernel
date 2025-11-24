@@ -712,3 +712,13 @@ void __net_exit tipc_topsrv_exit_net(struct net *net)
 {
 	tipc_topsrv_stop(net);
 }
+
+int __net_init tipc_topsrv_init_net(struct net *net)
+{
+	return tipc_topsrv_start(net);
+}
+
+void __net_exit tipc_topsrv_exit_net(struct net *net)
+{
+	tipc_topsrv_stop(net);
+}

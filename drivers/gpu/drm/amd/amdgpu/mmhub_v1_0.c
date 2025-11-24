@@ -507,6 +507,7 @@ int mmhub_v1_0_gart_enable(struct amdgpu_device *adev)
 		WREG32_SOC15(MMHUB, 0, mmMC_VM_FB_LOCATION_TOP,
 			     adev->gmc.vram_end >> 24);
 	}
+	WREG32_SOC15(MMHUB, 0, mmVM_L2_CNTL3, tmp);
 
 	/* GART Enable. */
 	mmhub_v1_0_init_gart_aperture_regs(adev);

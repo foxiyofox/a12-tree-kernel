@@ -86,6 +86,12 @@ enum iproc_pinconf_ctrl_type {
 	IOCTRL_TYPE_INVALID,
 };
 
+enum iproc_pinconf_ctrl_type {
+	IOCTRL_TYPE_AON = 1,
+	IOCTRL_TYPE_CDRU,
+	IOCTRL_TYPE_INVALID,
+};
+
 /*
  * Iproc GPIO core
  *

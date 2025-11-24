@@ -1721,6 +1721,53 @@ static int hns_roce_v2_write_mtpt(void *mb_buf, struct hns_roce_mr *mr,
 	struct hns_roce_v2_mpt_entry *mpt_entry;
 	int ret;
 
+	mpt_entry->pbl_size = cpu_to_le32(mr->pbl_size);
+	mpt_entry->pbl_ba_l = cpu_to_le32(lower_32_bits(mr->pbl_ba >> 3));
+	roce_set_field(mpt_entry->byte_48_mode_ba,
+		       V2_MPT_BYTE_48_PBL_BA_H_M, V2_MPT_BYTE_48_PBL_BA_H_S,
+		       upper_32_bits(mr->pbl_ba >> 3));
+
+	pages = (u64 *)__get_free_page(GFP_KERNEL);
+	if (!pages)
+		return -ENOMEM;
+
+	i = 0;
+	for_each_sg(mr->umem->sg_head.sgl, sg, mr->umem->nmap, entry) {
+		len = sg_dma_len(sg) >> PAGE_SHIFT;
+		for (j = 0; j < len; ++j) {
+			page_addr = sg_dma_address(sg) +
+				(j << mr->umem->page_shift);
+			pages[i] = page_addr >> 6;
+			/* Record the first 2 entry directly to MTPT table */
+			if (i >= HNS_ROCE_V2_MAX_INNER_MTPT_NUM - 1)
+				goto found;
+			i++;
+		}
+	}
+found:
+	mpt_entry->pa0_l = cpu_to_le32(lower_32_bits(pages[0]));
+	roce_set_field(mpt_entry->byte_56_pa0_h, V2_MPT_BYTE_56_PA0_H_M,
+		       V2_MPT_BYTE_56_PA0_H_S, upper_32_bits(pages[0]));
+
+	mpt_entry->pa1_l = cpu_to_le32(lower_32_bits(pages[1]));
+	roce_set_field(mpt_entry->byte_64_buf_pa1, V2_MPT_BYTE_64_PA1_H_M,
+		       V2_MPT_BYTE_64_PA1_H_S, upper_32_bits(pages[1]));
+	roce_set_field(mpt_entry->byte_64_buf_pa1,
+		       V2_MPT_BYTE_64_PBL_BUF_PG_SZ_M,
+		       V2_MPT_BYTE_64_PBL_BUF_PG_SZ_S,
+		       mr->pbl_buf_pg_sz + PG_SHIFT_OFFSET);
+
+	free_page((unsigned long)pages);
+
+	return 0;
+}
+
+static int hns_roce_v2_write_mtpt(void *mb_buf, struct hns_roce_mr *mr,
+				  unsigned long mtpt_idx)
+{
+	struct hns_roce_v2_mpt_entry *mpt_entry;
+	int ret;
+
 	mpt_entry = mb_buf;
 	memset(mpt_entry, 0, sizeof(*mpt_entry));
 
@@ -3821,6 +3868,7 @@ done:
 	}
 
 	qp_init_attr->cap = qp_attr->cap;
+	qp_init_attr->sq_sig_type = hr_qp->sq_signal_bits;
 
 out:
 	mutex_unlock(&hr_qp->mutex);

@@ -1244,6 +1244,37 @@ void drm_crtc_set_max_vblank_count(struct drm_crtc *crtc,
 EXPORT_SYMBOL(drm_crtc_set_max_vblank_count);
 
 /**
+ * drm_crtc_set_max_vblank_count - configure the hw max vblank counter value
+ * @crtc: CRTC in question
+ * @max_vblank_count: max hardware vblank counter value
+ *
+ * Update the maximum hardware vblank counter value for @crtc
+ * at runtime. Useful for hardware where the operation of the
+ * hardware vblank counter depends on the currently active
+ * display configuration.
+ *
+ * For example, if the hardware vblank counter does not work
+ * when a specific connector is active the maximum can be set
+ * to zero. And when that specific connector isn't active the
+ * maximum can again be set to the appropriate non-zero value.
+ *
+ * If used, must be called before drm_vblank_on().
+ */
+void drm_crtc_set_max_vblank_count(struct drm_crtc *crtc,
+				   u32 max_vblank_count)
+{
+	struct drm_device *dev = crtc->dev;
+	unsigned int pipe = drm_crtc_index(crtc);
+	struct drm_vblank_crtc *vblank = &dev->vblank[pipe];
+
+	WARN_ON(dev->max_vblank_count);
+	WARN_ON(!READ_ONCE(vblank->inmodeset));
+
+	vblank->max_vblank_count = max_vblank_count;
+}
+EXPORT_SYMBOL(drm_crtc_set_max_vblank_count);
+
+/**
  * drm_crtc_vblank_on - enable vblank events on a CRTC
  * @crtc: CRTC in question
  *

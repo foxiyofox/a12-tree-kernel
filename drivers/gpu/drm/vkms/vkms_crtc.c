@@ -58,6 +58,9 @@ bool vkms_get_vblank_timestamp(struct drm_device *dev, unsigned int pipe,
 	if (!in_vblank_irq)
 		*vblank_time -= output->period_ns;
 
+	if (!in_vblank_irq)
+		*vblank_time -= output->period_ns;
+
 	return true;
 }
 

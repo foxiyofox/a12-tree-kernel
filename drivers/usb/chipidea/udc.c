@@ -1560,6 +1560,12 @@ static int ci_udc_vbus_session(struct usb_gadget *_gadget, int is_active)
 		}
 	}
 
+	spin_lock_irqsave(&ci->lock, flags);
+	ci->gadget.speed = USB_SPEED_UNKNOWN;
+	ci->remote_wakeup = 0;
+	ci->suspended = 0;
+	spin_unlock_irqrestore(&ci->lock, flags);
+
 	return 0;
 }
 

@@ -7,6 +7,8 @@
 
 set -o errexit
 
+set -o errexit
+
 ## -- General shell logging cmds --
 function err() {
     local exitcode=$1
@@ -107,6 +109,8 @@ function pgset() {
 	err 5 "Write error($status) occurred cmd: \"$1 > $PGDEV\""
     fi
 }
+
+[[ $EUID -eq 0 ]] && trap 'pg_ctrl "reset"' EXIT
 
 [[ $EUID -eq 0 ]] && trap 'pg_ctrl "reset"' EXIT
 

@@ -64,6 +64,8 @@ struct msm_gem_vma;
 
 #define FRAC_16_16(mult, div)    (((mult) << 16) / (div))
 
+#define FRAC_16_16(mult, div)    (((mult) << 16) / (div))
+
 struct msm_file_private {
 	rwlock_t queuelock;
 	struct list_head submitqueues;

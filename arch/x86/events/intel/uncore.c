@@ -90,8 +90,8 @@ end:
 	return map;
 }
 
-ssize_t uncore_event_show(struct kobject *kobj,
-			  struct kobj_attribute *attr, char *buf)
+ssize_t uncore_event_show(struct device *dev,
+			  struct device_attribute *attr, char *buf)
 {
 	struct uncore_event_desc *event =
 		container_of(attr, struct uncore_event_desc, attr);
@@ -763,6 +763,40 @@ static int uncore_pmu_event_init(struct perf_event *event)
 		ret = 0;
 
 	return ret;
+}
+
+static void uncore_pmu_enable(struct pmu *pmu)
+{
+	struct intel_uncore_pmu *uncore_pmu;
+	struct intel_uncore_box *box;
+
+	uncore_pmu = container_of(pmu, struct intel_uncore_pmu, pmu);
+	if (!uncore_pmu)
+		return;
+
+	box = uncore_pmu_to_box(uncore_pmu, smp_processor_id());
+	if (!box)
+		return;
+
+	if (uncore_pmu->type->ops->enable_box)
+		uncore_pmu->type->ops->enable_box(box);
+}
+
+static void uncore_pmu_disable(struct pmu *pmu)
+{
+	struct intel_uncore_pmu *uncore_pmu;
+	struct intel_uncore_box *box;
+
+	uncore_pmu = container_of(pmu, struct intel_uncore_pmu, pmu);
+	if (!uncore_pmu)
+		return;
+
+	box = uncore_pmu_to_box(uncore_pmu, smp_processor_id());
+	if (!box)
+		return;
+
+	if (uncore_pmu->type->ops->disable_box)
+		uncore_pmu->type->ops->disable_box(box);
 }
 
 static void uncore_pmu_enable(struct pmu *pmu)

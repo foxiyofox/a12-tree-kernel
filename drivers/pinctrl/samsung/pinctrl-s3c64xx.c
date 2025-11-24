@@ -764,6 +764,7 @@ static int s3c64xx_eint_eint0_init(struct samsung_pinctrl_drv_data *d)
 			++irq;
 		}
 	}
+	of_node_put(eint0_np);
 
 	return 0;
 }

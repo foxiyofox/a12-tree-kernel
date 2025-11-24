@@ -26,6 +26,9 @@ void xdp_add_sk_umem(struct xdp_umem *umem, struct xdp_sock *xs)
 	if (!xs->tx)
 		return;
 
+	if (!xs->tx)
+		return;
+
 	spin_lock_irqsave(&umem->xsk_list_lock, flags);
 	list_add_rcu(&xs->list, &umem->xsk_list);
 	spin_unlock_irqrestore(&umem->xsk_list_lock, flags);
@@ -258,9 +261,9 @@ static int xdp_umem_account_pages(struct xdp_umem *umem)
 static int xdp_umem_reg(struct xdp_umem *umem, struct xdp_umem_reg *mr)
 {
 	u32 chunk_size = mr->chunk_size, headroom = mr->headroom;
+	u64 npgs, addr = mr->addr, size = mr->len;
 	unsigned int chunks, chunks_per_page;
-	u64 addr = mr->addr, size = mr->len;
-	int size_chk, err, i;
+	int err, i;
 
 	if (chunk_size < XDP_UMEM_MIN_CHUNK_SIZE || chunk_size > PAGE_SIZE) {
 		/* Strictly speaking we could support this, if:
@@ -283,6 +286,10 @@ static int xdp_umem_reg(struct xdp_umem *umem, struct xdp_umem_reg *mr)
 	}
 
 	if ((addr + size) < addr)
+		return -EINVAL;
+
+	npgs = div_u64(size, PAGE_SIZE);
+	if (npgs > U32_MAX)
 		return -EINVAL;
 
 	chunks = (unsigned int)div_u64(size, chunk_size);

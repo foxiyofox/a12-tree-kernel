@@ -132,6 +132,7 @@
 #include <linux/ioprio.h>
 #include <linux/sbitmap.h>
 #include <linux/delay.h>
+#include <linux/backing-dev.h>
 
 #include "blk.h"
 #include "blk-mq.h"
@@ -1938,6 +1939,9 @@ static void bfq_requests_merged(struct request_queue *q, struct request *rq,
 	if (!bfqq)
 		return;
 
+	if (!bfqq)
+		return;
+
 	/*
 	 * If next and rq belong to the same bfq_queue and next is older
 	 * than rq, then reposition rq in the fifo (by substituting next
@@ -2478,6 +2482,7 @@ static void __bfq_set_in_service_queue(struct bfq_data *bfqd,
 	}
 
 	bfqd->in_service_queue = bfqq;
+	bfqd->in_serv_last_pos = 0;
 }
 
 /*
@@ -3202,6 +3207,13 @@ static bool bfq_bfqq_injectable(struct bfq_queue *bfqq)
 		bfqq->bfqd->hw_tag;
 }
 
+static bool bfq_bfqq_injectable(struct bfq_queue *bfqq)
+{
+	return BFQQ_SEEKY(bfqq) && bfqq->wr_coeff == 1 &&
+		blk_queue_nonrot(bfqq->bfqd->queue) &&
+		bfqq->bfqd->hw_tag;
+}
+
 /**
  * bfq_bfqq_expire - expire a queue.
  * @bfqd: device owning the queue.
@@ -3310,6 +3322,8 @@ void bfq_bfqq_expire(struct bfq_data *bfqd,
 
 	if (ref == 1) /* bfqq is gone, no more actions on it */
 		return;
+
+	bfqq->injected_service = 0;
 
 	bfqq->injected_service = 0;
 
@@ -3681,6 +3695,30 @@ static struct bfq_queue *bfq_choose_bfqq_for_injection(struct bfq_data *bfqd)
 	return NULL;
 }
 
+static struct bfq_queue *bfq_choose_bfqq_for_injection(struct bfq_data *bfqd)
+{
+	struct bfq_queue *bfqq;
+
+	/*
+	 * A linear search; but, with a high probability, very few
+	 * steps are needed to find a candidate queue, i.e., a queue
+	 * with enough budget left for its next request. In fact:
+	 * - BFQ dynamically updates the budget of every queue so as
+	 *   to accommodate the expected backlog of the queue;
+	 * - if a queue gets all its requests dispatched as injected
+	 *   service, then the queue is removed from the active list
+	 *   (and re-added only if it gets new requests, but with
+	 *   enough budget for its new backlog).
+	 */
+	list_for_each_entry(bfqq, &bfqd->active_list, bfqq_list)
+		if (!RB_EMPTY_ROOT(&bfqq->sort_list) &&
+		    bfq_serv_to_charge(bfqq->next_rq, bfqq) <=
+		    bfq_bfqq_budget_left(bfqq))
+			return bfqq;
+
+	return NULL;
+}
+
 /*
  * Select a queue for service.  If we have a current queue in service,
  * check whether to continue servicing it, or retrieve and set a new one.
@@ -3863,6 +3901,14 @@ static struct request *bfq_dispatch_rq_from_bfqq(struct bfq_data *bfqd,
 	bfq_bfqq_served(bfqq, service_to_charge);
 
 	bfq_dispatch_remove(bfqd->queue, rq);
+
+	if (bfqq != bfqd->in_service_queue) {
+		if (likely(bfqd->in_service_queue))
+			bfqd->in_service_queue->injected_service +=
+				bfq_serv_to_charge(rq, bfqq);
+
+		goto return_rq;
+	}
 
 	if (bfqq != bfqd->in_service_queue) {
 		if (likely(bfqd->in_service_queue))
@@ -4211,8 +4257,9 @@ bfq_set_next_ioprio_data(struct bfq_queue *bfqq, struct bfq_io_cq *bic)
 	ioprio_class = IOPRIO_PRIO_CLASS(bic->ioprio);
 	switch (ioprio_class) {
 	default:
-		dev_err(bfqq->bfqd->queue->backing_dev_info->dev,
-			"bfq: bad prio class %d\n", ioprio_class);
+		pr_err("bdi %s: bfq: bad prio class %d\n",
+				bdi_dev_name(bfqq->bfqd->queue->backing_dev_info),
+				ioprio_class);
 		/* fall through */
 	case IOPRIO_CLASS_NONE:
 		/*
@@ -4238,7 +4285,7 @@ bfq_set_next_ioprio_data(struct bfq_queue *bfqq, struct bfq_io_cq *bic)
 	if (bfqq->new_ioprio >= IOPRIO_BE_NR) {
 		pr_crit("bfq_set_next_ioprio_data: new_ioprio %d\n",
 			bfqq->new_ioprio);
-		bfqq->new_ioprio = IOPRIO_BE_NR;
+		bfqq->new_ioprio = IOPRIO_BE_NR - 1;
 	}
 
 	bfqq->entity.new_weight = bfq_ioprio_to_weight(bfqq->new_ioprio);
@@ -5156,19 +5203,27 @@ static struct bfq_queue *bfq_init_rq(struct request *rq)
 	return bfqq;
 }
 
-static void bfq_idle_slice_timer_body(struct bfq_queue *bfqq)
+static void
+bfq_idle_slice_timer_body(struct bfq_data *bfqd, struct bfq_queue *bfqq)
 {
-	struct bfq_data *bfqd = bfqq->bfqd;
 	enum bfqq_expiration reason;
 	unsigned long flags;
 
 	spin_lock_irqsave(&bfqd->lock, flags);
-	bfq_clear_bfqq_wait_request(bfqq);
 
+	/*
+	 * Considering that bfqq may be in race, we should firstly check
+	 * whether bfqq is in service before doing something on it. If
+	 * the bfqq in race is not in service, it has already been expired
+	 * through __bfq_bfqq_expire func and its wait_request flags has
+	 * been cleared in __bfq_bfqd_reset_in_service func.
+	 */
 	if (bfqq != bfqd->in_service_queue) {
 		spin_unlock_irqrestore(&bfqd->lock, flags);
 		return;
 	}
+
+	bfq_clear_bfqq_wait_request(bfqq);
 
 	if (bfq_bfqq_budget_timeout(bfqq))
 		/*
@@ -5214,7 +5269,7 @@ static enum hrtimer_restart bfq_idle_slice_timer(struct hrtimer *timer)
 	 * early.
 	 */
 	if (bfqq)
-		bfq_idle_slice_timer_body(bfqq);
+		bfq_idle_slice_timer_body(bfqd, bfqq);
 
 	return HRTIMER_NORESTART;
 }
@@ -5309,7 +5364,7 @@ static void bfq_depth_updated(struct blk_mq_hw_ctx *hctx)
 	sbitmap_queue_min_shallow_depth(&tags->bitmap_tags, min_shallow);
 }
 
-static int bfq_init_hctx(struct blk_mq_hw_ctx *hctx, unsigned int index)
+static void bfq_depth_updated(struct blk_mq_hw_ctx *hctx)
 {
 	bfq_depth_updated(hctx);
 	return 0;

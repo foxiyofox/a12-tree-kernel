@@ -2063,6 +2063,12 @@ static int setup_nodes(struct perf_session *session)
 		if (cpu_map__empty(map))
 			continue;
 
+		nodes[node] = set;
+
+		/* empty node, skip */
+		if (cpu_map__empty(map))
+			continue;
+
 		for (cpu = 0; cpu < map->nr; cpu++) {
 			set_bit(map->map[cpu], set);
 

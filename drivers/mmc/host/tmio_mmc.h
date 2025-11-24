@@ -284,6 +284,11 @@ static inline void sd_ctrl_write32(struct tmio_mmc_host *host, int addr, u32 val
 	iowrite32(val, host->ctl + (addr << host->bus_shift));
 }
 
+static inline void sd_ctrl_write32(struct tmio_mmc_host *host, int addr, u32 val)
+{
+	iowrite32(val, host->ctl + (addr << host->bus_shift));
+}
+
 static inline void sd_ctrl_write32_rep(struct tmio_mmc_host *host, int addr,
 				       const u32 *buf, int count)
 {

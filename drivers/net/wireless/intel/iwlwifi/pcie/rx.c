@@ -1157,6 +1157,14 @@ static void iwl_pcie_rx_move_to_allocator(struct iwl_rxq *rxq,
 	spin_unlock(&rba->lock);
 }
 
+static void iwl_pcie_rx_move_to_allocator(struct iwl_rxq *rxq,
+					  struct iwl_rb_allocator *rba)
+{
+	spin_lock(&rba->lock);
+	list_splice_tail_init(&rxq->rx_used, &rba->rbd_empty);
+	spin_unlock(&rba->lock);
+}
+
 /*
  * iwl_pcie_rx_reuse_rbd - Recycle used RBDs
  *
@@ -1224,6 +1232,9 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
 			._page_stolen = false,
 			.truesize = max_len,
 		};
+
+		if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
+			rxcb.status = rxq->cd[i].status;
 
 		if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
 			rxcb.status = rxq->cd[i].status;

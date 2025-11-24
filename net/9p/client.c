@@ -187,6 +187,12 @@ static int parse_opts(char *opts, struct p9_client *clnt)
 				ret = -EINVAL;
 				continue;
 			}
+			if (option < 4096) {
+				p9_debug(P9_DEBUG_ERROR,
+					 "msize should be at least 4k\n");
+				ret = -EINVAL;
+				continue;
+			}
 			clnt->msize = option;
 			break;
 		case Opt_trans:

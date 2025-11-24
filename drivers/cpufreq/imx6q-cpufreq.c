@@ -270,7 +270,6 @@ static void imx6q_opp_check_speed_grading(struct device *dev)
 	 * 2b'00: 792000000Hz;
 	 * We need to set the max speed of ARM according to fuse map.
 	 */
-	val = readl_relaxed(base + OCOTP_CFG3);
 	val >>= OCOTP_CFG3_SPEED_SHIFT;
 	val &= 0x3;
 

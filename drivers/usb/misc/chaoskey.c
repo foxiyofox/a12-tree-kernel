@@ -148,6 +148,8 @@ static int chaoskey_probe(struct usb_interface *interface,
 
 	dev->interface = usb_get_intf(interface);
 
+	dev->interface = usb_get_intf(interface);
+
 	dev->buf = kmalloc(size, GFP_KERNEL);
 
 	if (dev->buf == NULL)

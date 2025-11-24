@@ -251,6 +251,13 @@ static int vgic_irq_cmp(void *priv, struct list_head *a, struct list_head *b)
 	if (unlikely(irqa == irqb))
 		return 0;
 
+	/*
+	 * list_sort may call this function with the same element when
+	 * the list is fairly long.
+	 */
+	if (unlikely(irqa == irqb))
+		return 0;
+
 	spin_lock(&irqa->irq_lock);
 	spin_lock_nested(&irqb->irq_lock, SINGLE_DEPTH_NESTING);
 
@@ -907,6 +914,17 @@ void kvm_vgic_put(struct kvm_vcpu *vcpu)
 		vgic_v2_put(vcpu);
 	else
 		vgic_v3_put(vcpu);
+}
+
+void kvm_vgic_vmcr_sync(struct kvm_vcpu *vcpu)
+{
+	if (unlikely(!irqchip_in_kernel(vcpu->kvm)))
+		return;
+
+	if (kvm_vgic_global_state.type == VGIC_V2)
+		vgic_v2_vmcr_sync(vcpu);
+	else
+		vgic_v3_vmcr_sync(vcpu);
 }
 
 void kvm_vgic_vmcr_sync(struct kvm_vcpu *vcpu)

@@ -339,6 +339,8 @@ static void usbport_trig_deactivate(struct led_classdev *led_cdev)
 
 	sysfs_remove_group(&led_cdev->dev->kobj, &ports_group);
 
+	sysfs_remove_group(&led_cdev->dev->kobj, &ports_group);
+
 	usb_unregister_notify(&usbport_data->nb);
 
 	kfree(usbport_data);

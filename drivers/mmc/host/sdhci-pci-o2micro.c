@@ -308,6 +308,9 @@ int sdhci_pci_o2_probe_slot(struct sdhci_pci_slot *slot)
 	switch (chip->pdev->device) {
 	case PCI_DEVICE_ID_O2_SDS0:
 	case PCI_DEVICE_ID_O2_SEABIRD0:
+		if (chip->pdev->revision == 0x01)
+			chip->quirks |= SDHCI_QUIRK_DELAY_AFTER_POWER;
+		/* fall through */
 	case PCI_DEVICE_ID_O2_SEABIRD1:
 	case PCI_DEVICE_ID_O2_SDS1:
 	case PCI_DEVICE_ID_O2_FUJIN2:

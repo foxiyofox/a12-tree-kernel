@@ -406,6 +406,9 @@ struct fuse_iqueue {
 	/** Lock protecting accesses to members of this structure */
 	spinlock_t lock;
 
+	/** Lock protecting accesses to members of this structure */
+	spinlock_t lock;
+
 	/** Readers of the connection are waiting on this */
 	wait_queue_head_t waitq;
 
@@ -921,6 +924,8 @@ int fuse_ctl_add_conn(struct fuse_conn *fc);
  * Remove connection from control filesystem
  */
 void fuse_ctl_remove_conn(struct fuse_conn *fc);
+
+bool fuse_invalid_attr(struct fuse_attr *attr);
 
 /**
  * Is file type valid?

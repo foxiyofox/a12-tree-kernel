@@ -887,6 +887,7 @@ lpfc_linkdown(struct lpfc_hba *phba)
 	struct lpfc_vport **vports;
 	LPFC_MBOXQ_t          *mb;
 	int i;
+	struct Scsi_Host  *shost = lpfc_shost_from_vport(phba->pport);
 
 	if (phba->link_state == LPFC_LINK_DOWN)
 		return 0;
@@ -1707,6 +1708,13 @@ lpfc_match_fcf_conn_list(struct lpfc_hba *phba,
 		return 1;
 	}
 
+	/* Clear the pport flogi counter in case the link down was
+	 * absorbed without an ACQE. No lock here - in worker thread
+	 * and discovery is synchronized.
+	 */
+	spin_lock_irq(shost->host_lock);
+	phba->pport->rcv_flogi_cnt = 0;
+	spin_unlock_irq(shost->host_lock);
 	return 0;
 }
 
@@ -4888,6 +4896,10 @@ lpfc_unreg_default_rpis(struct lpfc_vport *vport)
 	struct lpfc_hba  *phba  = vport->phba;
 	LPFC_MBOXQ_t     *mbox;
 	int rc;
+
+	/* Unreg DID is an SLI3 operation. */
+	if (phba->sli_rev > LPFC_SLI_REV3)
+		return;
 
 	/* Unreg DID is an SLI3 operation. */
 	if (phba->sli_rev > LPFC_SLI_REV3)

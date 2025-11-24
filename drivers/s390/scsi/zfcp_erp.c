@@ -242,6 +242,12 @@ static struct zfcp_erp_action *zfcp_erp_setup_act(int need, u32 act_status,
 			 need != ZFCP_ERP_ACTION_REOPEN_ADAPTER))
 		return NULL;
 
+	if (WARN_ON_ONCE(need != ZFCP_ERP_ACTION_REOPEN_LUN &&
+			 need != ZFCP_ERP_ACTION_REOPEN_PORT &&
+			 need != ZFCP_ERP_ACTION_REOPEN_PORT_FORCED &&
+			 need != ZFCP_ERP_ACTION_REOPEN_ADAPTER))
+		return NULL;
+
 	switch (need) {
 	case ZFCP_ERP_ACTION_REOPEN_LUN:
 		zfcp_sdev = sdev_to_zfcp(sdev);
@@ -592,7 +598,10 @@ static void zfcp_erp_strategy_check_fsfreq(struct zfcp_erp_action *act)
 				   ZFCP_STATUS_ERP_TIMEDOUT)) {
 			req->status |= ZFCP_STATUS_FSFREQ_DISMISSED;
 			zfcp_dbf_rec_run("erscf_1", act);
-			req->erp_action = NULL;
+			/* lock-free concurrent access with
+			 * zfcp_erp_timeout_handler()
+			 */
+			WRITE_ONCE(req->erp_action, NULL);
 		}
 		if (act->status & ZFCP_STATUS_ERP_TIMEDOUT)
 			zfcp_dbf_rec_run("erscf_2", act);
@@ -628,8 +637,14 @@ void zfcp_erp_notify(struct zfcp_erp_action *erp_action, unsigned long set_mask)
 void zfcp_erp_timeout_handler(struct timer_list *t)
 {
 	struct zfcp_fsf_req *fsf_req = from_timer(fsf_req, t, timer);
-	struct zfcp_erp_action *act = fsf_req->erp_action;
+	struct zfcp_erp_action *act;
 
+	if (fsf_req->status & ZFCP_STATUS_FSFREQ_DISMISSED)
+		return;
+	/* lock-free concurrent access with zfcp_erp_strategy_check_fsfreq() */
+	act = READ_ONCE(fsf_req->erp_action);
+	if (!act)
+		return;
 	zfcp_erp_notify(act, ZFCP_STATUS_ERP_TIMEDOUT);
 }
 
@@ -645,6 +660,20 @@ static void zfcp_erp_strategy_memwait(struct zfcp_erp_action *erp_action)
 	timer_setup(&erp_action->timer, zfcp_erp_memwait_handler, 0);
 	erp_action->timer.expires = jiffies + HZ;
 	add_timer(&erp_action->timer);
+}
+
+void zfcp_erp_port_forced_reopen_all(struct zfcp_adapter *adapter,
+				     int clear, char *dbftag)
+{
+	unsigned long flags;
+	struct zfcp_port *port;
+
+	write_lock_irqsave(&adapter->erp_lock, flags);
+	read_lock(&adapter->port_list_lock);
+	list_for_each_entry(port, &adapter->port_list, list)
+		_zfcp_erp_port_forced_reopen(port, clear, dbftag);
+	read_unlock(&adapter->port_list_lock);
+	write_unlock_irqrestore(&adapter->erp_lock, flags);
 }
 
 void zfcp_erp_port_forced_reopen_all(struct zfcp_adapter *adapter,
@@ -738,7 +767,7 @@ static void zfcp_erp_enqueue_ptp_port(struct zfcp_adapter *adapter)
 				 adapter->peer_d_id);
 	if (IS_ERR(port)) /* error or port already attached */
 		return;
-	_zfcp_erp_port_reopen(port, 0, "ereptp1");
+	zfcp_erp_port_reopen(port, 0, "ereptp1");
 }
 
 static int zfcp_erp_adapter_strat_fsf_xconf(struct zfcp_erp_action *erp_action)

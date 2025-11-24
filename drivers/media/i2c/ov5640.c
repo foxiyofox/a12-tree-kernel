@@ -1917,7 +1917,13 @@ out:
 		ret = v4l2_ctrl_handler_setup(&sensor->ctrls.handler);
 	}
 
-	return ret;
+	return ov5640_set_timings(sensor, mode);
+}
+
+static int ov5640_set_autoexposure(struct ov5640_dev *sensor, bool on)
+{
+	return ov5640_mod_reg(sensor, OV5640_REG_AEC_PK_MANUAL,
+			      BIT(0), on ? 0 : BIT(0));
 }
 
 static int ov5640_try_frame_interval(struct ov5640_dev *sensor,
@@ -2683,6 +2689,7 @@ static int ov5640_check_chip_id(struct ov5640_dev *sensor)
 	ret = ov5640_set_power_on(sensor);
 	if (ret)
 		return ret;
+	sensor->last_mode = &ov5640_mode_init_data;
 
 	ret = ov5640_read_reg16(sensor, OV5640_REG_CHIP_ID, &chip_id);
 	if (ret) {
@@ -2829,8 +2836,8 @@ static int ov5640_probe(struct i2c_client *client,
 free_ctrls:
 	v4l2_ctrl_handler_free(&sensor->ctrls.handler);
 entity_cleanup:
-	mutex_destroy(&sensor->lock);
 	media_entity_cleanup(&sensor->sd.entity);
+	mutex_destroy(&sensor->lock);
 	return ret;
 }
 
@@ -2840,9 +2847,9 @@ static int ov5640_remove(struct i2c_client *client)
 	struct ov5640_dev *sensor = to_ov5640_dev(sd);
 
 	v4l2_async_unregister_subdev(&sensor->sd);
-	mutex_destroy(&sensor->lock);
 	media_entity_cleanup(&sensor->sd.entity);
 	v4l2_ctrl_handler_free(&sensor->ctrls.handler);
+	mutex_destroy(&sensor->lock);
 
 	return 0;
 }

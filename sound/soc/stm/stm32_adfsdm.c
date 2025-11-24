@@ -106,6 +106,9 @@ static int stm32_adfsdm_dai_prepare(struct snd_pcm_substream *substream,
 out:
 	mutex_unlock(&priv->lock);
 
+out:
+	mutex_unlock(&priv->lock);
+
 	return ret;
 }
 

@@ -52,6 +52,9 @@ static __be64 *pnv_alloc_tce_level(int nid, unsigned int shift)
 static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
 		unsigned long size, unsigned int levels);
 
+static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
+		unsigned long size, unsigned int levels);
+
 static __be64 *pnv_tce(struct iommu_table *tbl, bool user, long idx, bool alloc)
 {
 	__be64 *tmp = user ? tbl->it_userspace : (__be64 *) tbl->it_base;

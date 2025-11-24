@@ -830,6 +830,9 @@ static u32 process_channel_irqs(struct bam_device *bdev)
 		if (offset < bchan->head)
 			avail--;
 
+		if (offset < bchan->head)
+			avail--;
+
 		list_for_each_entry_safe(async_desc, tmp,
 					 &bchan->desc_list, desc_node) {
 			/* Not enough data to read */

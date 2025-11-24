@@ -1142,6 +1142,7 @@ static int coda_start_encoding(struct coda_ctx *ctx)
 		ret = -EFAULT;
 		goto out;
 	}
+	ctx->sequence_offset = ~0U;
 	ctx->initialized = 1;
 
 	if (dst_fourcc != V4L2_PIX_FMT_JPEG) {
@@ -1999,6 +2000,9 @@ static int coda_prepare_decode(struct coda_ctx *ctx)
 
 	/* Clear decode success flag */
 	coda_write(dev, 0, CODA_RET_DEC_PIC_SUCCESS);
+
+	/* Clear error return value */
+	coda_write(dev, 0, CODA_RET_DEC_PIC_ERR_MB);
 
 	/* Clear error return value */
 	coda_write(dev, 0, CODA_RET_DEC_PIC_ERR_MB);

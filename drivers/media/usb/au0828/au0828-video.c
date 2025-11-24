@@ -761,6 +761,9 @@ static int au0828_analog_stream_enable(struct au0828_dev *d)
 	if (test_bit(DEV_DISCONNECTED, &d->dev_state))
 		return -ENODEV;
 
+	if (test_bit(DEV_DISCONNECTED, &d->dev_state))
+		return -ENODEV;
+
 	iface = usb_ifnum_to_if(d->usbdev, 0);
 	if (iface && iface->cur_altsetting->desc.bAlternateSetting != 5) {
 		dprintk(1, "Changing intf#0 to alt 5\n");

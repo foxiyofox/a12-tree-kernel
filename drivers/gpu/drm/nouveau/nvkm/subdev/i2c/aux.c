@@ -179,6 +179,24 @@ nvkm_i2c_aux_fini(struct nvkm_i2c_aux *aux)
 	mutex_unlock(&aux->mutex);
 }
 
+void
+nvkm_i2c_aux_init(struct nvkm_i2c_aux *aux)
+{
+	AUX_TRACE(aux, "init");
+	mutex_lock(&aux->mutex);
+	aux->enabled = true;
+	mutex_unlock(&aux->mutex);
+}
+
+void
+nvkm_i2c_aux_fini(struct nvkm_i2c_aux *aux)
+{
+	AUX_TRACE(aux, "fini");
+	mutex_lock(&aux->mutex);
+	aux->enabled = false;
+	mutex_unlock(&aux->mutex);
+}
+
 int
 nvkm_i2c_aux_ctor(const struct nvkm_i2c_aux_func *func,
 		  struct nvkm_i2c_pad *pad, int id,

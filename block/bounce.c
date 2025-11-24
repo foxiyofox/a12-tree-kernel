@@ -49,6 +49,24 @@ static void init_bounce_bioset(void)
 	bounce_bs_setup = true;
 }
 
+static void init_bounce_bioset(void)
+{
+	static bool bounce_bs_setup;
+	int ret;
+
+	if (bounce_bs_setup)
+		return;
+
+	ret = bioset_init(&bounce_bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+	BUG_ON(ret);
+	if (bioset_integrity_create(&bounce_bio_set, BIO_POOL_SIZE))
+		BUG_ON(1);
+
+	ret = bioset_init(&bounce_bio_split, BIO_POOL_SIZE, 0, 0);
+	BUG_ON(ret);
+	bounce_bs_setup = true;
+}
+
 #if defined(CONFIG_HIGHMEM)
 static __init int init_emergency_pool(void)
 {
@@ -96,6 +114,8 @@ static void *mempool_alloc_pages_isa(gfp_t gfp_mask, void *data)
 {
 	return mempool_alloc_pages(gfp_mask | GFP_DMA, data);
 }
+
+static DEFINE_MUTEX(isa_mutex);
 
 static DEFINE_MUTEX(isa_mutex);
 

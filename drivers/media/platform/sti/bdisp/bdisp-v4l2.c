@@ -578,8 +578,7 @@ static int bdisp_open(struct file *file)
 	struct bdisp_ctx *ctx = NULL;
 	int ret;
 
-	if (mutex_lock_interruptible(&bdisp->lock))
-		return -ERESTARTSYS;
+	mutex_lock(&bdisp->lock);
 
 	/* Allocate memory for both context and node */
 	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
@@ -1371,7 +1370,7 @@ static int bdisp_probe(struct platform_device *pdev)
 	ret = pm_runtime_get_sync(dev);
 	if (ret < 0) {
 		dev_err(dev, "failed to set PM\n");
-		goto err_dbg;
+		goto err_pm;
 	}
 
 	/* Filters */
@@ -1399,7 +1398,6 @@ err_filter:
 	bdisp_hw_free_filters(bdisp->dev);
 err_pm:
 	pm_runtime_put(dev);
-err_dbg:
 	bdisp_debugfs_remove(bdisp);
 err_v4l2:
 	v4l2_device_unregister(&bdisp->v4l2_dev);

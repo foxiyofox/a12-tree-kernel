@@ -480,6 +480,8 @@ void dce_abm_destroy(struct abm **abm)
 
 	abm_dce->base.funcs->set_abm_immediate_disable(*abm);
 
+	abm_dce->base.funcs->set_abm_immediate_disable(*abm);
+
 	kfree(abm_dce);
 	*abm = NULL;
 }

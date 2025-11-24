@@ -7416,6 +7416,8 @@
 #define mmFMT4_FMT_420_HBLANK_EARLY_START                                                              0x0f55
 #define mmFMT4_FMT_420_HBLANK_EARLY_START_BASE_IDX                                                     2
 
+#define mmDCHUBBUB_SDPIF_MMIO_CNTRL_0                                                                  0x395d
+#define mmDCHUBBUB_SDPIF_MMIO_CNTRL_0_BASE_IDX                                                         2
 
 // addressBlock: dce_dc_dcp5_dispdec
 // base address: 0x2800

@@ -41,6 +41,8 @@ static int intel_lpss_pci_probe(struct pci_dev *pdev,
 
 	pdev->d3cold_delay = 0;
 
+	pdev->d3cold_delay = 0;
+
 	/* Probably it is enough to set this for iDMA capable devices only */
 	pci_set_master(pdev);
 	pci_try_set_mwi(pdev);
@@ -124,6 +126,18 @@ static struct property_entry apl_i2c_properties[] = {
 static const struct intel_lpss_platform_info apl_i2c_info = {
 	.clk_rate = 133000000,
 	.properties = apl_i2c_properties,
+};
+
+static struct property_entry glk_i2c_properties[] = {
+	PROPERTY_ENTRY_U32("i2c-sda-hold-time-ns", 313),
+	PROPERTY_ENTRY_U32("i2c-sda-falling-time-ns", 171),
+	PROPERTY_ENTRY_U32("i2c-scl-falling-time-ns", 290),
+	{ },
+};
+
+static const struct intel_lpss_platform_info glk_i2c_info = {
+	.clk_rate = 133000000,
+	.properties = glk_i2c_properties,
 };
 
 static struct property_entry glk_i2c_properties[] = {

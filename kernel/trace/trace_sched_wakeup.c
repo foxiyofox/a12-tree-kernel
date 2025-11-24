@@ -116,6 +116,8 @@ wakeup_tracer_call(unsigned long ip, unsigned long parent_ip,
 	unsigned long flags;
 	int pc;
 
+	ftrace_graph_addr_finish(trace);
+
 	if (!func_prolog_preempt_disable(tr, &data, &pc))
 		return;
 

@@ -526,6 +526,10 @@ bool ccp_queues_suspended(struct ccp_device *ccp)
 	unsigned long flags;
 	unsigned int i;
 
+	/* If there's no device there's nothing to do */
+	if (!ccp)
+		return 0;
+
 	spin_lock_irqsave(&ccp->cmd_lock, flags);
 
 	for (i = 0; i < ccp->cmd_q_count; i++)
@@ -542,6 +546,10 @@ int ccp_dev_suspend(struct sp_device *sp, pm_message_t state)
 	struct ccp_device *ccp = sp->ccp_data;
 	unsigned long flags;
 	unsigned int i;
+
+	/* If there's no device there's nothing to do */
+	if (!ccp)
+		return 0;
 
 	/* If there's no device there's nothing to do */
 	if (!ccp)

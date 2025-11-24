@@ -531,6 +531,7 @@ static int twl4030_charger_enable_usb(struct twl4030_bci *bci, bool enable)
 static int twl4030_charger_enable_ac(struct twl4030_bci *bci, bool enable)
 {
 	int ret;
+	u32 reg;
 
 	if (bci->ac_mode == CHARGE_OFF)
 		enable = false;

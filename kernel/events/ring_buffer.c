@@ -752,6 +752,9 @@ struct ring_buffer *rb_alloc(int nr_pages, long watermark, int cpu, int flags)
 	if (order_base_2(size) >= PAGE_SHIFT+MAX_ORDER)
 		goto fail;
 
+	if (order_base_2(size) >= PAGE_SHIFT+MAX_ORDER)
+		goto fail;
+
 	rb = kzalloc(size, GFP_KERNEL);
 	if (!rb)
 		goto fail;

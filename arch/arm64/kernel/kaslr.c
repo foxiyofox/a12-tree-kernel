@@ -171,5 +171,8 @@ u64 __init kaslr_early_init(u64 dt_phys)
 	__flush_dcache_area(&module_alloc_base, sizeof(module_alloc_base));
 	__flush_dcache_area(&memstart_offset_seed, sizeof(memstart_offset_seed));
 
+	__flush_dcache_area(&module_alloc_base, sizeof(module_alloc_base));
+	__flush_dcache_area(&memstart_offset_seed, sizeof(memstart_offset_seed));
+
 	return offset;
 }

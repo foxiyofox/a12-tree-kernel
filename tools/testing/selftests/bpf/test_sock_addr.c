@@ -494,6 +494,34 @@ static struct sock_addr_test tests[] = {
 		SUCCESS,
 	},
 	{
+		"sendmsg6: set dst IP = [::] (BSD'ism)",
+		sendmsg6_rw_wildcard_prog_load,
+		BPF_CGROUP_UDP6_SENDMSG,
+		BPF_CGROUP_UDP6_SENDMSG,
+		AF_INET6,
+		SOCK_DGRAM,
+		SERV6_IP,
+		SERV6_PORT,
+		SERV6_REWRITE_IP,
+		SERV6_REWRITE_PORT,
+		SRC6_REWRITE_IP,
+		SUCCESS,
+	},
+	{
+		"sendmsg6: preserve dst IP = [::] (BSD'ism)",
+		sendmsg_allow_prog_load,
+		BPF_CGROUP_UDP6_SENDMSG,
+		BPF_CGROUP_UDP6_SENDMSG,
+		AF_INET6,
+		SOCK_DGRAM,
+		WILDCARD6_IP,
+		SERV6_PORT,
+		SERV6_REWRITE_IP,
+		SERV6_PORT,
+		SRC6_IP,
+		SUCCESS,
+	},
+	{
 		"sendmsg6: deny call",
 		sendmsg_deny_prog_load,
 		BPF_CGROUP_UDP6_SENDMSG,
@@ -884,6 +912,11 @@ static int sendmsg6_rw_asm_prog_load(const struct sock_addr_test *test)
 static int sendmsg6_rw_v4mapped_prog_load(const struct sock_addr_test *test)
 {
 	return sendmsg6_rw_dst_asm_prog_load(test, SERV6_V4MAPPED_IP);
+}
+
+static int sendmsg6_rw_wildcard_prog_load(const struct sock_addr_test *test)
+{
+	return sendmsg6_rw_dst_asm_prog_load(test, WILDCARD6_IP);
 }
 
 static int sendmsg6_rw_wildcard_prog_load(const struct sock_addr_test *test)

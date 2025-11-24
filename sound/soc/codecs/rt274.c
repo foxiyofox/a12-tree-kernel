@@ -400,6 +400,8 @@ static int rt274_mic_detect(struct snd_soc_component *component,
 
 	rt274->jack = jack;
 
+	rt274->jack = jack;
+
 	if (jack == NULL) {
 		/* Disable jack detection */
 		regmap_update_bits(rt274->regmap, RT274_EAPD_GPIO_IRQ_CTRL,

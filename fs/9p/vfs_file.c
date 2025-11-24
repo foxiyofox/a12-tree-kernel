@@ -192,6 +192,8 @@ static int v9fs_file_do_lock(struct file *filp, int cmd, struct file_lock *fl)
 
 	v9ses = v9fs_inode2v9ses(file_inode(filp));
 
+	v9ses = v9fs_inode2v9ses(file_inode(filp));
+
 	/*
 	 * if its a blocked request and we get P9_LOCK_BLOCKED as the status
 	 * for lock request, keep on trying
@@ -304,6 +306,8 @@ static int v9fs_file_getlock(struct file *filp, struct file_lock *fl)
 			fl->fl_end = glock.start + glock.length - 1;
 		fl->fl_pid = -glock.proc_id;
 	}
+	if (flock.client_id != fid->clnt->name)
+		kfree(flock.client_id);
 out:
 	if (glock.client_id != fid->clnt->name)
 		kfree(glock.client_id);

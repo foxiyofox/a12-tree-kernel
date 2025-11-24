@@ -5,6 +5,8 @@
  *
  * Copyright 2019 Finn Thain
  *
+ * Copyright 2019 Finn Thain
+ *
  * derived in part from:
  */
 /*

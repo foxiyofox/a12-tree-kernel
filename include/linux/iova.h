@@ -242,6 +242,11 @@ static inline bool has_iova_flush_queue(struct iova_domain *iovad)
 	return false;
 }
 
+static inline bool has_iova_flush_queue(struct iova_domain *iovad)
+{
+	return false;
+}
+
 static inline int init_iova_flush_queue(struct iova_domain *iovad,
 					iova_flush_cb flush_cb,
 					iova_entry_dtor entry_dtor)

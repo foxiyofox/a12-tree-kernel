@@ -1373,6 +1373,7 @@ static struct mdesc_mlgroup * __init find_mlgroup(u64 node)
 	}
 	return NULL;
 }
+EXPORT_SYMBOL(__node_distance);
 
 int __node_distance(int from, int to)
 {

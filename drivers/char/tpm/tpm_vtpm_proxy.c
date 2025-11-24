@@ -732,7 +732,7 @@ static int __init vtpm_module_init(void)
 err_vtpmx_cleanup:
 	vtpmx_cleanup();
 
-	return rc;
+	return 0;
 }
 
 static void __exit vtpm_module_exit(void)

@@ -439,6 +439,9 @@ parse_driver_features(struct drm_psb_private *dev_priv,
 	dev_priv->lvds_enabled_in_vbt = driver->lvds_config != 0;
 	DRM_DEBUG_KMS("LVDS VBT config bits: 0x%x\n", driver->lvds_config);
 
+	dev_priv->lvds_enabled_in_vbt = driver->lvds_config != 0;
+	DRM_DEBUG_KMS("LVDS VBT config bits: 0x%x\n", driver->lvds_config);
+
 	/* This bit means to use 96Mhz for DPLL_A or not */
 	if (driver->primary_lfp_id)
 		dev_priv->dplla_96mhz = true;

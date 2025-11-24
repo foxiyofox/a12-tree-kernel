@@ -68,12 +68,4 @@ static inline long do_futex(u32 __user *uaddr, int op, u32 val,
 }
 #endif
 
-#ifdef CONFIG_FUTEX_PI
-extern void exit_pi_state_list(struct task_struct *curr);
-#else
-static inline void exit_pi_state_list(struct task_struct *curr)
-{
-}
-#endif
-
 #endif

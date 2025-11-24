@@ -23,6 +23,8 @@
 
 extern void free_irqs(void);
 
+extern void free_irqs(void);
+
 /* When epoll triggers we do not know why it did so
  * we can also have different IRQs for read and write.
  * This is why we keep a small irq_fd array for each fd -
@@ -312,6 +314,8 @@ static void do_free_by_irq_and_dev(
 			}
 		}
 	}
+
+	free_irqs();
 }
 
 void free_irq_by_fd(int fd)

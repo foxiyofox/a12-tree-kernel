@@ -42,6 +42,7 @@
 		regulator-min-microvolt = <3750000>;
 		regulator-max-microvolt = <3750000>;
 		regulator-boot-on;
+		startup-delay-us = <25000>;
 	};
 
 	leds {

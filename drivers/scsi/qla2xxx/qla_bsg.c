@@ -19,10 +19,11 @@ qla2x00_bsg_job_done(void *ptr, int res)
 	struct bsg_job *bsg_job = sp->u.bsg_job;
 	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
 
+	sp->free(sp);
+
 	bsg_reply->result = res;
 	bsg_job_done(bsg_job, bsg_reply->result,
 		       bsg_reply->reply_payload_rcv_len);
-	sp->free(sp);
 }
 
 void
@@ -1884,6 +1885,9 @@ qla24xx_process_bidir_cmd(struct bsg_job *bsg_job)
 		rval = EXT_STATUS_NO_MEMORY;
 		goto done_unmap_sg;
 	}
+
+	req_data_len = bsg_job->request_payload.payload_len;
+	rsp_data_len = bsg_job->reply_payload.payload_len;
 
 	req_data_len = bsg_job->request_payload.payload_len;
 	rsp_data_len = bsg_job->reply_payload.payload_len;

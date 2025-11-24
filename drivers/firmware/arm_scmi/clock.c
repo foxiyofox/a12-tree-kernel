@@ -187,6 +187,8 @@ scmi_clock_describe_rates_get(const struct scmi_handle *handle, u32 clk_id,
 
 	clk->rate_discrete = rate_discrete;
 
+	clk->rate_discrete = rate_discrete;
+
 err:
 	scmi_xfer_put(handle, t);
 	return ret;

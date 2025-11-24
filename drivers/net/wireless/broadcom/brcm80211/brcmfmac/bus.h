@@ -245,6 +245,15 @@ void brcmf_bus_debugfs_create(struct brcmf_bus *bus)
 	return bus->ops->debugfs_create(bus->dev);
 }
 
+static inline
+void brcmf_bus_debugfs_create(struct brcmf_bus *bus)
+{
+	if (!bus->ops->debugfs_create)
+		return;
+
+	return bus->ops->debugfs_create(bus->dev);
+}
+
 /*
  * interface functions from common layer
  */

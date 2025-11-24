@@ -1087,6 +1087,10 @@ qed_iwarp_mpa_complete(struct qed_hwfn *p_hwfn,
 		/* paired with READ_ONCE in destroy_qp */
 		smp_store_release(&ep->state, QED_IWARP_EP_CLOSED);
 
+	if (fw_return_code != RDMA_RETURN_OK)
+		/* paired with READ_ONCE in destroy_qp */
+		smp_store_release(&ep->state, QED_IWARP_EP_CLOSED);
+
 	ep->event_cb(ep->cb_context, &params);
 
 	/* on passive side, if there is no associated QP (REJECT) we need to
@@ -1691,6 +1695,15 @@ qed_iwarp_parse_rx_pkt(struct qed_hwfn *p_hwfn,
 	}
 
 	eth_hlen = ETH_HLEN + (vlan_valid ? sizeof(u32) : 0);
+
+	if (!ether_addr_equal(ethh->h_dest,
+			      p_hwfn->p_rdma_info->iwarp.mac_addr)) {
+		DP_VERBOSE(p_hwfn,
+			   QED_MSG_RDMA,
+			   "Got unexpected mac %pM instead of %pM\n",
+			   ethh->h_dest, p_hwfn->p_rdma_info->iwarp.mac_addr);
+		return -EINVAL;
+	}
 
 	if (!ether_addr_equal(ethh->h_dest,
 			      p_hwfn->p_rdma_info->iwarp.mac_addr)) {
@@ -2754,8 +2767,10 @@ qed_iwarp_ll2_start(struct qed_hwfn *p_hwfn,
 	iwarp_info->mpa_bufs = kcalloc(data.input.rx_num_desc,
 				       sizeof(*iwarp_info->mpa_bufs),
 				       GFP_KERNEL);
-	if (!iwarp_info->mpa_bufs)
+	if (!iwarp_info->mpa_bufs) {
+		rc = -ENOMEM;
 		goto err;
+	}
 
 	INIT_LIST_HEAD(&iwarp_info->mpa_buf_pending_list);
 	INIT_LIST_HEAD(&iwarp_info->mpa_buf_list);

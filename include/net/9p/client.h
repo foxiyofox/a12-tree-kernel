@@ -262,4 +262,7 @@ int p9_client_readlink(struct p9_fid *fid, char **target);
 int p9_client_init(void);
 void p9_client_exit(void);
 
+int p9_client_init(void);
+void p9_client_exit(void);
+
 #endif /* NET_9P_CLIENT_H */

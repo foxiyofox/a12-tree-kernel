@@ -500,9 +500,9 @@ void synchronize_user_stack(void)
 		do {
 			struct reg_window *rwin = &t->reg_window[window];
 			int winsize = sizeof(struct reg_window);
-			unsigned long sp;
+			unsigned long sp, orig_sp;
 
-			sp = t->rwbuf_stkptrs[window];
+			orig_sp = sp = t->rwbuf_stkptrs[window];
 
 			if (test_thread_64bit_stack(sp))
 				sp += STACK_BIAS;

@@ -2028,6 +2028,39 @@ static void intel_tfa_pmu_enable_all(int added)
 	intel_pmu_enable_all(added);
 }
 
+static void intel_set_tfa(struct cpu_hw_events *cpuc, bool on)
+{
+	u64 val = on ? MSR_TFA_RTM_FORCE_ABORT : 0;
+
+	if (cpuc->tfa_shadow != val) {
+		cpuc->tfa_shadow = val;
+		wrmsrl(MSR_TSX_FORCE_ABORT, val);
+	}
+}
+
+static void intel_tfa_commit_scheduling(struct cpu_hw_events *cpuc, int idx, int cntr)
+{
+	/*
+	 * We're going to use PMC3, make sure TFA is set before we touch it.
+	 */
+	if (cntr == 3 && !cpuc->is_fake)
+		intel_set_tfa(cpuc, true);
+}
+
+static void intel_tfa_pmu_enable_all(int added)
+{
+	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
+
+	/*
+	 * If we find PMC3 is no longer used when we enable the PMU, we can
+	 * clear TFA.
+	 */
+	if (!test_bit(3, cpuc->active_mask))
+		intel_set_tfa(cpuc, false);
+
+	intel_pmu_enable_all(added);
+}
+
 static inline u64 intel_pmu_get_status(void)
 {
 	u64 status;
@@ -2717,6 +2750,35 @@ dyn_constraint(struct cpu_hw_events *cpuc, struct event_constraint *c, int idx)
 }
 
 static struct event_constraint *
+dyn_constraint(struct cpu_hw_events *cpuc, struct event_constraint *c, int idx)
+{
+	WARN_ON_ONCE(!cpuc->constraint_list);
+
+	if (!(c->flags & PERF_X86_EVENT_DYNAMIC)) {
+		struct event_constraint *cx;
+
+		/*
+		 * grab pre-allocated constraint entry
+		 */
+		cx = &cpuc->constraint_list[idx];
+
+		/*
+		 * initialize dynamic constraint
+		 * with static constraint
+		 */
+		*cx = *c;
+
+		/*
+		 * mark constraint as dynamic
+		 */
+		cx->flags |= PERF_X86_EVENT_DYNAMIC;
+		c = cx;
+	}
+
+	return c;
+}
+
+static struct event_constraint *
 intel_get_excl_constraints(struct cpu_hw_events *cpuc, struct perf_event *event,
 			   int idx, struct event_constraint *c)
 {
@@ -3294,6 +3356,26 @@ tfa_get_event_constraints(struct cpu_hw_events *cpuc, int idx,
 	return c;
 }
 
+static bool allow_tsx_force_abort = true;
+
+static struct event_constraint *
+tfa_get_event_constraints(struct cpu_hw_events *cpuc, int idx,
+			  struct perf_event *event)
+{
+	struct event_constraint *c = hsw_get_event_constraints(cpuc, idx, event);
+
+	/*
+	 * Without TFA we must not use PMC3.
+	 */
+	if (!allow_tsx_force_abort && test_bit(3, c->idxmsk) && idx >= 0) {
+		c = dyn_constraint(cpuc, c, idx);
+		c->idxmsk64 &= ~(1ULL << 3);
+		c->weight--;
+	}
+
+	return c;
+}
+
 /*
  * Broadwell:
  *
@@ -3318,6 +3400,11 @@ static u64 bdw_limit_period(struct perf_event *event, u64 left)
 		left &= ~0x3fULL;
 	}
 	return left;
+}
+
+static u64 nhm_limit_period(struct perf_event *event, u64 left)
+{
+	return max(left, 32ULL);
 }
 
 static u64 nhm_limit_period(struct perf_event *event, u64 left)
@@ -3428,6 +3515,11 @@ static int intel_pmu_cpu_prepare(int cpu)
 	return intel_cpuc_prepare(&per_cpu(cpu_hw_events, cpu), cpu);
 }
 
+static int intel_pmu_cpu_prepare(int cpu)
+{
+	return intel_cpuc_prepare(&per_cpu(cpu_hw_events, cpu), cpu);
+}
+
 static void flip_smm_bit(void *data)
 {
 	unsigned long set = *(unsigned long *)data;
@@ -3454,6 +3546,12 @@ static void intel_pmu_cpu_starting(int cpu)
 	intel_pmu_lbr_reset();
 
 	cpuc->lbr_sel = NULL;
+
+	if (x86_pmu.flags & PMU_FL_TFA) {
+		WARN_ON_ONCE(cpuc->tfa_shadow);
+		cpuc->tfa_shadow = ~0ULL;
+		intel_set_tfa(cpuc, false);
+	}
 
 	if (x86_pmu.flags & PMU_FL_TFA) {
 		WARN_ON_ONCE(cpuc->tfa_shadow);
@@ -3549,6 +3647,11 @@ static void intel_pmu_sched_task(struct perf_event_context *ctx,
 {
 	intel_pmu_pebs_sched_task(ctx, sched_in);
 	intel_pmu_lbr_sched_task(ctx, sched_in);
+}
+
+static int intel_pmu_check_period(struct perf_event *event, u64 value)
+{
+	return intel_pmu_has_bts_period(event, value) ? -EINVAL : 0;
 }
 
 static int intel_pmu_check_period(struct perf_event *event, u64 value)

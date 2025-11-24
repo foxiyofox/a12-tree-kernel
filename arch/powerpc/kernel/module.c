@@ -82,6 +82,14 @@ int module_finalize(const Elf_Ehdr *hdr,
 	}
 #endif /* PPC64_ELF_ABI_v1 */
 
+#ifdef PPC64_ELF_ABI_v1
+	sect = find_section(hdr, sechdrs, ".opd");
+	if (sect != NULL) {
+		me->arch.start_opd = sect->sh_addr;
+		me->arch.end_opd = sect->sh_addr + sect->sh_size;
+	}
+#endif /* PPC64_ELF_ABI_v1 */
+
 #ifdef CONFIG_PPC_BARRIER_NOSPEC
 	sect = find_section(hdr, sechdrs, "__spec_barrier_fixup");
 	if (sect != NULL)

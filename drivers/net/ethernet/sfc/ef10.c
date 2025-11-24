@@ -6080,6 +6080,13 @@ static int efx_ef10_mtd_probe_partition(struct efx_nic *efx,
 	if (__test_and_set_bit(type_idx, found))
 		return -EEXIST;
 
+	/* If we've already exposed a partition of this type, hide this
+	 * duplicate.  All operations on MTDs are keyed by the type anyway,
+	 * so we can't act on the duplicate.
+	 */
+	if (__test_and_set_bit(type_idx, found))
+		return -EEXIST;
+
 	part->nvram_type = type;
 
 	MCDI_SET_DWORD(inbuf, NVRAM_METADATA_IN_TYPE, type);

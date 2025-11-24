@@ -4201,6 +4201,14 @@ static int dsi_display_init_dsi(struct dsi_data *dsi)
 		dsi->vdds_dsi_enabled = true;
 	}
 
+	if (!dsi->vdds_dsi_enabled) {
+		r = regulator_enable(dsi->vdds_dsi_reg);
+		if (r)
+			goto err1;
+
+		dsi->vdds_dsi_enabled = true;
+	}
+
 	r = dsi_cio_init(dsi);
 	if (r)
 		goto err2;

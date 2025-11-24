@@ -58,6 +58,10 @@ static int platform_clock_control(struct snd_soc_dapm_widget *w,
 	if (ctx->quirks & QUIRK_PMC_PLT_CLK_0)
 		return 0;
 
+	/* See the comment in snd_cht_mc_probe() */
+	if (ctx->quirks & QUIRK_PMC_PLT_CLK_0)
+		return 0;
+
 	codec_dai = snd_soc_card_get_codec_dai(card, CHT_CODEC_DAI);
 	if (!codec_dai) {
 		dev_err(card->dev, "Codec dai not found; Unable to set platform clock\n");
@@ -226,6 +230,10 @@ static int cht_codec_init(struct snd_soc_pcm_runtime *runtime)
 		dev_err(runtime->dev,
 			"jack detection gpios not added, error %d\n", ret);
 	}
+
+	/* See the comment in snd_cht_mc_probe() */
+	if (ctx->quirks & QUIRK_PMC_PLT_CLK_0)
+		return 0;
 
 	/* See the comment in snd_cht_mc_probe() */
 	if (ctx->quirks & QUIRK_PMC_PLT_CLK_0)

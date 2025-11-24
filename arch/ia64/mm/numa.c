@@ -81,6 +81,7 @@ int __meminit __early_pfn_to_nid(unsigned long pfn,
 
 	return -1;
 }
+EXPORT_SYMBOL(paddr_to_nid);
 
 void numa_clear_node(int cpu)
 {

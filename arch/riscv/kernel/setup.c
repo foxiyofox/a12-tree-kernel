@@ -19,6 +19,7 @@
  * to the Free Software Foundation, Inc.,
  */
 
+#include <linux/bootmem.h>
 #include <linux/init.h>
 #include <linux/mm.h>
 #include <linux/memblock.h>

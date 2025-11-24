@@ -611,6 +611,8 @@ int autofs_expire_run(struct super_block *sb,
 
 	dput(dentry);
 
+	dput(dentry);
+
 	return ret;
 }
 

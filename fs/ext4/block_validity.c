@@ -24,6 +24,7 @@ struct ext4_system_zone {
 	struct rb_node	node;
 	ext4_fsblk_t	start_blk;
 	unsigned int	count;
+	u32		ino;
 };
 
 static struct kmem_cache *ext4_system_zone_cachep;
@@ -369,11 +370,15 @@ int ext4_check_blockref(const char *function, unsigned int line,
 	     le32_to_cpu(EXT4_SB(inode->i_sb)->s_es->s_journal_inum)))
 		return 0;
 
+	if (ext4_has_feature_journal(inode->i_sb) &&
+	    (inode->i_ino ==
+	     le32_to_cpu(EXT4_SB(inode->i_sb)->s_es->s_journal_inum)))
+		return 0;
+
 	while (bref < p+max) {
 		blk = le32_to_cpu(*bref++);
 		if (blk &&
-		    unlikely(!ext4_data_block_valid(EXT4_SB(inode->i_sb),
-						    blk, 1))) {
+		    unlikely(!ext4_inode_block_valid(inode, blk, 1))) {
 			es->s_last_error_block = cpu_to_le64(blk);
 			ext4_error_inode(inode, function, line, blk,
 					 "invalid block");

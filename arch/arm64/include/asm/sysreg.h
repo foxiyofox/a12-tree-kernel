@@ -60,7 +60,9 @@
 #ifndef CONFIG_BROKEN_GAS_INST
 
 #ifdef __ASSEMBLY__
-#define __emit_inst(x)			.inst (x)
+// The space separator is omitted so that __emit_inst(x) can be parsed as
+// either an assembler directive or an assembler macro argument.
+#define __emit_inst(x)			.inst(x)
 #else
 #define __emit_inst(x)			".inst " __stringify((x)) "\n\t"
 #endif
@@ -568,6 +570,13 @@
 
 /* id_aa64pfr1 */
 #define ID_AA64PFR1_RAS_SHIFT		12
+#define ID_AA64PFR1_SSBS_SHIFT		4
+
+#define ID_AA64PFR1_SSBS_PSTATE_NI	0
+#define ID_AA64PFR1_SSBS_PSTATE_ONLY	1
+#define ID_AA64PFR1_SSBS_PSTATE_INSNS	2
+
+/* id_aa64pfr1 */
 #define ID_AA64PFR1_SSBS_SHIFT		4
 
 #define ID_AA64PFR1_SSBS_PSTATE_NI	0

@@ -110,6 +110,8 @@ static int perf_top__parse_source(struct perf_top *top, struct hist_entry *he)
 
 	evsel = hists_to_evsel(he->hists);
 
+	evsel = hists_to_evsel(he->hists);
+
 	sym = he->ms.sym;
 	map = he->ms.map;
 
@@ -233,6 +235,8 @@ static void perf_top__show_details(struct perf_top *top)
 
 	if (!he)
 		return;
+
+	evsel = hists_to_evsel(he->hists);
 
 	evsel = hists_to_evsel(he->hists);
 
@@ -651,7 +655,9 @@ repeat:
 	delay_msecs = top->delay_secs * MSEC_PER_SEC;
 	set_term_quiet_input(&save);
 	/* trash return*/
-	getc(stdin);
+	clearerr(stdin);
+	if (poll(&stdin_poll, 1, 0) > 0)
+		getc(stdin);
 
 	while (!done) {
 		perf_top__print_sym_table(top);

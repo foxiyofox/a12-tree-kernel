@@ -387,7 +387,7 @@ void xen_save_time_memory_area(void)
 	xen_clock_value_saved = xen_clocksource_read() - xen_sched_clock_offset;
 
 	if (!xen_clock)
-		return;
+		goto out;
 
 	t.addr.v = NULL;
 

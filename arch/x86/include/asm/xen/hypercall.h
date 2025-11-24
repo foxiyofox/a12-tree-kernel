@@ -209,6 +209,9 @@ xen_single_call(unsigned int call,
 	if (call >= PAGE_SIZE / sizeof(hypercall_page[0]))
 		return -EINVAL;
 
+	if (call >= PAGE_SIZE / sizeof(hypercall_page[0]))
+		return -EINVAL;
+
 	asm volatile(CALL_NOSPEC
 		     : __HYPERCALL_5PARAM
 		     : [thunk_target] "a" (&hypercall_page[call])

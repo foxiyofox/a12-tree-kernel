@@ -356,6 +356,7 @@ struct device *driver_find_device(struct device_driver *drv,
 				  struct device *start, void *data,
 				  int (*match)(struct device *dev, void *data));
 
+void driver_deferred_probe_add(struct device *dev);
 int driver_deferred_probe_check_state(struct device *dev);
 
 /**
@@ -822,6 +823,30 @@ static inline void device_connections_remove(struct device_connection *cons)
 }
 
 /**
+ * device_connections_add - Add multiple device connections at once
+ * @cons: Zero terminated array of device connection descriptors
+ */
+static inline void device_connections_add(struct device_connection *cons)
+{
+	struct device_connection *c;
+
+	for (c = cons; c->endpoint[0]; c++)
+		device_connection_add(c);
+}
+
+/**
+ * device_connections_remove - Remove multiple device connections at once
+ * @cons: Zero terminated array of device connection descriptors
+ */
+static inline void device_connections_remove(struct device_connection *cons)
+{
+	struct device_connection *c;
+
+	for (c = cons; c->endpoint[0]; c++)
+		device_connection_remove(c);
+}
+
+/**
  * enum device_link_state - Device link states.
  * @DL_STATE_NONE: The presence of the drivers is not being tracked.
  * @DL_STATE_DORMANT: None of the supplier/consumer drivers is present.
@@ -1028,6 +1053,7 @@ struct device {
 	struct dev_pin_info	*pins;
 #endif
 #ifdef CONFIG_GENERIC_MSI_IRQ
+	raw_spinlock_t		msi_lock;
 	struct list_head	msi_list;
 #endif
 

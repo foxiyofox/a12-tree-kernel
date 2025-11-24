@@ -113,7 +113,7 @@ static const char * const sm_state_strings[] = {
 	[SFP_S_LINK_UP] = "link_up",
 	[SFP_S_TX_FAULT] = "tx_fault",
 	[SFP_S_REINIT] = "reinit",
-	[SFP_S_TX_DISABLE] = "rx_disable",
+	[SFP_S_TX_DISABLE] = "tx_disable",
 };
 
 static const char *sm_state_to_str(unsigned short sm_state)
@@ -320,6 +320,7 @@ static int sfp_i2c_write(struct sfp *sfp, bool a2, u8 dev_addr, void *buf,
 {
 	struct i2c_msg msgs[1];
 	u8 bus_addr = a2 ? 0x51 : 0x50;
+	size_t this_len;
 	int ret;
 
 	msgs[0].addr = bus_addr;
@@ -1638,6 +1639,19 @@ static void sfp_detach(struct sfp *sfp)
 	sfp_sm_event(sfp, SFP_E_REMOVE);
 }
 
+static void sfp_attach(struct sfp *sfp)
+{
+	sfp->attached = true;
+	if (sfp->state & SFP_F_PRESENT)
+		sfp_sm_event(sfp, SFP_E_INSERT);
+}
+
+static void sfp_detach(struct sfp *sfp)
+{
+	sfp->attached = false;
+	sfp_sm_event(sfp, SFP_E_REMOVE);
+}
+
 static void sfp_start(struct sfp *sfp)
 {
 	sfp_sm_event(sfp, SFP_E_DEV_UP);
@@ -1713,6 +1727,7 @@ static void sfp_timeout(struct work_struct *work)
 	rtnl_lock();
 	sfp_sm_event(sfp, SFP_E_TIMEOUT);
 	rtnl_unlock();
+	mutex_unlock(&sfp->st_mutex);
 }
 
 static void sfp_check_state(struct sfp *sfp)
@@ -1911,6 +1926,10 @@ static int sfp_probe(struct platform_device *pdev)
 	if (!sfp->gpio[GPIO_TX_DISABLE])
 		dev_warn(sfp->dev,
 			 "No tx_disable pin: SFP modules will always be emitting.\n");
+
+	sfp->sfp_bus = sfp_register_socket(sfp->dev, sfp, &sfp_module_ops);
+	if (!sfp->sfp_bus)
+		return -ENOMEM;
 
 	sfp->sfp_bus = sfp_register_socket(sfp->dev, sfp, &sfp_module_ops);
 	if (!sfp->sfp_bus)

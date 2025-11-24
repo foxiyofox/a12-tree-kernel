@@ -38,6 +38,8 @@
 
 #include <linux/nospec.h>
 
+#include <linux/nospec.h>
+
 static struct drm_map_list *drm_find_matching_map(struct drm_device *dev,
 						  struct drm_local_map *map)
 {

@@ -73,6 +73,8 @@ struct udl_device {
 
 #define to_udl(x) container_of(x, struct udl_device, drm)
 
+#define to_udl(x) container_of(x, struct udl_device, drm)
+
 struct udl_gem_object {
 	struct drm_gem_object base;
 	struct page **pages;

@@ -282,6 +282,8 @@ static inline void skb_dst_drop(struct sk_buff *skb)
 		refdst_drop(skb->_skb_refdst);
 		skb->_skb_refdst = 0UL;
 	}
+
+	return skb->_skb_refdst != 0UL;
 }
 
 static inline void __skb_dst_copy(struct sk_buff *nskb, unsigned long refdst)
@@ -412,7 +414,15 @@ static inline struct neighbour *dst_neigh_lookup(const struct dst_entry *dst, co
 static inline struct neighbour *dst_neigh_lookup_skb(const struct dst_entry *dst,
 						     struct sk_buff *skb)
 {
-	struct neighbour *n =  dst->ops->neigh_lookup(dst, skb, NULL);
+	struct neighbour *n = NULL;
+
+	/* The packets from tunnel devices (eg bareudp) may have only
+	 * metadata in the dst pointer of skb. Hence a pointer check of
+	 * neigh_lookup is needed.
+	 */
+	if (dst->ops->neigh_lookup)
+		n = dst->ops->neigh_lookup(dst, skb, NULL);
+
 	return IS_ERR(n) ? NULL : n;
 }
 

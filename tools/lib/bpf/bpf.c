@@ -191,7 +191,15 @@ int bpf_create_map_in_map_node(enum bpf_map_type map_type, const char *name,
 		attr.numa_node = node;
 	}
 
-	return sys_bpf(BPF_MAP_CREATE, &attr, sizeof(attr));
+	ret = sys_bpf(BPF_MAP_CREATE, &attr, sizeof(attr));
+	if (ret < 0 && errno == EINVAL && create_attr->name) {
+		/* Retry the same syscall, but without the name.
+		 * Pre v4.14 kernels don't support map names.
+		 */
+		memset(attr.map_name, 0, sizeof(attr.map_name));
+		return sys_bpf(BPF_MAP_CREATE, &attr, sizeof(attr));
+	}
+	return ret;
 }
 
 int bpf_create_map_in_map(enum bpf_map_type map_type, const char *name,
@@ -261,9 +269,9 @@ int bpf_load_program(enum bpf_prog_type type, const struct bpf_insn *insns,
 }
 
 int bpf_verify_program(enum bpf_prog_type type, const struct bpf_insn *insns,
-		       size_t insns_cnt, int strict_alignment,
-		       const char *license, __u32 kern_version,
-		       char *log_buf, size_t log_buf_sz, int log_level)
+		       size_t insns_cnt, __u32 prog_flags, const char *license,
+		       __u32 kern_version, char *log_buf, size_t log_buf_sz,
+		       int log_level)
 {
 	union bpf_attr attr;
 

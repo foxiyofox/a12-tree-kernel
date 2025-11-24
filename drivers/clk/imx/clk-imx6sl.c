@@ -415,6 +415,10 @@ static void __init imx6sl_clocks_init(struct device_node *ccm_node)
 	writel_relaxed(readl_relaxed(base + CCDR) |
 		BM_CCM_CCDR_MMDC_CH0_MASK, base + CCDR);
 
+	/* Ensure the MMDC CH0 handshake is bypassed */
+	writel_relaxed(readl_relaxed(base + CCDR) |
+		BM_CCM_CCDR_MMDC_CH0_MASK, base + CCDR);
+
 	imx_check_clocks(clks, ARRAY_SIZE(clks));
 
 	clk_data.clks = clks;

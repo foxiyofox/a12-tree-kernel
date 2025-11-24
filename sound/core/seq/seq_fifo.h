@@ -45,6 +45,8 @@ struct snd_seq_fifo *snd_seq_fifo_new(int poolsize);
 /* delete fifo (destructor) */
 void snd_seq_fifo_delete(struct snd_seq_fifo **f);
 
+/* get the number of unused cells safely */
+int snd_seq_fifo_unused_cells(struct snd_seq_fifo *f);
 
 /* enqueue event to fifo */
 int snd_seq_fifo_event_in(struct snd_seq_fifo *f, struct snd_seq_event *event);

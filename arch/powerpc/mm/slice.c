@@ -69,6 +69,13 @@ static inline bool slice_addr_is_low(unsigned long addr)
 	return tmp < SLICE_LOW_TOP;
 }
 
+static inline bool slice_addr_is_low(unsigned long addr)
+{
+	u64 tmp = (u64)addr;
+
+	return tmp < SLICE_LOW_TOP;
+}
+
 static void slice_range_to_mask(unsigned long start, unsigned long len,
 				struct slice_mask *ret)
 {
@@ -331,6 +338,7 @@ static unsigned long slice_find_area_bottomup(struct mm_struct *mm,
 	int pshift = max_t(int, mmu_psize_defs[psize].shift, PAGE_SHIFT);
 	unsigned long addr, found, next_end;
 	struct vm_unmapped_area_info info;
+	unsigned long min_addr = max(PAGE_SIZE, mmap_min_addr);
 
 	info.flags = 0;
 	info.length = len;

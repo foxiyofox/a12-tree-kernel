@@ -110,6 +110,11 @@ static struct pernet_operations tipc_topsrv_net_ops = {
 	.exit = tipc_topsrv_exit_net,
 };
 
+static struct pernet_operations tipc_topsrv_net_ops = {
+	.init = tipc_topsrv_init_net,
+	.exit = tipc_topsrv_exit_net,
+};
+
 static int __init tipc_init(void)
 {
 	int err;

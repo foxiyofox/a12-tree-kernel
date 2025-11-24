@@ -443,6 +443,9 @@ void xhci_debugfs_create_endpoint(struct xhci_hcd *xhci,
 	if (!spriv)
 		return;
 
+	if (!spriv)
+		return;
+
 	if (spriv->eps[ep_index])
 		return;
 

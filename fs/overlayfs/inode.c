@@ -340,7 +340,9 @@ int ovl_xattr_set(struct dentry *dentry, struct inode *inode, const char *name,
 		goto out;
 
 	if (!value && !upperdentry) {
+		old_cred = ovl_override_creds(dentry->d_sb);
 		err = vfs_getxattr(realdentry, name, NULL, 0);
+		revert_creds(old_cred);
 		if (err < 0)
 			goto out_drop_write;
 	}
@@ -847,6 +849,54 @@ struct inode *ovl_get_trap_inode(struct super_block *sb, struct dentry *dir)
 	return trap;
 }
 
+bool ovl_lookup_trap_inode(struct super_block *sb, struct dentry *dir)
+{
+	struct inode *key = d_inode(dir);
+	struct inode *trap;
+	bool res;
+
+	trap = ilookup5(sb, (unsigned long) key, ovl_inode_test, key);
+	if (!trap)
+		return false;
+
+	res = IS_DEADDIR(trap) && !ovl_inode_upper(trap) &&
+				  !ovl_inode_lower(trap);
+
+	iput(trap);
+	return res;
+}
+
+/*
+ * Create an inode cache entry for layer root dir, that will intentionally
+ * fail ovl_verify_inode(), so any lookup that will find some layer root
+ * will fail.
+ */
+struct inode *ovl_get_trap_inode(struct super_block *sb, struct dentry *dir)
+{
+	struct inode *key = d_inode(dir);
+	struct inode *trap;
+
+	if (!d_is_dir(dir))
+		return ERR_PTR(-ENOTDIR);
+
+	trap = iget5_locked(sb, (unsigned long) key, ovl_inode_test,
+			    ovl_inode_set, key);
+	if (!trap)
+		return ERR_PTR(-ENOMEM);
+
+	if (!(trap->i_state & I_NEW)) {
+		/* Conflicting layer roots? */
+		iput(trap);
+		return ERR_PTR(-ELOOP);
+	}
+
+	trap->i_mode = S_IFDIR;
+	trap->i_flags = S_DEAD;
+	unlock_new_inode(trap);
+
+	return trap;
+}
+
 /*
  * Does overlay inode need to be hashed by lower inode?
  */
@@ -949,6 +999,8 @@ struct inode *ovl_get_inode(struct super_block *sb,
 			err = -ENOMEM;
 			goto out_err;
 		}
+		ino = realinode->i_ino;
+		fsid = lowerpath->layer->fsid;
 	}
 	ovl_fill_inode(inode, realinode->i_mode, realinode->i_rdev, ino, fsid);
 	ovl_inode_init(inode, upperdentry, lowerdentry, oip->lowerdata);

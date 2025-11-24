@@ -808,4 +808,5 @@ void nfp_tunnel_config_stop(struct nfp_app *app)
 		list_del(&route_entry->list);
 		kfree(route_entry);
 	}
+	rcu_read_unlock();
 }

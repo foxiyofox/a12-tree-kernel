@@ -39,6 +39,13 @@
  */
 #define MAX_XDP_MTU	(1530 - ETH_HLEN - VLAN_HLEN * 2)
 
+/* NOTE: Packets bigger than 1530 are split across multiple pages and XDP needs
+ * the buffer to be contiguous. Allow XDP to be set up only if we don't exceed
+ * this value, keeping headroom for the 14 byte Ethernet header and two
+ * VLAN tags (for QinQ)
+ */
+#define MAX_XDP_MTU	(1530 - ETH_HLEN - VLAN_HLEN * 2)
+
 /* Supported devices */
 static const struct pci_device_id nicvf_id_table[] = {
 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_CAVIUM,
@@ -177,6 +184,17 @@ static int nicvf_check_pf_ready(struct nicvf *nic)
 	}
 
 	return 1;
+}
+
+static void nicvf_send_cfg_done(struct nicvf *nic)
+{
+	union nic_mbx mbx = {};
+
+	mbx.msg.msg = NIC_MBOX_MSG_CFG_DONE;
+	if (nicvf_send_msg_to_pf(nic, &mbx)) {
+		netdev_err(nic->netdev,
+			   "PF didn't respond to CFG DONE msg\n");
+	}
 }
 
 static void nicvf_send_cfg_done(struct nicvf *nic)
@@ -1223,7 +1241,7 @@ static int nicvf_register_misc_interrupt(struct nicvf *nic)
 	if (ret < 0) {
 		netdev_err(nic->netdev,
 			   "Req for #%d msix vectors failed\n", nic->num_vec);
-		return 1;
+		return ret;
 	}
 
 	sprintf(nic->irq_name[irq], "%s Mbox", "NICVF");
@@ -1242,7 +1260,7 @@ static int nicvf_register_misc_interrupt(struct nicvf *nic)
 	if (!nicvf_check_pf_ready(nic)) {
 		nicvf_disable_intr(nic, NICVF_INTR_MBOX, 0);
 		nicvf_unregister_interrupts(nic);
-		return 1;
+		return -EIO;
 	}
 
 	return 0;
@@ -1327,7 +1345,6 @@ int nicvf_stop(struct net_device *netdev)
 	struct nicvf *nic = netdev_priv(netdev);
 	struct queue_set *qs = nic->qs;
 	struct nicvf_cq_poll *cq_poll = NULL;
-	union nic_mbx mbx = {};
 
 	mbx.msg.msg = NIC_MBOX_MSG_SHUTDOWN;
 	nicvf_send_msg_to_pf(nic, &mbx);
@@ -1563,6 +1580,15 @@ static int nicvf_change_mtu(struct net_device *netdev, int new_mtu)
 		return -EINVAL;
 	}
 
+	/* For now just support only the usual MTU sized frames,
+	 * plus some headroom for VLAN, QinQ.
+	 */
+	if (nic->xdp_prog && new_mtu > MAX_XDP_MTU) {
+		netdev_warn(netdev, "Jumbo frames not yet supported with XDP, current MTU %d.\n",
+			    netdev->mtu);
+		return -EINVAL;
+	}
+
 	netdev->mtu = new_mtu;
 
 	if (!netif_running(netdev))
@@ -1593,7 +1619,7 @@ static int nicvf_set_mac_address(struct net_device *netdev, void *p)
 		nic->set_mac_pending = true;
 	}
 
-	return 0;
+	return ret;
 }
 
 void nicvf_update_lmac_stats(struct nicvf *nic)
@@ -2015,11 +2041,11 @@ static void nicvf_set_rx_mode_task(struct work_struct *work_arg)
 	/* Save message data locally to prevent them from
 	 * being overwritten by next ndo_set_rx_mode call().
 	 */
-	spin_lock(&nic->rx_mode_wq_lock);
+	spin_lock_bh(&nic->rx_mode_wq_lock);
 	mode = vf_work->mode;
 	mc = vf_work->mc;
 	vf_work->mc = NULL;
-	spin_unlock(&nic->rx_mode_wq_lock);
+	spin_unlock_bh(&nic->rx_mode_wq_lock);
 
 	__nicvf_set_rx_mode_task(mode, mc, nic);
 }

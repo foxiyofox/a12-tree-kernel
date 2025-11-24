@@ -98,6 +98,8 @@
 
 #define LIB82596_DMA_ATTR	DMA_ATTR_NON_CONSISTENT
 
+#define LIB82596_DMA_ATTR	DMA_ATTR_NON_CONSISTENT
+
 #define DMA_WBACK(ndev, addr, len) \
 	do { dma_cache_sync((ndev)->dev.parent, (void *)addr, len, DMA_TO_DEVICE); } while (0)
 

@@ -4342,6 +4342,12 @@ static int smack_key_permission(key_ref_t key_ref,
 	if (perm & ~KEY_NEED_ALL)
 		return -EINVAL;
 
+	/*
+	 * Validate requested permissions
+	 */
+	if (perm & ~KEY_NEED_ALL)
+		return -EINVAL;
+
 	keyp = key_ref_to_ptr(key_ref);
 	if (keyp == NULL)
 		return -EINVAL;

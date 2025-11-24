@@ -1897,6 +1897,8 @@ static int isc_async_complete(struct v4l2_async_notifier *notifier)
 
 	INIT_WORK(&isc->awb_work, isc_awb_work);
 
+	INIT_WORK(&isc->awb_work, isc_awb_work);
+
 	ret = v4l2_device_register_subdev_nodes(&isc->v4l2_dev);
 	if (ret < 0) {
 		v4l2_err(&isc->v4l2_dev, "Failed to register subdev nodes\n");

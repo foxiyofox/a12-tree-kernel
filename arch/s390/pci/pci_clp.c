@@ -373,7 +373,7 @@ int clp_scan_pci_devices(void)
 	struct clp_req_rsp_list_pci *rrb;
 	int rc;
 
-	rrb = clp_alloc_block(GFP_KERNEL);
+	rrb = clp_alloc_block(GFP_ATOMIC);
 	if (!rrb)
 		return -ENOMEM;
 

@@ -31,6 +31,10 @@
 #define PID_CODE_IN    1
 #define PID_CODE_SETUP 2
 
+/* PID Codes that are used here, from EHCI specification, Table 3-16. */
+#define PID_CODE_IN    1
+#define PID_CODE_SETUP 2
+
 /* fill a qtd, returning how much of the buffer we were able to queue up */
 
 static int

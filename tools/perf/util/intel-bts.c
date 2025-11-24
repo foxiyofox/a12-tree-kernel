@@ -276,6 +276,13 @@ static inline u8 intel_bts_cpumode(struct intel_bts *bts, uint64_t ip)
 	       PERF_RECORD_MISC_USER;
 }
 
+static inline u8 intel_bts_cpumode(struct intel_bts *bts, uint64_t ip)
+{
+	return machine__kernel_ip(bts->machine, ip) ?
+	       PERF_RECORD_MISC_KERNEL :
+	       PERF_RECORD_MISC_USER;
+}
+
 static int intel_bts_synth_branch_sample(struct intel_bts_queue *btsq,
 					 struct branch *branch)
 {
@@ -300,6 +307,10 @@ static int intel_bts_synth_branch_sample(struct intel_bts_queue *btsq,
 	sample.flags = btsq->sample_flags;
 	sample.insn_len = btsq->intel_pt_insn.length;
 	memcpy(sample.insn, btsq->intel_pt_insn.buf, INTEL_PT_INSN_BUF_SZ);
+
+	event.sample.header.type = PERF_RECORD_SAMPLE;
+	event.sample.header.misc = sample.cpumode;
+	event.sample.header.size = sizeof(struct perf_event_header);
 
 	event.sample.header.type = PERF_RECORD_SAMPLE;
 	event.sample.header.misc = sample.cpumode;

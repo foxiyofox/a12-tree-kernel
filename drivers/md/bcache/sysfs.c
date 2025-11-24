@@ -31,6 +31,12 @@ static const char * const bch_reada_cache_policies[] = {
 	NULL
 };
 
+static const char * const bch_reada_cache_policies[] = {
+	"all",
+	"meta-only",
+	NULL
+};
+
 /* Default is -1; we skip past it for stop_when_cache_set_failed */
 static const char * const bch_stop_on_failure_modes[] = {
 	"auto",
@@ -166,6 +172,11 @@ SHOW(__bch_cached_dev)
 		return bch_snprint_string_list(buf, PAGE_SIZE,
 					       bch_cache_modes,
 					       BDEV_CACHE_MODE(&dc->sb));
+
+	if (attr == &sysfs_readahead_cache_policy)
+		return bch_snprint_string_list(buf, PAGE_SIZE,
+					      bch_reada_cache_policies,
+					      dc->cache_readahead_policy);
 
 	if (attr == &sysfs_readahead_cache_policy)
 		return bch_snprint_string_list(buf, PAGE_SIZE,
@@ -334,6 +345,15 @@ STORE(__cached_dev)
 			SET_BDEV_CACHE_MODE(&dc->sb, v);
 			bch_write_bdev_super(dc, NULL);
 		}
+	}
+
+	if (attr == &sysfs_readahead_cache_policy) {
+		v = __sysfs_match_string(bch_reada_cache_policies, -1, buf);
+		if (v < 0)
+			return v;
+
+		if ((unsigned int) v != dc->cache_readahead_policy)
+			dc->cache_readahead_policy = v;
 	}
 
 	if (attr == &sysfs_readahead_cache_policy) {

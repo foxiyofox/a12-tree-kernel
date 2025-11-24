@@ -1940,6 +1940,11 @@ static int __init atari_floppy_init (void)
 						     &ataflop_lock);
 		if (!unit[i].disk->queue)
 			goto Enomem;
+
+		unit[i].disk->queue = blk_init_queue(do_fd_request,
+						     &ataflop_lock);
+		if (!unit[i].disk->queue)
+			goto Enomem;
 	}
 
 	if (UseTrackbuffer < 0)

@@ -2326,7 +2326,7 @@ static int rtw_wx_write32(struct net_device *dev,
 			return -EINVAL;
 	}
 
-	return 0;
+	return ret;
 }
 
 static int rtw_wx_read_rf(struct net_device *dev,

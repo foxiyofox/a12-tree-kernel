@@ -60,6 +60,29 @@ static const struct inv_mpu6050_reg_map reg_set_icm20602 = {
 	.i2c_if                 = INV_ICM20602_REG_I2C_IF,
 };
 
+static const struct inv_mpu6050_reg_map reg_set_icm20602 = {
+	.sample_rate_div	= INV_MPU6050_REG_SAMPLE_RATE_DIV,
+	.lpf                    = INV_MPU6050_REG_CONFIG,
+	.accel_lpf              = INV_MPU6500_REG_ACCEL_CONFIG_2,
+	.user_ctrl              = INV_MPU6050_REG_USER_CTRL,
+	.fifo_en                = INV_MPU6050_REG_FIFO_EN,
+	.gyro_config            = INV_MPU6050_REG_GYRO_CONFIG,
+	.accl_config            = INV_MPU6050_REG_ACCEL_CONFIG,
+	.fifo_count_h           = INV_MPU6050_REG_FIFO_COUNT_H,
+	.fifo_r_w               = INV_MPU6050_REG_FIFO_R_W,
+	.raw_gyro               = INV_MPU6050_REG_RAW_GYRO,
+	.raw_accl               = INV_MPU6050_REG_RAW_ACCEL,
+	.temperature            = INV_MPU6050_REG_TEMPERATURE,
+	.int_enable             = INV_MPU6050_REG_INT_ENABLE,
+	.int_status             = INV_MPU6050_REG_INT_STATUS,
+	.pwr_mgmt_1             = INV_MPU6050_REG_PWR_MGMT_1,
+	.pwr_mgmt_2             = INV_MPU6050_REG_PWR_MGMT_2,
+	.int_pin_cfg            = INV_MPU6050_REG_INT_PIN_CFG,
+	.accl_offset            = INV_MPU6500_REG_ACCEL_OFFSET,
+	.gyro_offset            = INV_MPU6050_REG_GYRO_OFFSET,
+	.i2c_if                 = INV_ICM20602_REG_I2C_IF,
+};
+
 static const struct inv_mpu6050_reg_map reg_set_6500 = {
 	.sample_rate_div	= INV_MPU6050_REG_SAMPLE_RATE_DIV,
 	.lpf                    = INV_MPU6050_REG_CONFIG,
@@ -858,6 +881,73 @@ static const struct iio_chan_spec inv_mpu_channels[] = {
 	INV_MPU6050_CHAN(IIO_ACCEL, IIO_MOD_X, INV_MPU6050_SCAN_ACCL_X),
 	INV_MPU6050_CHAN(IIO_ACCEL, IIO_MOD_Y, INV_MPU6050_SCAN_ACCL_Y),
 	INV_MPU6050_CHAN(IIO_ACCEL, IIO_MOD_Z, INV_MPU6050_SCAN_ACCL_Z),
+};
+
+static const unsigned long inv_mpu_scan_masks[] = {
+	/* 3-axis accel */
+	BIT(INV_MPU6050_SCAN_ACCL_X)
+		| BIT(INV_MPU6050_SCAN_ACCL_Y)
+		| BIT(INV_MPU6050_SCAN_ACCL_Z),
+	/* 3-axis gyro */
+	BIT(INV_MPU6050_SCAN_GYRO_X)
+		| BIT(INV_MPU6050_SCAN_GYRO_Y)
+		| BIT(INV_MPU6050_SCAN_GYRO_Z),
+	/* 6-axis accel + gyro */
+	BIT(INV_MPU6050_SCAN_ACCL_X)
+		| BIT(INV_MPU6050_SCAN_ACCL_Y)
+		| BIT(INV_MPU6050_SCAN_ACCL_Z)
+		| BIT(INV_MPU6050_SCAN_GYRO_X)
+		| BIT(INV_MPU6050_SCAN_GYRO_Y)
+		| BIT(INV_MPU6050_SCAN_GYRO_Z),
+	0,
+};
+
+static const struct iio_chan_spec inv_icm20602_channels[] = {
+	IIO_CHAN_SOFT_TIMESTAMP(INV_ICM20602_SCAN_TIMESTAMP),
+	{
+		.type = IIO_TEMP,
+		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW)
+				| BIT(IIO_CHAN_INFO_OFFSET)
+				| BIT(IIO_CHAN_INFO_SCALE),
+		.scan_index = INV_ICM20602_SCAN_TEMP,
+		.scan_type = {
+				.sign = 's',
+				.realbits = 16,
+				.storagebits = 16,
+				.shift = 0,
+				.endianness = IIO_BE,
+			     },
+	},
+
+	INV_MPU6050_CHAN(IIO_ANGL_VEL, IIO_MOD_X, INV_ICM20602_SCAN_GYRO_X),
+	INV_MPU6050_CHAN(IIO_ANGL_VEL, IIO_MOD_Y, INV_ICM20602_SCAN_GYRO_Y),
+	INV_MPU6050_CHAN(IIO_ANGL_VEL, IIO_MOD_Z, INV_ICM20602_SCAN_GYRO_Z),
+
+	INV_MPU6050_CHAN(IIO_ACCEL, IIO_MOD_Y, INV_ICM20602_SCAN_ACCL_Y),
+	INV_MPU6050_CHAN(IIO_ACCEL, IIO_MOD_X, INV_ICM20602_SCAN_ACCL_X),
+	INV_MPU6050_CHAN(IIO_ACCEL, IIO_MOD_Z, INV_ICM20602_SCAN_ACCL_Z),
+};
+
+static const unsigned long inv_icm20602_scan_masks[] = {
+	/* 3-axis accel + temp (mandatory) */
+	BIT(INV_ICM20602_SCAN_ACCL_X)
+		| BIT(INV_ICM20602_SCAN_ACCL_Y)
+		| BIT(INV_ICM20602_SCAN_ACCL_Z)
+		| BIT(INV_ICM20602_SCAN_TEMP),
+	/* 3-axis gyro + temp (mandatory) */
+	BIT(INV_ICM20602_SCAN_GYRO_X)
+		| BIT(INV_ICM20602_SCAN_GYRO_Y)
+		| BIT(INV_ICM20602_SCAN_GYRO_Z)
+		| BIT(INV_ICM20602_SCAN_TEMP),
+	/* 6-axis accel + gyro + temp (mandatory) */
+	BIT(INV_ICM20602_SCAN_ACCL_X)
+		| BIT(INV_ICM20602_SCAN_ACCL_Y)
+		| BIT(INV_ICM20602_SCAN_ACCL_Z)
+		| BIT(INV_ICM20602_SCAN_GYRO_X)
+		| BIT(INV_ICM20602_SCAN_GYRO_Y)
+		| BIT(INV_ICM20602_SCAN_GYRO_Z)
+		| BIT(INV_ICM20602_SCAN_TEMP),
+	0,
 };
 
 static const unsigned long inv_mpu_scan_masks[] = {

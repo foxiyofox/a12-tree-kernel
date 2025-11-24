@@ -108,7 +108,7 @@ static int am335x_phy_suspend(struct device *dev)
 
 	phy_ctrl_power(am_phy->phy_ctrl, am_phy->id, am_phy->dr_mode, false);
 
-	return 0;
+	return usb_add_phy_dev(&am_phy->usb_phy_gen.phy);
 }
 
 static int am335x_phy_resume(struct device *dev)

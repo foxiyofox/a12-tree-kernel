@@ -1197,6 +1197,8 @@ static struct iommu_table *vio_build_iommu_table(struct vio_dev *dev)
 
 	kref_init(&tbl->it_kref);
 
+	kref_init(&tbl->it_kref);
+
 	of_parse_dma_window(dev->dev.of_node, dma_window,
 			    &tbl->it_index, &offset, &size);
 

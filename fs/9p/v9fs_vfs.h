@@ -43,6 +43,9 @@
 /* flags for v9fs_stat2inode() & v9fs_stat2inode_dotl() */
 #define V9FS_STAT2INODE_KEEP_ISIZE 1
 
+/* flags for v9fs_stat2inode() & v9fs_stat2inode_dotl() */
+#define V9FS_STAT2INODE_KEEP_ISIZE 1
+
 extern struct file_system_type v9fs_fs_type;
 extern const struct address_space_operations v9fs_addr_operations;
 extern const struct file_operations v9fs_file_operations;

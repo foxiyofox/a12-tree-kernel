@@ -129,6 +129,8 @@
 
 #define MEI_DEV_ID_DNV_IE     0x19E5  /* Denverton IE */
 
+#define MEI_DEV_ID_DNV_IE     0x19E5  /* Denverton IE */
+
 #define MEI_DEV_ID_GLK        0x319A  /* Gemini Lake */
 
 #define MEI_DEV_ID_KBP        0xA2BA  /* Kaby Point */
@@ -148,6 +150,24 @@
 #define MEI_DEV_ID_CMP_H_3    0x06e4  /* Comet Lake H 3 (iTouch) */
 
 #define MEI_DEV_ID_ICP_LP     0x34E0  /* Ice Lake Point LP */
+
+#define MEI_DEV_ID_TGP_LP     0xA0E0  /* Tiger Lake Point LP */
+
+#define MEI_DEV_ID_MCC        0x4B70  /* Mule Creek Canyon (EHL) */
+#define MEI_DEV_ID_MCC_4      0x4B75  /* Mule Creek Canyon 4 (EHL) */
+
+#define MEI_DEV_ID_CMP_LP     0x02e0  /* Comet Point LP */
+#define MEI_DEV_ID_CMP_LP_3   0x02e4  /* Comet Point LP 3 (iTouch) */
+
+#define MEI_DEV_ID_CMP_V      0xA3BA  /* Comet Point Lake V */
+
+#define MEI_DEV_ID_CMP_H      0x06e0  /* Comet Lake H */
+#define MEI_DEV_ID_CMP_H_3    0x06e4  /* Comet Lake H 3 (iTouch) */
+
+#define MEI_DEV_ID_CDF        0x18D3  /* Cedar Fork */
+
+#define MEI_DEV_ID_ICP_LP     0x34E0  /* Ice Lake Point LP */
+#define MEI_DEV_ID_ICP_N      0x38E0  /* Ice Lake Point N */
 
 #define MEI_DEV_ID_TGP_LP     0xA0E0  /* Tiger Lake Point LP */
 

@@ -130,6 +130,8 @@ MODULE_DEVICE_TABLE(usb, carl9170_usb_ids);
 
 static struct usb_driver carl9170_driver;
 
+static struct usb_driver carl9170_driver;
+
 static void carl9170_usb_submit_data_urb(struct ar9170 *ar)
 {
 	struct urb *urb;

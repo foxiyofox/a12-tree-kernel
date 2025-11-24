@@ -156,6 +156,8 @@ struct hdac_ext_link *snd_hdac_ext_bus_get_link(struct hdac_bus *bus,
 		return NULL;
 	if (bus->idx != bus_idx)
 		return NULL;
+	if (addr < 0 || addr > 31)
+		return NULL;
 
 	list_for_each_entry(hlink, &bus->hlink_list, list) {
 		for (i = 0; i < HDA_MAX_CODECS; i++) {
@@ -299,6 +301,7 @@ EXPORT_SYMBOL_GPL(snd_hdac_ext_bus_link_get);
 int snd_hdac_ext_bus_link_put(struct hdac_bus *bus,
 				struct hdac_ext_link *link)
 {
+	unsigned long codec_mask;
 	int ret = 0;
 	struct hdac_ext_link *hlink;
 	bool link_up = false;

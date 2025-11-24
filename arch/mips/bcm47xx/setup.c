@@ -198,6 +198,31 @@ static struct device * __init bcm47xx_setup_device(void)
 }
 #endif
 
+#ifdef CONFIG_BCM47XX_BCMA
+static struct device * __init bcm47xx_setup_device(void)
+{
+	struct device *dev;
+	int err;
+
+	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+	if (!dev)
+		return NULL;
+
+	err = dev_set_name(dev, "bcm47xx_soc");
+	if (err) {
+		pr_err("Failed to set SoC device name: %d\n", err);
+		kfree(dev);
+		return NULL;
+	}
+
+	err = dma_coerce_mask_and_coherent(dev, DMA_BIT_MASK(32));
+	if (err)
+		pr_err("Failed to set SoC DMA mask: %d\n", err);
+
+	return dev;
+}
+#endif
+
 /*
  * This finishes bus initialization doing things that were not possible without
  * kmalloc. Make sure to call it late enough (after mm_init).
@@ -207,6 +232,10 @@ void __init bcm47xx_bus_setup(void)
 #ifdef CONFIG_BCM47XX_BCMA
 	if (bcm47xx_bus_type == BCM47XX_BUS_TYPE_BCMA) {
 		int err;
+
+		bcm47xx_bus.bcma.dev = bcm47xx_setup_device();
+		if (!bcm47xx_bus.bcma.dev)
+			panic("Failed to setup SoC device\n");
 
 		bcm47xx_bus.bcma.dev = bcm47xx_setup_device();
 		if (!bcm47xx_bus.bcma.dev)

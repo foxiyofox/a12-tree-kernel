@@ -1169,6 +1169,9 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
 	if (local->in_reconfig)
 		return;
 
+	if (local->in_reconfig)
+		return;
+
 	if (!check_sdata_in_driver(sdata))
 		return;
 

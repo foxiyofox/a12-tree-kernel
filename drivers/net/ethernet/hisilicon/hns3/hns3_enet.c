@@ -29,6 +29,8 @@ static const char hns3_driver_string[] =
 static const char hns3_copyright[] = "Copyright (c) 2017 Huawei Corporation.";
 static struct hnae3_client client;
 
+#define HNS3_MIN_TUN_PKT_LEN	65U
+
 /* hns3_pci_tbl - PCI Device ID Table
  *
  * Last entry must be all 0s
@@ -702,8 +704,6 @@ static bool hns3_tunnel_csum_bug(struct sk_buff *skb)
 	if (!(!skb->encapsulation && l4.udp->dest == htons(IANA_VXLAN_PORT)))
 		return false;
 
-	skb_checksum_help(skb);
-
 	return true;
 }
 
@@ -764,8 +764,7 @@ static int hns3_set_l3l4_type_csum(struct sk_buff *skb, u8 ol4_proto,
 			/* the stack computes the IP header already,
 			 * driver calculate l4 checksum when not TSO.
 			 */
-			skb_checksum_help(skb);
-			return 0;
+			return skb_checksum_help(skb);
 		}
 
 		l3.hdr = skb_inner_network_header(skb);
@@ -795,8 +794,11 @@ static int hns3_set_l3l4_type_csum(struct sk_buff *skb, u8 ol4_proto,
 				HNS3_L4T_TCP);
 		break;
 	case IPPROTO_UDP:
-		if (hns3_tunnel_csum_bug(skb))
-			break;
+		if (hns3_tunnel_csum_bug(skb)) {
+			int ret = skb_put_padto(skb, HNS3_MIN_TUN_PKT_LEN);
+
+			return ret ? ret : skb_checksum_help(skb);
+		}
 
 		hnae3_set_bit(*type_cs_vlan_tso, HNS3_TXD_L4CS_B, 1);
 		hnae3_set_field(*type_cs_vlan_tso,
@@ -821,8 +823,7 @@ static int hns3_set_l3l4_type_csum(struct sk_buff *skb, u8 ol4_proto,
 		/* the stack computes the IP header already,
 		 * driver calculate l4 checksum when not TSO.
 		 */
-		skb_checksum_help(skb);
-		return 0;
+		return skb_checksum_help(skb);
 	}
 
 	return 0;
@@ -2793,6 +2794,17 @@ static int hns3_nic_uninit_vector_data(struct hns3_nic_priv *priv)
 	}
 
 	return 0;
+
+err_free_chain:
+	cur_chain = head->next;
+	while (cur_chain) {
+		chain = cur_chain->next;
+		devm_kfree(&pdev->dev, cur_chain);
+		cur_chain = chain;
+	}
+	head->next = NULL;
+
+	return -ENOMEM;
 }
 
 static int hns3_nic_dealloc_vector_data(struct hns3_nic_priv *priv)
@@ -3430,7 +3442,7 @@ int hns3_nic_reset_all_ring(struct hnae3_handle *h)
 		hns3_init_ring_hw(rx_ring);
 		ret = hns3_clear_rx_ring(rx_ring);
 		if (ret)
-			return ret;
+			goto map_ring_fail;
 
 		/* We can not know the hardware head and tail when this
 		 * function is called in reset flow, so we reuse all desc.
@@ -3445,6 +3457,31 @@ int hns3_nic_reset_all_ring(struct hnae3_handle *h)
 	hns3_init_tx_ring_tc(priv);
 
 	return 0;
+}
+
+static void hns3_store_coal(struct hns3_nic_priv *priv)
+{
+	/* ethtool only support setting and querying one coal
+	 * configuation for now, so save the vector 0' coal
+	 * configuation here in order to restore it.
+	 */
+	memcpy(&priv->tx_coal, &priv->tqp_vector[0].tx_group.coal,
+	       sizeof(struct hns3_enet_coalesce));
+	memcpy(&priv->rx_coal, &priv->tqp_vector[0].rx_group.coal,
+	       sizeof(struct hns3_enet_coalesce));
+}
+
+static void hns3_restore_coal(struct hns3_nic_priv *priv)
+{
+	u16 vector_num = priv->vector_num;
+	int i;
+
+	for (i = 0; i < vector_num; i++) {
+		memcpy(&priv->tqp_vector[i].tx_group.coal, &priv->tx_coal,
+		       sizeof(struct hns3_enet_coalesce));
+		memcpy(&priv->tqp_vector[i].rx_group.coal, &priv->rx_coal,
+		       sizeof(struct hns3_enet_coalesce));
+	}
 }
 
 static void hns3_store_coal(struct hns3_nic_priv *priv)
@@ -3520,6 +3557,8 @@ static int hns3_reset_notify_init_enet(struct hnae3_handle *handle)
 
 	hns3_restore_coal(priv);
 
+	hns3_restore_coal(priv);
+
 	ret = hns3_nic_init_vector_data(priv);
 	if (ret)
 		return ret;
@@ -3546,6 +3585,8 @@ static int hns3_reset_notify_uninit_enet(struct hnae3_handle *handle)
 		netdev_err(netdev, "uninit vector error\n");
 		return ret;
 	}
+
+	hns3_store_coal(priv);
 
 	hns3_store_coal(priv);
 

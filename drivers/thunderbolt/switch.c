@@ -664,24 +664,6 @@ int tb_switch_reset(struct tb *tb, u64 route)
 	return res.err;
 }
 
-struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route)
-{
-	u8 next_port = route; /*
-			       * Routes use a stride of 8 bits,
-			       * eventhough a port index has 6 bits at most.
-			       * */
-	if (route == 0)
-		return sw;
-	if (next_port > sw->config.max_port_number)
-		return NULL;
-	if (tb_is_upstream_port(&sw->ports[next_port]))
-		return NULL;
-	if (!sw->ports[next_port].remote)
-		return NULL;
-	return get_switch_at_route(sw->ports[next_port].remote->sw,
-				   route >> TB_ROUTE_SHIFT);
-}
-
 /**
  * tb_plug_events_active() - enable/disable plug events on a switch
  *
@@ -1321,6 +1303,19 @@ static int tb_switch_set_uuid(struct tb_switch *sw)
 	ret = 0;
 	if (sw->uuid)
 		return ret;
+
+	/*
+	 * If there is status already set then authentication failed
+	 * when the dma_port_flash_update_auth() returned. Power cycling
+	 * is not needed (it was done already) so only thing we do here
+	 * is to unblock runtime PM of the root port.
+	 */
+	nvm_get_auth_status(sw, &status);
+	if (status) {
+		if (!tb_route(sw))
+			nvm_authenticate_complete(sw);
+		return 0;
+	}
 
 	/*
 	 * The newer controllers include fused UUID as part of link

@@ -50,7 +50,7 @@ static unsigned int vti_net_id __read_mostly;
 static int vti_tunnel_init(struct net_device *dev);
 
 static int vti_input(struct sk_buff *skb, int nexthdr, __be32 spi,
-		     int encap_type)
+		     int encap_type, bool update_skb_dev)
 {
 	struct ip_tunnel *tunnel;
 	const struct iphdr *iph = ip_hdr(skb);
@@ -64,6 +64,9 @@ static int vti_input(struct sk_buff *skb, int nexthdr, __be32 spi,
 			goto drop;
 
 		XFRM_TUNNEL_SKB_CB(skb)->tunnel.ip4 = tunnel;
+
+		if (update_skb_dev)
+			skb->dev = tunnel->dev;
 
 		return xfrm_input(skb, nexthdr, spi, encap_type);
 	}
@@ -101,12 +104,49 @@ drop:
 	return 0;
 }
 
-static int vti_rcv(struct sk_buff *skb)
+static int vti_input_proto(struct sk_buff *skb, int nexthdr, __be32 spi,
+			   int encap_type)
+{
+	return vti_input(skb, nexthdr, spi, encap_type, false);
+}
+
+static int vti_rcv(struct sk_buff *skb, __be32 spi, bool update_skb_dev)
 {
 	XFRM_SPI_SKB_CB(skb)->family = AF_INET;
 	XFRM_SPI_SKB_CB(skb)->daddroff = offsetof(struct iphdr, daddr);
 
-	return vti_input(skb, ip_hdr(skb)->protocol, 0, 0);
+	return vti_input(skb, ip_hdr(skb)->protocol, spi, 0, update_skb_dev);
+}
+
+static int vti_rcv_proto(struct sk_buff *skb)
+{
+	return vti_rcv(skb, 0, false);
+}
+
+static int vti_rcv_tunnel(struct sk_buff *skb)
+{
+	struct ip_tunnel_net *itn = net_generic(dev_net(skb->dev), vti_net_id);
+	const struct iphdr *iph = ip_hdr(skb);
+	struct ip_tunnel *tunnel;
+
+	tunnel = ip_tunnel_lookup(itn, skb->dev->ifindex, TUNNEL_NO_KEY,
+				  iph->saddr, iph->daddr, 0);
+	if (tunnel) {
+		struct tnl_ptk_info tpi = {
+			.proto = htons(ETH_P_IP),
+		};
+
+		if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
+			goto drop;
+		if (iptunnel_pull_header(skb, 0, tpi.proto, false))
+			goto drop;
+		return ip_tunnel_rcv(tunnel, skb, &tpi, NULL, false);
+	}
+
+	return -EINVAL;
+drop:
+	kfree_skb(skb);
+	return 0;
 }
 
 static int vti_rcv_ipip(struct sk_buff *skb)
@@ -284,6 +324,9 @@ static netdev_tx_t vti_tunnel_xmit(struct sk_buff *skb, struct net_device *dev)
 {
 	struct ip_tunnel *tunnel = netdev_priv(dev);
 	struct flowi fl;
+
+	if (!pskb_inet_may_pull(skb))
+		goto tx_err;
 
 	if (!pskb_inet_may_pull(skb))
 		goto tx_err;
@@ -659,6 +702,11 @@ static int __init vti_init(void)
 		pr_info("%s: cant't register tunnel\n",__func__);
 		goto xfrm_tunnel_failed;
 	}
+
+	msg = "ipip tunnel";
+	err = xfrm4_tunnel_register(&ipip_handler, AF_INET);
+	if (err < 0)
+		goto xfrm_tunnel_failed;
 
 	msg = "netlink interface";
 	err = rtnl_link_register(&vti_link_ops);

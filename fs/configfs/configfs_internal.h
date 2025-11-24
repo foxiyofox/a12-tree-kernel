@@ -43,6 +43,15 @@ struct configfs_fragment {
 void put_fragment(struct configfs_fragment *);
 struct configfs_fragment *get_fragment(struct configfs_fragment *);
 
+struct configfs_fragment {
+	atomic_t frag_count;
+	struct rw_semaphore frag_sem;
+	bool frag_dead;
+};
+
+void put_fragment(struct configfs_fragment *);
+struct configfs_fragment *get_fragment(struct configfs_fragment *);
+
 struct configfs_dirent {
 	atomic_t		s_count;
 	int			s_dependent_count;

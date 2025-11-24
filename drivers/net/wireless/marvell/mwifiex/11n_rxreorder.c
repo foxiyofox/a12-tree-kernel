@@ -300,7 +300,6 @@ mwifiex_11n_find_last_seq_num(struct reorder_tmr_cnxt *ctx)
 			return i;
 		}
 	}
-	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
 
 	return -1;
 }

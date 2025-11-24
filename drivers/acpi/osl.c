@@ -262,6 +262,7 @@ static struct acpi_ioremap *
 acpi_map_lookup_virt(void __iomem *virt, acpi_size size)
 {
 	struct acpi_ioremap *map;
+	unsigned long refcount;
 
 	list_for_each_entry_rcu(map, &acpi_ioremaps, list)
 		if (map->virt <= virt &&
@@ -997,6 +998,7 @@ err_lock:
 	mutex_unlock(&acpi_debugger.lock);
 	return ret;
 }
+EXPORT_SYMBOL(acpi_os_wait_events_complete);
 
 int acpi_debugger_notify_command_complete(void)
 {

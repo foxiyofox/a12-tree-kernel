@@ -1000,6 +1000,8 @@ static int coda_encoder_cmd(struct file *file, void *fh,
 
 	flush_work(&ctx->pic_run_work);
 
+	flush_work(&ctx->pic_run_work);
+
 	/* If there is no buffer in flight, wake up */
 	if (!ctx->streamon_out || ctx->qsequence == ctx->osequence) {
 		dst_vq = v4l2_m2m_get_vq(ctx->fh.m2m_ctx,

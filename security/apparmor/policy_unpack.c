@@ -1044,6 +1044,9 @@ int aa_unpack(struct aa_loaddata *udata, struct list_head *lh,
 			goto fail;
 		}
 	}
+
+fail:
+	e->pos = pos;
 	return 0;
 
 fail_profile:

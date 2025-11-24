@@ -279,6 +279,9 @@ static int xgmac_mdio_probe(struct platform_device *pdev)
 	priv->has_a011043 = of_property_read_bool(pdev->dev.of_node,
 						  "fsl,erratum-a011043");
 
+	priv->has_a011043 = of_property_read_bool(pdev->dev.of_node,
+						  "fsl,erratum-a011043");
+
 	ret = of_mdiobus_register(bus, np);
 	if (ret) {
 		dev_err(&pdev->dev, "cannot register MDIO bus\n");

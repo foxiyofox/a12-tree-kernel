@@ -38,6 +38,21 @@ static void debug_one_dentry(unsigned char d_type, const char *de_name,
 #endif
 }
 
+static void debug_one_dentry(unsigned char d_type, const char *de_name,
+			     unsigned int de_namelen)
+{
+#ifdef CONFIG_EROFS_FS_DEBUG
+	/* since the on-disk name could not have the trailing '\0' */
+	unsigned char dbg_namebuf[EROFS_NAME_LEN + 1];
+
+	memcpy(dbg_namebuf, de_name, de_namelen);
+	dbg_namebuf[de_namelen] = '\0';
+
+	debugln("found dirent %s de_len %u d_type %d", dbg_namebuf,
+		de_namelen, d_type);
+#endif
+}
+
 static int erofs_fill_dentries(struct dir_context *ctx,
 	void *dentry_blk, unsigned *ofs,
 	unsigned nameoff, unsigned maxsize)

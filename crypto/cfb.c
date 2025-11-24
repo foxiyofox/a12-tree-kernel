@@ -94,7 +94,7 @@ static int crypto_cfb_encrypt_inplace(struct skcipher_walk *walk,
 	const unsigned int bsize = crypto_cfb_bsize(tfm);
 	unsigned int nbytes = walk->nbytes;
 	u8 *src = walk->src.virt.addr;
-	u8 *iv = walk->iv;
+	u8 * const iv = walk->iv;
 	u8 tmp[MAX_CIPHER_BLOCKSIZE];
 
 	do {
@@ -104,8 +104,6 @@ static int crypto_cfb_encrypt_inplace(struct skcipher_walk *walk,
 
 		src += bsize;
 	} while ((nbytes -= bsize) >= bsize);
-
-	memcpy(walk->iv, iv, bsize);
 
 	return nbytes;
 }
@@ -297,6 +295,12 @@ static int crypto_cfb_create(struct crypto_template *tmpl, struct rtattr **tb)
 	/* we're a stream cipher independend of the crypto cra_blocksize */
 	inst->alg.base.cra_blocksize = 1;
 	inst->alg.base.cra_alignmask = alg->cra_alignmask;
+
+	/*
+	 * To simplify the implementation, configure the skcipher walk to only
+	 * give a partial block at the very end, never earlier.
+	 */
+	inst->alg.chunksize = alg->cra_blocksize;
 
 	/*
 	 * To simplify the implementation, configure the skcipher walk to only

@@ -264,6 +264,7 @@ struct cred *cred_alloc_blank(void)
 	if (!new)
 		return NULL;
 
+	new->non_rcu = 0;
 	atomic_set(&new->usage, 1);
 #ifdef CONFIG_DEBUG_CREDENTIALS
 	new->magic = CRED_MAGIC;

@@ -1826,6 +1826,12 @@ xfs_swap_extents(
 			return error;
 	}
 
+	if (xfs_inode_has_cow_data(tip)) {
+		error = xfs_reflink_cancel_cow_range(tip, 0, NULLFILEOFF, true);
+		if (error)
+			goto out_unlock;
+	}
+
 	/*
 	 * Extent "swapping" with rmap requires a permanent reservation and
 	 * a block reservation because it's really just a remap operation

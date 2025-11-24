@@ -158,6 +158,10 @@ static int omap_dm_timer_of_set_source(struct omap_dm_timer *timer)
 	if (clk_is_match(parent, timer->fclk))
 		return 0;
 
+	/* Bail out if both clocks point to fck */
+	if (clk_is_match(parent, timer->fclk))
+		return 0;
+
 	ret = clk_set_parent(timer->fclk, parent);
 	if (ret < 0)
 		pr_err("%s: failed to set parent\n", __func__);

@@ -68,6 +68,7 @@ static struct device_node *find_php_slot_pci_node(char *drc_name,
 		if (rc == 0)
 			break;
 	}
+	of_node_put(parent);
 
 	return np;
 }
@@ -296,6 +297,7 @@ int dlpar_add_slot(char *drc_name)
 		rc = -ENODEV;
 		goto exit;
 	}
+	of_node_put(dn);
 
 	switch (node_type) {
 		case NODE_TYPE_VIO:

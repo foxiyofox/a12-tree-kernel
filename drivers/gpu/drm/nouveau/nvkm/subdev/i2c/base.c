@@ -181,6 +181,10 @@ nvkm_i2c_fini(struct nvkm_subdev *subdev, bool suspend)
 		nvkm_i2c_pad_fini(pad);
 	}
 
+	list_for_each_entry(aux, &i2c->aux, head) {
+		nvkm_i2c_aux_init(aux);
+	}
+
 	return 0;
 }
 

@@ -66,7 +66,7 @@ struct tty_buffer {
 	int read;
 	int flags;
 	/* Data points here */
-	unsigned long data[0];
+	unsigned long data[];
 };
 
 /* Values for .flags field of tty_buffer */
@@ -224,6 +224,8 @@ struct tty_port_client_operations {
 	int (*receive_buf)(struct tty_port *port, const unsigned char *, const unsigned char *, size_t);
 	void (*write_wakeup)(struct tty_port *port);
 };
+
+extern const struct tty_port_client_operations tty_port_default_client_ops;
 
 extern const struct tty_port_client_operations tty_port_default_client_ops;
 
@@ -388,6 +390,12 @@ static inline void tty_set_flow_change(struct tty_struct *tty, int val)
 {
 	tty->flow_change = val;
 	smp_mb();
+}
+
+static inline bool tty_io_nonblock(struct tty_struct *tty, struct file *file)
+{
+	return file->f_flags & O_NONBLOCK ||
+		test_bit(TTY_LDISC_CHANGING, &tty->flags);
 }
 
 static inline bool tty_io_nonblock(struct tty_struct *tty, struct file *file)

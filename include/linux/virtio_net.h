@@ -3,6 +3,8 @@
 #define _LINUX_VIRTIO_NET_H
 
 #include <linux/if_vlan.h>
+#include <uapi/linux/tcp.h>
+#include <uapi/linux/udp.h>
 #include <uapi/linux/virtio_net.h>
 
 static inline int virtio_net_hdr_set_proto(struct sk_buff *skb,
@@ -28,17 +30,26 @@ static inline int virtio_net_hdr_to_skb(struct sk_buff *skb,
 					bool little_endian)
 {
 	unsigned int gso_type = 0;
+	unsigned int thlen = 0;
+	unsigned int p_off = 0;
+	unsigned int ip_proto;
 
 	if (hdr->gso_type != VIRTIO_NET_HDR_GSO_NONE) {
 		switch (hdr->gso_type & ~VIRTIO_NET_HDR_GSO_ECN) {
 		case VIRTIO_NET_HDR_GSO_TCPV4:
 			gso_type = SKB_GSO_TCPV4;
+			ip_proto = IPPROTO_TCP;
+			thlen = sizeof(struct tcphdr);
 			break;
 		case VIRTIO_NET_HDR_GSO_TCPV6:
 			gso_type = SKB_GSO_TCPV6;
+			ip_proto = IPPROTO_TCP;
+			thlen = sizeof(struct tcphdr);
 			break;
 		case VIRTIO_NET_HDR_GSO_UDP:
 			gso_type = SKB_GSO_UDP;
+			ip_proto = IPPROTO_UDP;
+			thlen = sizeof(struct udphdr);
 			break;
 		default:
 			return -EINVAL;

@@ -38,6 +38,9 @@
 /* How long to wait for graceful shutdown of a connection */
 #define HVS_CLOSE_TIMEOUT (8 * HZ)
 
+/* How long to wait for graceful shutdown of a connection */
+#define HVS_CLOSE_TIMEOUT (8 * HZ)
+
 struct vmpipe_proto_header {
 	u32 pkt_type;
 	u32 data_size;

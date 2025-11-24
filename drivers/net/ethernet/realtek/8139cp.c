@@ -583,6 +583,10 @@ static irqreturn_t cp_interrupt (int irq, void *dev_instance)
 	if (!mask)
 		goto out_unlock;
 
+	mask = cpr16(IntrMask);
+	if (!mask)
+		goto out_unlock;
+
 	status = cpr16(IntrStatus);
 	if (!status || (status == 0xFFFF))
 		goto out_unlock;

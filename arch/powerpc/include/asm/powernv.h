@@ -25,6 +25,8 @@ extern int pnv_npu2_handle_fault(struct npu_context *context, uintptr_t *ea,
 
 void pnv_program_cpu_hotplug_lpcr(unsigned int cpu, u64 lpcr_val);
 
+void pnv_program_cpu_hotplug_lpcr(unsigned int cpu, u64 lpcr_val);
+
 void pnv_tm_init(void);
 #else
 static inline void powernv_set_nmmu_ptcr(unsigned long ptcr) { }

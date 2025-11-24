@@ -175,6 +175,28 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
 	return 1;
 }
 
+static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+					  struct aer_err_info *info)
+{
+	int pos = dev->aer_cap;
+	u32 status, mask, sev;
+
+	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
+	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, &mask);
+	status &= ~mask;
+	if (!status)
+		return 0;
+
+	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
+	status &= sev;
+	if (status)
+		info->severity = AER_FATAL;
+	else
+		info->severity = AER_NONFATAL;
+
+	return 1;
+}
+
 static irqreturn_t dpc_handler(int irq, void *context)
 {
 	struct aer_err_info info;

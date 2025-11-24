@@ -115,6 +115,8 @@ static void mtk_eint_mask(struct irq_data *d)
 
 	eint->cur_mask[d->hwirq >> 5] &= ~mask;
 
+	eint->cur_mask[d->hwirq >> 5] &= ~mask;
+
 	writel(mask, reg);
 }
 
@@ -124,6 +126,8 @@ static void mtk_eint_unmask(struct irq_data *d)
 	u32 mask = BIT(d->hwirq & 0x1f);
 	void __iomem *reg = mtk_eint_get_offset(eint, d->hwirq,
 						eint->regs->mask_clr);
+
+	eint->cur_mask[d->hwirq >> 5] |= mask;
 
 	eint->cur_mask[d->hwirq >> 5] |= mask;
 

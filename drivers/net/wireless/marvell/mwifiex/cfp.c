@@ -534,5 +534,8 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
 	if (rate_index >= MWIFIEX_MAX_AC_RX_RATES)
 		rate_index = MWIFIEX_MAX_AC_RX_RATES - 1;
 
+	if (rate_index >= MWIFIEX_MAX_AC_RX_RATES)
+		rate_index = MWIFIEX_MAX_AC_RX_RATES - 1;
+
 	return rate_index;
 }

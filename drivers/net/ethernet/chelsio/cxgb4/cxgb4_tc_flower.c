@@ -232,6 +232,9 @@ static void cxgb4_process_flow_match(struct net_device *dev,
 		fs->val.ivlan_vld = 1;
 		fs->mask.ivlan_vld = 1;
 
+		fs->val.ivlan_vld = 1;
+		fs->mask.ivlan_vld = 1;
+
 		/* Chelsio adapters use ivlan_vld bit to match vlan packets
 		 * as 802.1Q. Also, when vlan tag is present in packets,
 		 * ethtype match is used then to match on ethtype of inner

@@ -57,6 +57,10 @@ krb5_make_rc4_seq_num(struct krb5_ctx *kctx, int direction, s32 seqnum,
 	if (!plain)
 		return -ENOMEM;
 
+	plain = kmalloc(8, GFP_NOFS);
+	if (!plain)
+		return -ENOMEM;
+
 	plain[0] = (unsigned char) ((seqnum >> 24) & 0xff);
 	plain[1] = (unsigned char) ((seqnum >> 16) & 0xff);
 	plain[2] = (unsigned char) ((seqnum >> 8) & 0xff);
@@ -151,6 +155,7 @@ out_plain:
 	kfree(plain);
 out:
 	crypto_free_skcipher(cipher);
+	kfree(plain);
 	return code;
 }
 

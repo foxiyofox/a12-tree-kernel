@@ -1005,7 +1005,7 @@ static int xemaclite_close(struct net_device *dev)
 		phy_disconnect(lp->phy_dev);
 	lp->phy_dev = NULL;
 
-	return 0;
+	return NETDEV_TX_OK;
 }
 
 /**
@@ -1177,9 +1177,8 @@ static int xemaclite_of_probe(struct platform_device *ofdev)
 	}
 
 	dev_info(dev,
-		 "Xilinx EmacLite at 0x%08X mapped to 0x%08X, irq=%d\n",
-		 (unsigned int __force)ndev->mem_start,
-		 (unsigned int __force)lp->base_addr, ndev->irq);
+		 "Xilinx EmacLite at 0x%08X mapped to 0x%p, irq=%d\n",
+		 (unsigned int __force)ndev->mem_start, lp->base_addr, ndev->irq);
 	return 0;
 
 error:

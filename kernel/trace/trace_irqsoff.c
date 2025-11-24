@@ -210,6 +210,8 @@ static void irqsoff_graph_return(struct ftrace_graph_ret *trace)
 
 	ftrace_graph_addr_finish(trace);
 
+	ftrace_graph_addr_finish(trace);
+
 	if (!func_prolog_dec(tr, &data, &flags))
 		return;
 

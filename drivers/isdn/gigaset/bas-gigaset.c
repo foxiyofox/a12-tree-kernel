@@ -2090,6 +2090,7 @@ static int gigaset_brkchars(struct cardstate *cs, const unsigned char buf[6])
  */
 static void gigaset_freebcshw(struct bc_state *bcs)
 {
+	struct usb_device *udev = bcs->cs->hw.bas->udev;
 	struct bas_bc_state *ubc = bcs->hw.bas;
 	int i;
 

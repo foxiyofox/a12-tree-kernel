@@ -87,6 +87,8 @@ static void tlbiel_all_isa206(unsigned int num_sets, unsigned int is)
 		tlbiel_hash_set_isa206(set, is);
 
 	asm volatile("ptesync": : :"memory");
+
+	asm volatile(PPC_INVALIDATE_ERAT "; isync" : : :"memory");
 }
 
 static void tlbiel_all_isa300(unsigned int num_sets, unsigned int is)

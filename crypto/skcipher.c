@@ -599,6 +599,12 @@ static void skcipher_set_needkey(struct crypto_skcipher *tfm)
 		crypto_skcipher_set_flags(tfm, CRYPTO_TFM_NEED_KEY);
 }
 
+static void skcipher_set_needkey(struct crypto_skcipher *tfm)
+{
+	if (tfm->keysize)
+		crypto_skcipher_set_flags(tfm, CRYPTO_TFM_NEED_KEY);
+}
+
 static int skcipher_setkey_blkcipher(struct crypto_skcipher *tfm,
 				     const u8 *key, unsigned int keylen)
 {

@@ -108,6 +108,9 @@ struct dm_snapshot {
 	unsigned in_progress;
 	struct wait_queue_head in_progress_wait;
 
+	unsigned in_progress;
+	struct wait_queue_head in_progress_wait;
+
 	struct dm_kcopyd_client *kcopyd_client;
 
 	/* Wait for events based on state_bits */
@@ -137,6 +140,11 @@ struct dm_snapshot {
 	 * for them to be committed.
 	 */
 	struct bio_list bios_queued_during_merge;
+
+	/*
+	 * Flush data after merge.
+	 */
+	struct bio flush_bio;
 };
 
 /*
@@ -147,6 +155,19 @@ struct dm_snapshot {
  */
 #define RUNNING_MERGE          0
 #define SHUTDOWN_MERGE         1
+
+/*
+ * Maximum number of chunks being copied on write.
+ *
+ * The value was decided experimentally as a trade-off between memory
+ * consumption, stalling the kernel's workqueues and maintaining a high enough
+ * throughput.
+ */
+#define DEFAULT_COW_THRESHOLD 2048
+
+static unsigned cow_threshold = DEFAULT_COW_THRESHOLD;
+module_param_named(snapshot_cow_threshold, cow_threshold, uint, 0644);
+MODULE_PARM_DESC(snapshot_cow_threshold, "Maximum number of chunks being copied on write");
 
 /*
  * Maximum number of chunks being copied on write.
@@ -789,7 +810,7 @@ static int dm_add_exception(void *context, chunk_t old, chunk_t new)
 static uint32_t __minimum_chunk_size(struct origin *o)
 {
 	struct dm_snapshot *snap;
-	unsigned chunk_size = 0;
+	unsigned chunk_size = rounddown_pow_of_two(UINT_MAX);
 
 	if (o)
 		list_for_each_entry(snap, &o->snapshots, list)
@@ -1061,6 +1082,17 @@ shut:
 
 static void error_bios(struct bio *bio);
 
+static int flush_data(struct dm_snapshot *s)
+{
+	struct bio *flush_bio = &s->flush_bio;
+
+	bio_reset(flush_bio);
+	bio_set_dev(flush_bio, s->origin->bdev);
+	flush_bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
+
+	return submit_bio_wait(flush_bio);
+}
+
 static void merge_callback(int read_err, unsigned long write_err, void *context)
 {
 	struct dm_snapshot *s = context;
@@ -1071,6 +1103,11 @@ static void merge_callback(int read_err, unsigned long write_err, void *context)
 			DMERR("Read error: shutting down merge.");
 		else
 			DMERR("Write error: shutting down merge.");
+		goto shut;
+	}
+
+	if (flush_data(s) < 0) {
+		DMERR("Flush after merge failed: shutting down merge");
 		goto shut;
 	}
 
@@ -1198,6 +1235,7 @@ static int snapshot_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 	s->first_merging_chunk = 0;
 	s->num_merging_chunks = 0;
 	bio_list_init(&s->bios_queued_during_merge);
+	bio_init(&s->flush_bio, NULL, 0);
 
 	/* Allocate hash table for COW data */
 	if (init_hash_tables(s)) {
@@ -1205,6 +1243,8 @@ static int snapshot_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 		r = -ENOMEM;
 		goto bad_hash_tables;
 	}
+
+	init_waitqueue_head(&s->in_progress_wait);
 
 	init_waitqueue_head(&s->in_progress_wait);
 
@@ -1264,6 +1304,7 @@ static int snapshot_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 
 	if (!s->store->chunk_size) {
 		ti->error = "Chunk size not set";
+		r = -EINVAL;
 		goto bad_read_metadata;
 	}
 
@@ -1493,6 +1534,7 @@ static void error_bios(struct bio *bio)
 		bio_io_error(bio);
 		bio = n;
 	}
+	account_end_copy(s);
 }
 
 static void __invalidate_snapshot(struct dm_snapshot *s, int err)
@@ -1539,6 +1581,11 @@ static void pending_complete(void *context, int success)
 		goto out;
 	}
 	*e = pe->e;
+
+	if (bio_data_dir(bio) == WRITE) {
+		while (unlikely(!wait_for_in_progress(s, false)))
+			; /* wait_for_in_progress() has slept */
+	}
 
 	mutex_lock(&s->lock);
 	if (!s->valid) {

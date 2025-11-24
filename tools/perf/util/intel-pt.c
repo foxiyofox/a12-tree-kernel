@@ -414,6 +414,13 @@ static inline u8 intel_pt_cpumode(struct intel_pt *pt, uint64_t ip)
 	       PERF_RECORD_MISC_USER;
 }
 
+static inline u8 intel_pt_cpumode(struct intel_pt *pt, uint64_t ip)
+{
+	return ip >= pt->kernel_start ?
+	       PERF_RECORD_MISC_KERNEL :
+	       PERF_RECORD_MISC_USER;
+}
+
 static int intel_pt_walk_next_insn(struct intel_pt_insn *intel_pt_insn,
 				   uint64_t *insn_cnt_ptr, uint64_t *ip,
 				   uint64_t to_ip, uint64_t max_insn_cnt,
@@ -505,8 +512,10 @@ static int intel_pt_walk_next_insn(struct intel_pt_insn *intel_pt_insn,
 
 			*ip += intel_pt_insn->length;
 
-			if (to_ip && *ip == to_ip)
+			if (to_ip && *ip == to_ip) {
+				intel_pt_insn->length = 0;
 				goto out_no_cache;
+			}
 
 			if (*ip >= al.map->end)
 				break;
@@ -876,6 +885,8 @@ static void intel_pt_set_pid_tid_cpu(struct intel_pt *pt,
 
 	if (queue->tid == -1 || pt->have_sched_switch) {
 		ptq->tid = machine__get_current_tid(pt->machine, ptq->cpu);
+		if (ptq->tid == -1)
+			ptq->pid = -1;
 		thread__zput(ptq->thread);
 	}
 
@@ -891,6 +902,7 @@ static void intel_pt_set_pid_tid_cpu(struct intel_pt *pt,
 
 static void intel_pt_sample_flags(struct intel_pt_queue *ptq)
 {
+	ptq->insn_len = 0;
 	if (ptq->state->flags & INTEL_PT_ABORT_TX) {
 		ptq->flags = PERF_IP_FLAG_BRANCH | PERF_IP_FLAG_TX_ABORT;
 	} else if (ptq->state->flags & INTEL_PT_ASYNC) {
@@ -1915,10 +1927,8 @@ static int intel_pt_context_switch(struct intel_pt *pt, union perf_event *event,
 		tid = sample->tid;
 	}
 
-	if (tid == -1) {
-		pr_err("context_switch event has no tid\n");
-		return -EINVAL;
-	}
+	if (tid == -1)
+		intel_pt_log("context_switch event has no tid\n");
 
 	intel_pt_log("context_switch: cpu %d pid %d tid %d time %"PRIu64" tsc %#"PRIx64"\n",
 		     cpu, pid, tid, sample->time, perf_time_to_tsc(sample->time,

@@ -545,6 +545,12 @@ static int hiface_pcm_init_urb(struct pcm_urb *urb,
 	init_usb_anchor(&urb->submitted);
 
 	return 0;
+
+error:
+	for (i = 0; i < PCM_N_URBS; i++)
+		kfree(rt->out_urbs[i].buffer);
+	kfree(rt);
+	return ret;
 }
 
 void hiface_pcm_abort(struct hiface_chip *chip)

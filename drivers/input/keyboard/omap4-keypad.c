@@ -236,13 +236,37 @@ static int omap4_keypad_parse_dt(struct device *dev,
 	return 0;
 }
 
+static int omap4_keypad_check_revision(struct device *dev,
+				       struct omap4_keypad *keypad_data)
+{
+	unsigned int rev;
+
+	rev = __raw_readl(keypad_data->base + OMAP4_KBD_REVISION);
+	rev &= 0x03 << 30;
+	rev >>= 30;
+	switch (rev) {
+	case KBD_REVISION_OMAP4:
+		keypad_data->reg_offset = 0x00;
+		keypad_data->irqreg_offset = 0x00;
+		break;
+	case KBD_REVISION_OMAP5:
+		keypad_data->reg_offset = 0x10;
+		keypad_data->irqreg_offset = 0x0c;
+		break;
+	default:
+		dev_err(dev, "Keypad reports unsupported revision %d", rev);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int omap4_keypad_probe(struct platform_device *pdev)
 {
 	struct omap4_keypad *keypad_data;
 	struct input_dev *input_dev;
 	struct resource *res;
 	unsigned int max_keys;
-	int rev;
 	int irq;
 	int error;
 
@@ -253,10 +277,8 @@ static int omap4_keypad_probe(struct platform_device *pdev)
 	}
 
 	irq = platform_get_irq(pdev, 0);
-	if (!irq) {
-		dev_err(&pdev->dev, "no keyboard irq assigned\n");
-		return -EINVAL;
-	}
+	if (irq < 0)
+		return irq;
 
 	keypad_data = kzalloc(sizeof(struct omap4_keypad), GFP_KERNEL);
 	if (!keypad_data) {
@@ -284,41 +306,33 @@ static int omap4_keypad_probe(struct platform_device *pdev)
 		goto err_release_mem;
 	}
 
+	pm_runtime_enable(&pdev->dev);
 
 	/*
 	 * Enable clocks for the keypad module so that we can read
 	 * revision register.
 	 */
-	pm_runtime_enable(&pdev->dev);
 	error = pm_runtime_get_sync(&pdev->dev);
 	if (error) {
 		dev_err(&pdev->dev, "pm_runtime_get_sync() failed\n");
-		goto err_unmap;
+		pm_runtime_put_noidle(&pdev->dev);
+	} else {
+		error = omap4_keypad_check_revision(&pdev->dev,
+						    keypad_data);
+		if (!error) {
+			/* Ensure device does not raise interrupts */
+			omap4_keypad_stop(keypad_data);
+		}
+		pm_runtime_put_sync(&pdev->dev);
 	}
-	rev = __raw_readl(keypad_data->base + OMAP4_KBD_REVISION);
-	rev &= 0x03 << 30;
-	rev >>= 30;
-	switch (rev) {
-	case KBD_REVISION_OMAP4:
-		keypad_data->reg_offset = 0x00;
-		keypad_data->irqreg_offset = 0x00;
-		break;
-	case KBD_REVISION_OMAP5:
-		keypad_data->reg_offset = 0x10;
-		keypad_data->irqreg_offset = 0x0c;
-		break;
-	default:
-		dev_err(&pdev->dev,
-			"Keypad reports unsupported revision %d", rev);
-		error = -EINVAL;
-		goto err_pm_put_sync;
-	}
+	if (error)
+		goto err_pm_disable;
 
 	/* input device allocation */
 	keypad_data->input = input_dev = input_allocate_device();
 	if (!input_dev) {
 		error = -ENOMEM;
-		goto err_pm_put_sync;
+		goto err_pm_disable;
 	}
 
 	input_dev->name = pdev->name;

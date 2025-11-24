@@ -302,6 +302,8 @@ static int vimc_probe(struct platform_device *pdev)
 
 	memset(&vimc->mdev, 0, sizeof(vimc->mdev));
 
+	memset(&vimc->mdev, 0, sizeof(vimc->mdev));
+
 	/* Create platform_device for each entity in the topology*/
 	vimc->subdevs = devm_kcalloc(&vimc->pdev.dev, vimc->pipe_cfg->num_ents,
 				     sizeof(*vimc->subdevs), GFP_KERNEL);

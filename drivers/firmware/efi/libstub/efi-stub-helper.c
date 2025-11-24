@@ -48,6 +48,10 @@ int __pure novamap(void)
 {
 	return __novamap;
 }
+int __pure novamap(void)
+{
+	return __novamap;
+}
 
 #define EFI_MMAP_NR_SLACK_SLOTS	8
 
@@ -485,6 +489,11 @@ efi_status_t efi_parse_options(char const *cmdline)
 		if (!strncmp(str, "nochunk", 7)) {
 			str += strlen("nochunk");
 			__chunk_size = -1UL;
+		}
+
+		if (!strncmp(str, "novamap", 7)) {
+			str += strlen("novamap");
+			__novamap = 1;
 		}
 
 		if (!strncmp(str, "novamap", 7)) {

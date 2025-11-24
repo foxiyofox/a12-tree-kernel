@@ -41,6 +41,10 @@ prerequisite()
 	present_max=${present_cpus##*-}
 	echo "present_cpus = $present_cpus present_max = $present_max"
 
+	present_cpus=`cat $SYSFS/devices/system/cpu/present`
+	present_max=${present_cpus##*-}
+	echo "present_cpus = $present_cpus present_max = $present_max"
+
 	echo -e "\t Cpus in online state: $online_cpus"
 
 	offline_cpus=`cat $SYSFS/devices/system/cpu/offline`

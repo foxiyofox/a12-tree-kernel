@@ -2137,8 +2137,6 @@ static int coh901318_terminate_all(struct dma_chan *chan)
 	cohc->nbr_active_done = 0;
 	cohc->busy = 0;
 
-	spin_unlock_irqrestore(&cohc->lock, flags);
-
 	return 0;
 }
 

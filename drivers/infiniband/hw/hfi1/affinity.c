@@ -205,6 +205,8 @@ int node_affinity_init(void)
 		ids++;
 	}
 
+	free_cpumask_var(available_cpus);
+	free_cpumask_var(non_intr_cpus);
 	return 0;
 
 out:

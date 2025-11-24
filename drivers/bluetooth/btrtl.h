@@ -99,6 +99,11 @@ static inline int btrtl_shutdown_realtek(struct hci_dev *hdev)
 	return -EOPNOTSUPP;
 }
 
+static inline int btrtl_shutdown_realtek(struct hci_dev *hdev)
+{
+	return -EOPNOTSUPP;
+}
+
 static inline int btrtl_get_uart_settings(struct hci_dev *hdev,
 					  struct btrtl_device_info *btrtl_dev,
 					  unsigned int *controller_baudrate,

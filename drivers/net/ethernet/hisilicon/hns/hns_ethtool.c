@@ -550,6 +550,7 @@ static int __lb_run_test(struct net_device *ndev,
 
 static int __lb_down(struct net_device *ndev, enum hnae_loop loop)
 {
+#define NIC_LB_TEST_WAIT_PHY_LINK_TIME 300
 	struct hns_nic_priv *priv = netdev_priv(ndev);
 	struct hnae_handle *h = priv->ae_handle;
 	int ret;
@@ -570,6 +571,9 @@ static int __lb_down(struct net_device *ndev, enum hnae_loop loop)
 	(void)__lb_clean_rings(priv, 0, h->q_num - 1, 256);
 
 	hns_nic_net_reset(ndev);
+
+	/* wait adjust link done and phy ready */
+	msleep(NIC_LB_TEST_WAIT_PHY_LINK_TIME);
 
 	return 0;
 }

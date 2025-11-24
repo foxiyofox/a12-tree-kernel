@@ -294,9 +294,6 @@ bool dm_helpers_dp_mst_poll_for_allocation_change_trigger(
 
 	ret = drm_dp_check_act_status(mst_mgr);
 
-	if (ret)
-		return false;
-
 	return true;
 }
 

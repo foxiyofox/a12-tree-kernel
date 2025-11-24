@@ -397,8 +397,8 @@ int cxl_calc_capp_routing(struct pci_dev *dev, u64 *chipid,
 	*capp_unit_id = get_capp_unit_id(np, *phb_index);
 	of_node_put(np);
 	if (!*capp_unit_id) {
-		pr_err("cxl: invalid capp unit id (phb_index: %d)\n",
-		       *phb_index);
+		pr_err("cxl: No capp unit found for PHB[%lld,%d]. Make sure the adapter is on a capi-compatible slot\n",
+		       *chipid, *phb_index);
 		return -ENODEV;
 	}
 
@@ -1886,6 +1886,7 @@ static pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
 		dev_info(&pdev->dev, "reflashing, so opting out of EEH!\n");
 		return PCI_ERS_RESULT_NONE;
 	}
+	spin_unlock(&adapter->afu_list_lock);
 
 	/*
 	 * At this point, we want to try to recover.  We'll always

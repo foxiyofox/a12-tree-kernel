@@ -390,6 +390,13 @@ static int report__setup_sample_type(struct report *rep)
 	}
 #endif
 
+#if !defined(HAVE_LIBUNWIND_SUPPORT) && !defined(HAVE_DWARF_SUPPORT)
+	if (dwarf_callchain_users) {
+		ui__warning("Please install libunwind or libdw "
+			    "development packages during the perf build.\n");
+	}
+#endif
+
 	return 0;
 }
 
@@ -447,8 +454,7 @@ static size_t hists__fprintf_nr_sample_events(struct hists *hists, struct report
 	if (rep->time_str)
 		ret += fprintf(fp, " (time slices: %s)", rep->time_str);
 
-	if (symbol_conf.show_ref_callgraph &&
-	    strstr(evname, "call-graph=no")) {
+	if (symbol_conf.show_ref_callgraph && evname && strstr(evname, "call-graph=no")) {
 		ret += fprintf(fp, ", show reference callgraph");
 	}
 

@@ -121,6 +121,9 @@ machine_kexec(struct kimage *image)
 	/* Mark offline BEFORE disabling local irq. */
 	set_cpu_online(smp_processor_id(), false);
 
+	/* Mark offline BEFORE disabling local irq. */
+	set_cpu_online(smp_processor_id(), false);
+
 	/*
 	 * we do not want to be bothered.
 	 */

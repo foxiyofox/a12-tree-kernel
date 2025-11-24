@@ -600,7 +600,6 @@ static int bcm_sysport_get_coalesce(struct net_device *dev,
 				    struct ethtool_coalesce *ec)
 {
 	struct bcm_sysport_priv *priv = netdev_priv(dev);
-	u32 reg;
 
 	reg = tdma_readl(priv, TDMA_DESC_RING_INTR_CONTROL(0));
 
@@ -677,7 +676,8 @@ static struct sk_buff *bcm_sysport_rx_refill(struct bcm_sysport_priv *priv,
 	dma_addr_t mapping;
 
 	/* Allocate a new SKB for a new packet */
-	skb = netdev_alloc_skb(priv->netdev, RX_BUF_LENGTH);
+	skb = __netdev_alloc_skb(priv->netdev, RX_BUF_LENGTH,
+				 GFP_ATOMIC | __GFP_NOWARN);
 	if (!skb) {
 		priv->mib.alloc_rx_buff_failed++;
 		netif_err(priv, rx_err, ndev, "SKB alloc failed\n");
@@ -2038,6 +2038,8 @@ static int bcm_sysport_open(struct net_device *dev)
 
 	netif_tx_start_all_queues(dev);
 
+	netif_tx_start_all_queues(dev);
+
 	return 0;
 
 out_clear_rx_int:
@@ -2440,8 +2442,10 @@ static int bcm_sysport_probe(struct platform_device *pdev)
 	priv->tx_rings = devm_kcalloc(&pdev->dev, txq,
 				      sizeof(struct bcm_sysport_tx_ring),
 				      GFP_KERNEL);
-	if (!priv->tx_rings)
-		return -ENOMEM;
+	if (!priv->tx_rings) {
+		ret = -ENOMEM;
+		goto err_free_netdev;
+	}
 
 	priv->is_lite = params->is_lite;
 	priv->num_rx_desc_words = params->num_rx_desc_words;
@@ -2504,6 +2508,7 @@ static int bcm_sysport_probe(struct platform_device *pdev)
 	/* HW supported features, none enabled by default */
 	dev->hw_features |= NETIF_F_RXCSUM | NETIF_F_HIGHDMA |
 				NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM;
+	dev->max_mtu = UMAC_MAX_MTU_SIZE;
 
 	/* Request the WOL interrupt and advertise suspend if available */
 	priv->wol_irq_disabled = 1;
@@ -2719,6 +2724,9 @@ static int __maybe_unused bcm_sysport_resume(struct device *d)
 	/* Disable the UniMAC RX/TX */
 	umac_enable_set(priv, CMD_RX_EN | CMD_TX_EN, 0);
 
+	/* Disable the UniMAC RX/TX */
+	umac_enable_set(priv, CMD_RX_EN | CMD_TX_EN, 0);
+
 	/* We may have been suspended and never received a WOL event that
 	 * would turn off MPD detection, take care of that now
 	 */
@@ -2787,6 +2795,8 @@ static int __maybe_unused bcm_sysport_resume(struct device *d)
 	phy_resume(dev->phydev);
 
 	bcm_sysport_netif_start(dev);
+
+	netif_device_attach(dev);
 
 	netif_device_attach(dev);
 

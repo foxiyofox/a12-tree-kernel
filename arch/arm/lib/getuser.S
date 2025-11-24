@@ -87,6 +87,9 @@ ENTRY(__get_user_8)
 5: TUSER(ldr)	r2, [r0], #4
 6: TUSER(ldr)	r3, [r0]
 #endif
+
+#endif /* __LINUX_ARM_ARCH__ >= 6 */
+
 	mov	r0, #0
 	ret	lr
 ENDPROC(__get_user_8)

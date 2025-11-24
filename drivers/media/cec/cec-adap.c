@@ -75,6 +75,19 @@ u16 cec_get_edid_phys_addr(const u8 *edid, unsigned int size,
 }
 EXPORT_SYMBOL_GPL(cec_get_edid_phys_addr);
 
+u16 cec_get_edid_phys_addr(const u8 *edid, unsigned int size,
+			   unsigned int *offset)
+{
+	unsigned int loc = cec_get_edid_spa_location(edid, size);
+
+	if (offset)
+		*offset = loc;
+	if (loc == 0)
+		return CEC_PHYS_ADDR_INVALID;
+	return (edid[loc] << 8) | edid[loc + 1];
+}
+EXPORT_SYMBOL_GPL(cec_get_edid_phys_addr);
+
 /*
  * Queue a new event for this filehandle. If ts == 0, then set it
  * to the current time.
@@ -345,6 +358,14 @@ static void cec_data_completed(struct cec_data *data)
 			cec_queue_msg_fh(data->fh, &data->msg);
 		kfree(data);
 	}
+	/*
+	 * If something went wrong and this counter isn't what it should
+	 * be, then this will reset it back to 0. Warn if it is not 0,
+	 * since it indicates a bug, either in this framework or in a
+	 * CEC driver.
+	 */
+	if (WARN_ON(adap->transmit_queue_sz))
+		adap->transmit_queue_sz = 0;
 }
 
 /*
@@ -1034,6 +1055,8 @@ void cec_received_msg_ts(struct cec_adapter *adap,
 
 	adap->last_initiator = 0xff;
 
+	adap->last_initiator = 0xff;
+
 	/* Check if this message was for us (directed or broadcast). */
 	if (!cec_msg_is_broadcast(msg))
 		valid_la = cec_has_log_addr(adap, msg_dest);
@@ -1146,6 +1169,7 @@ void cec_received_msg_ts(struct cec_adapter *adap,
 			if (abort)
 				dst->rx_status |= CEC_RX_STATUS_FEATURE_ABORT;
 			msg->flags = dst->flags;
+			msg->sequence = dst->sequence;
 			/* Remove it from the wait_queue */
 			list_del_init(&data->list);
 
@@ -1668,6 +1692,10 @@ int __cec_s_log_addrs(struct cec_adapter *adap,
 		unsigned j;
 
 		log_addrs->log_addr[i] = CEC_LOG_ADDR_INVALID;
+		if (log_addrs->log_addr_type[i] > CEC_LOG_ADDR_TYPE_UNREGISTERED) {
+			dprintk(1, "unknown logical address type\n");
+			return -EINVAL;
+		}
 		if (type_mask & (1 << log_addrs->log_addr_type[i])) {
 			dprintk(1, "duplicate logical address type\n");
 			return -EINVAL;
@@ -1686,10 +1714,6 @@ int __cec_s_log_addrs(struct cec_adapter *adap,
 		}
 		if (log_addrs->primary_device_type[i] == 2) {
 			dprintk(1, "invalid primary device type\n");
-			return -EINVAL;
-		}
-		if (log_addrs->log_addr_type[i] > CEC_LOG_ADDR_TYPE_UNREGISTERED) {
-			dprintk(1, "unknown logical address type\n");
 			return -EINVAL;
 		}
 		for (j = 0; j < feature_sz; j++) {

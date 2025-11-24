@@ -348,6 +348,10 @@ static s16 bme680_compensate_temp(struct bme680_data *data,
 	if (!calib->par_t2)
 		bme680_read_calib(data, calib);
 
+	/* If the calibration is invalid, attempt to reload it */
+	if (!calib->par_t2)
+		bme680_read_calib(data, calib);
+
 	var1 = (adc_temp >> 3) - (calib->par_t1 << 1);
 	var2 = (var1 * calib->par_t2) >> 11;
 	var3 = ((var1 >> 1) * (var1 >> 1)) >> 12;

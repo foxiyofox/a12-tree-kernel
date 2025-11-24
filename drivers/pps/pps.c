@@ -174,6 +174,14 @@ static long pps_cdev_ioctl(struct file *file,
 		pps->params.assert_off_tu.flags = 0;
 		pps->params.clear_off_tu.flags = 0;
 
+		/*
+		 * Clear unused fields of pps_kparams to avoid leaking
+		 * uninitialized data of the PPS_SETPARAMS caller via
+		 * PPS_GETPARAMS
+		 */
+		pps->params.assert_off_tu.flags = 0;
+		pps->params.clear_off_tu.flags = 0;
+
 		spin_unlock_irq(&pps->lock);
 
 		break;

@@ -290,7 +290,6 @@ static void ixgbe_ipsec_start_engine(struct ixgbe_adapter *adapter)
  **/
 void ixgbe_ipsec_restore(struct ixgbe_adapter *adapter)
 {
-	struct ixgbe_ipsec *ipsec = adapter->ipsec;
 	struct ixgbe_hw *hw = &adapter->hw;
 	int i;
 
@@ -672,6 +671,10 @@ static int ixgbe_ipsec_add_sa(struct xfrm_state *xs)
 			     (__force u32)rsa.xs->id.spi);
 	} else {
 		struct tx_sa tsa;
+
+		if (adapter->num_vfs &&
+		    adapter->bridge_mode != BRIDGE_MODE_VEPA)
+			return -EOPNOTSUPP;
 
 		if (adapter->num_vfs &&
 		    adapter->bridge_mode != BRIDGE_MODE_VEPA)

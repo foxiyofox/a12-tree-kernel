@@ -78,6 +78,13 @@ static void dwc2_set_s3c6400_params(struct dwc2_hsotg *hsotg)
 	p->power_down = 0;
 }
 
+static void dwc2_set_s3c6400_params(struct dwc2_hsotg *hsotg)
+{
+	struct dwc2_core_params *p = &hsotg->params;
+
+	p->power_down = 0;
+}
+
 static void dwc2_set_rk_params(struct dwc2_hsotg *hsotg)
 {
 	struct dwc2_core_params *p = &hsotg->params;
@@ -103,6 +110,7 @@ static void dwc2_set_ltq_params(struct dwc2_hsotg *hsotg)
 	p->max_packet_count = 511;
 	p->ahbcfg = GAHBCFG_HBSTLEN_INCR16 <<
 		GAHBCFG_HBSTLEN_SHIFT;
+	p->power_down = 0;
 }
 
 static void dwc2_set_amlogic_params(struct dwc2_hsotg *hsotg)
@@ -808,7 +816,7 @@ int dwc2_get_hwparams(struct dwc2_hsotg *hsotg)
 int dwc2_init_params(struct dwc2_hsotg *hsotg)
 {
 	const struct of_device_id *match;
-	void (*set_params)(void *data);
+	void (*set_params)(struct dwc2_hsotg *data);
 
 	dwc2_set_default_params(hsotg);
 	dwc2_get_device_properties(hsotg);

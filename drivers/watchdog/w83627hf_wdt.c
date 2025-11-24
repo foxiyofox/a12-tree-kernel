@@ -412,6 +412,9 @@ static int wdt_find(int addr)
 	case NCT6796_ID:
 		ret = nct6796;
 		break;
+	case NCT6796_ID:
+		ret = nct6796;
+		break;
 	case NCT6102_ID:
 		ret = nct6102;
 		cr_wdt_timeout = NCT6102D_WDT_TIMEOUT;

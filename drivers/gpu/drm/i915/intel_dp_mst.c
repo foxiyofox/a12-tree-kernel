@@ -460,6 +460,10 @@ static struct drm_connector *intel_dp_add_mst_connector(struct drm_dp_mst_topolo
 	intel_connector->mst_port = intel_dp;
 	intel_connector->port = port;
 
+	intel_connector->get_hw_state = intel_dp_mst_get_hw_state;
+	intel_connector->mst_port = intel_dp;
+	intel_connector->port = port;
+
 	connector = &intel_connector->base;
 	ret = drm_connector_init(dev, connector, &intel_dp_mst_connector_funcs,
 				 DRM_MODE_CONNECTOR_DisplayPort);
@@ -588,21 +592,31 @@ intel_dp_create_fake_mst_encoders(struct intel_digital_port *intel_dig_port)
 int
 intel_dp_mst_encoder_init(struct intel_digital_port *intel_dig_port, int conn_base_id)
 {
+	struct drm_i915_private *i915 = to_i915(intel_dig_port->base.base.dev);
 	struct intel_dp *intel_dp = &intel_dig_port->dp;
-	struct drm_device *dev = intel_dig_port->base.base.dev;
+	enum port port = intel_dig_port->base.port;
 	int ret;
 
-	intel_dp->can_mst = true;
+	if (!HAS_DP_MST(i915) || intel_dp_is_edp(intel_dp))
+		return 0;
+
+	if (INTEL_GEN(i915) < 12 && port == PORT_A)
+		return 0;
+
+	if (INTEL_GEN(i915) < 11 && port == PORT_E)
+		return 0;
+
 	intel_dp->mst_mgr.cbs = &mst_cbs;
 
 	/* create encoders */
 	intel_dp_create_fake_mst_encoders(intel_dig_port);
-	ret = drm_dp_mst_topology_mgr_init(&intel_dp->mst_mgr, dev,
+	ret = drm_dp_mst_topology_mgr_init(&intel_dp->mst_mgr, &i915->drm,
 					   &intel_dp->aux, 16, 3, conn_base_id);
-	if (ret) {
-		intel_dp->can_mst = false;
+	if (ret)
 		return ret;
-	}
+
+	intel_dp->can_mst = true;
+
 	return 0;
 }
 

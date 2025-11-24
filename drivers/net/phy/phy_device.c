@@ -132,6 +132,8 @@ static int mdio_bus_phy_suspend(struct device *dev)
 
 	phydev->suspended_by_mdio_bus = 1;
 
+	phydev->suspended_by_mdio_bus = 1;
+
 	return phy_suspend(phydev);
 }
 
@@ -606,8 +608,10 @@ static int get_phy_id(struct mii_bus *bus, int addr, u32 *phy_id,
 
 	/* Grab the bits from PHYIR2, and put them in the lower half */
 	phy_reg = mdiobus_read(bus, addr, MII_PHYSID2);
-	if (phy_reg < 0)
-		return -EIO;
+	if (phy_reg < 0) {
+		/* returning -ENODEV doesn't stop bus scanning */
+		return (phy_reg == -EIO || phy_reg == -ENODEV) ? -ENODEV : -EIO;
+	}
 
 	*phy_id |= (phy_reg & 0xffff);
 
@@ -765,6 +769,9 @@ int phy_connect_direct(struct net_device *dev, struct phy_device *phydev,
 	if (!dev)
 		return -EINVAL;
 
+	if (!dev)
+		return -EINVAL;
+
 	rc = phy_attach_direct(dev, phydev, phydev->dev_flags, interface);
 	if (rc)
 		return rc;
@@ -800,6 +807,9 @@ struct phy_device *phy_connect(struct net_device *dev, const char *bus_id,
 	struct phy_device *phydev;
 	struct device *d;
 	int rc;
+
+	if (!dev)
+		return ERR_PTR(-EINVAL);
 
 	/* Search the list of PHY devices on the mdio bus for the
 	 * PHY with the requested name
@@ -1152,7 +1162,8 @@ void phy_detach(struct phy_device *phydev)
 
 	phy_led_triggers_unregister(phydev);
 
-	module_put(phydev->mdio.dev.driver->owner);
+	if (phydev->mdio.dev.driver)
+		module_put(phydev->mdio.dev.driver->owner);
 
 	/* If the device had no specific driver before (i.e. - it
 	 * was using the generic driver), we unbind the device
@@ -1939,6 +1950,14 @@ int phy_driver_register(struct phy_driver *new_driver, struct module *owner)
 	new_driver->mdiodrv.driver.probe = phy_probe;
 	new_driver->mdiodrv.driver.remove = phy_remove;
 	new_driver->mdiodrv.driver.owner = owner;
+
+	/* The following works around an issue where the PHY driver doesn't bind
+	 * to the device, resulting in the genphy driver being used instead of
+	 * the dedicated driver. The root cause of the issue isn't known yet
+	 * and seems to be in the base driver core. Once this is fixed we may
+	 * remove this workaround.
+	 */
+	new_driver->mdiodrv.driver.probe_type = PROBE_FORCE_SYNCHRONOUS;
 
 	/* The following works around an issue where the PHY driver doesn't bind
 	 * to the device, resulting in the genphy driver being used instead of

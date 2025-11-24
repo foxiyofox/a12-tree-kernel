@@ -1321,6 +1321,12 @@ static int configfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode
 		goto out;
 	}
 
+	frag = new_fragment();
+	if (!frag) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
 	/* Get a working ref for the duration of this function */
 	parent_item = configfs_get_config_item(dentry->d_parent);
 	type = parent_item->ci_type;
@@ -1547,6 +1553,7 @@ static int configfs_rmdir(struct inode *dir, struct dentry *dentry)
 
 	/* Drop reference from above, item already holds one. */
 	config_item_put(parent_item);
+	put_fragment(frag);
 
 	if (item->ci_type)
 		dead_item_owner = item->ci_type->ct_owner;
@@ -1981,6 +1988,7 @@ void configfs_unregister_subsystem(struct configfs_subsystem *subsys)
 		pr_err("Tried to unregister non-subsystem!\n");
 		return;
 	}
+	put_fragment(frag);
 
 	down_write(&frag->frag_sem);
 	frag->frag_dead = true;

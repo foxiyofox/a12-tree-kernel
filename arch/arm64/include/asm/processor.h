@@ -216,6 +216,9 @@ static inline void compat_start_thread(struct pt_regs *regs, unsigned long pc,
 	if (arm64_get_ssbd_state() != ARM64_SSBD_FORCE_ENABLE)
 		set_compat_ssbs_bit(regs);
 
+	if (arm64_get_ssbd_state() != ARM64_SSBD_FORCE_ENABLE)
+		set_compat_ssbs_bit(regs);
+
 	regs->compat_sp = sp;
 }
 #endif

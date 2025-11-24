@@ -126,6 +126,8 @@ void etnaviv_core_dump(struct etnaviv_gpu *gpu)
 
 	mutex_lock(&gpu->mmu->lock);
 
+	mutex_lock(&gpu->mmu->lock);
+
 	mmu_size = etnaviv_iommu_dump_size(gpu->mmu);
 
 	/* We always dump registers, mmu, ring and end marker */
@@ -235,6 +237,8 @@ void etnaviv_core_dump(struct etnaviv_gpu *gpu)
 		etnaviv_core_dump_header(&iter, ETDUMP_BUF_BO, iter.data +
 					 obj->base.size);
 	}
+
+	mutex_unlock(&gpu->mmu->lock);
 
 	mutex_unlock(&gpu->mmu->lock);
 

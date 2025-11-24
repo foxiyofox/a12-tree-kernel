@@ -421,6 +421,12 @@ exit:
 	return rv;
 }
 
+static int usbtmc_ioctl_abort_bulk_out_tag(struct usbtmc_device_data *data,
+					   u8 tag)
+{
+	return usbtmc_ioctl_abort_bulk_out_tag(data, data->bTag_last_write);
+}
+
 static int usbtmc_ioctl_abort_bulk_out(struct usbtmc_device_data *data)
 {
 	return usbtmc_ioctl_abort_bulk_out_tag(data, data->bTag_last_write);
@@ -1537,17 +1543,10 @@ static void usbtmc_interrupt(struct urb *urb)
 		dev_err(dev, "overflow with length %d, actual length is %d\n",
 			data->iin_wMaxPacketSize, urb->actual_length);
 		/* fall through */
-	case -ECONNRESET:
-	case -ENOENT:
-	case -ESHUTDOWN:
-	case -EILSEQ:
-	case -ETIME:
-	case -EPIPE:
+	default:
 		/* urb terminated, clean up */
 		dev_dbg(dev, "urb terminated, status: %d\n", status);
 		return;
-	default:
-		dev_err(dev, "unknown status received: %d\n", status);
 	}
 exit:
 	rv = usb_submit_urb(urb, GFP_ATOMIC);

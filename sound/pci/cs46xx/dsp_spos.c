@@ -906,6 +906,9 @@ int cs46xx_dsp_proc_done (struct snd_cs46xx *chip)
 	if (!ins)
 		return 0;
 
+	if (!ins)
+		return 0;
+
 	snd_info_free_entry(ins->proc_sym_info_entry);
 	ins->proc_sym_info_entry = NULL;
 

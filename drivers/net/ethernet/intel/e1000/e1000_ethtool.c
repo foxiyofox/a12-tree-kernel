@@ -218,6 +218,7 @@ static int e1000_set_link_ksettings(struct net_device *netdev,
 
 	/* reset the link */
 
+	err = 0;
 	if (netif_running(adapter->netdev)) {
 		e1000_down(adapter);
 		e1000_up(adapter);

@@ -74,6 +74,25 @@ static int write_kprobe_events(const char *val)
 	return ret;
 }
 
+static int write_kprobe_events(const char *val)
+{
+	int fd, ret, flags;
+
+	if (val == NULL)
+		return -1;
+	else if (val[0] == '\0')
+		flags = O_WRONLY | O_TRUNC;
+	else
+		flags = O_WRONLY | O_APPEND;
+
+	fd = open("/sys/kernel/debug/tracing/kprobe_events", flags);
+
+	ret = write(fd, val, strlen(val));
+	close(fd);
+
+	return ret;
+}
+
 static int load_and_attach(const char *event, struct bpf_insn *prog, int size)
 {
 	bool is_socket = strncmp(event, "socket", 6) == 0;

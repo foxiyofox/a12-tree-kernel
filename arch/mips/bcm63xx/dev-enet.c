@@ -72,6 +72,8 @@ static int shared_device_registered;
 
 static u64 enet_dmamask = DMA_BIT_MASK(32);
 
+static u64 enet_dmamask = DMA_BIT_MASK(32);
+
 static struct resource enet0_res[] = {
 	{
 		.start		= -1, /* filled at runtime */

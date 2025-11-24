@@ -561,6 +561,7 @@ static ssize_t core_id_show(struct device *dev, struct device_attribute *attr,
 {
 	struct drm_device *drm = dev_get_drvdata(dev);
 	struct malidp_drm *malidp = drm->dev_private;
+	int loop = 5;
 
 	return snprintf(buf, PAGE_SIZE, "%08x\n", malidp->core_id);
 }

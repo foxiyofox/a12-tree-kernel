@@ -767,6 +767,11 @@ static int bcsp_close(struct hci_uart *hu)
 		bcsp->rx_skb = NULL;
 	}
 
+	if (bcsp->rx_skb) {
+		kfree_skb(bcsp->rx_skb);
+		bcsp->rx_skb = NULL;
+	}
+
 	kfree(bcsp);
 	return 0;
 }

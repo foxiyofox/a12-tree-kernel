@@ -687,6 +687,7 @@ int blk_iolatency_init(struct request_queue *q)
 	struct blk_iolatency *blkiolat;
 	struct rq_qos *rqos;
 	int ret;
+	int enable = 0;
 
 	blkiolat = kzalloc(sizeof(*blkiolat), GFP_KERNEL);
 	if (!blkiolat)

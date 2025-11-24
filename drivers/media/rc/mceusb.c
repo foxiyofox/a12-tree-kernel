@@ -685,11 +685,18 @@ static void mceusb_dev_printdata(struct mceusb_dev *ir, u8 *buf, int buf_len,
 				data[0], data[1]);
 			break;
 		case MCE_RSP_EQIRCFS:
+			if (!data[0] && !data[1]) {
+				dev_dbg(dev, "%s: no carrier", inout);
+				break;
+			}
+			// prescaler should make sense
+			if (data[0] > 8)
+				break;
 			period = DIV_ROUND_CLOSEST((1U << data[0] * 2) *
 						   (data[1] + 1), 10);
 			if (!period)
 				break;
-			carrier = (1000 * 1000) / period;
+			carrier = USEC_PER_SEC / period;
 			dev_dbg(dev, "%s carrier of %u Hz (period %uus)",
 				 inout, carrier, period);
 			break;
@@ -733,6 +740,9 @@ static void mceusb_dev_printdata(struct mceusb_dev *ir, u8 *buf, int buf_len,
 			break;
 		case MCE_RSP_CMD_ILLEGAL:
 			dev_dbg(dev, "Illegal PORT_IR command");
+			break;
+		case MCE_RSP_TX_TIMEOUT:
+			dev_dbg(dev, "IR TX timeout (TX buffer underrun)");
 			break;
 		case MCE_RSP_TX_TIMEOUT:
 			dev_dbg(dev, "IR TX timeout (TX buffer underrun)");
@@ -1316,6 +1326,7 @@ static void mceusb_dev_recv(struct urb *urb)
 	case -ECONNRESET:
 	case -ENOENT:
 	case -EILSEQ:
+	case -EPROTO:
 	case -ESHUTDOWN:
 		usb_unlink_urb(urb);
 		return;

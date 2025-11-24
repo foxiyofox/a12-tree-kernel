@@ -847,6 +847,8 @@ hashlimit_mt(const struct sk_buff *skb, struct xt_action_param *par)
 
 #define HASHLIMIT_MAX_SIZE 1048576
 
+#define HASHLIMIT_MAX_SIZE 1048576
+
 static int hashlimit_mt_check_common(const struct xt_mtchk_param *par,
 				     struct xt_hashlimit_htable **hinfo,
 				     struct hashlimit_cfg3 *cfg,

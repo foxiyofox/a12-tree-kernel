@@ -185,6 +185,7 @@ int acpi_smbus_register_callback(struct acpi_smb_hc *hc,
 	hc->callback = callback;
 	hc->context = context;
 	mutex_unlock(&hc->lock);
+	acpi_os_wait_events_complete();
 	return 0;
 }
 

@@ -610,6 +610,9 @@ static void sun4i_usb_phy0_id_vbus_det_scan(struct work_struct *work)
 		/* Enable PHY0 passby for host mode only. */
 		sun4i_usb_phy_passby(phy, !id_det);
 
+		/* Enable PHY0 passby for host mode only. */
+		sun4i_usb_phy_passby(phy, !id_det);
+
 		/* Re-route PHY0 if necessary */
 		if (data->cfg->phy0_dual_route)
 			sun4i_usb_phy0_reroute(data, id_det);
@@ -652,6 +655,9 @@ static struct phy *sun4i_usb_phy_xlate(struct device *dev,
 	struct sun4i_usb_phy_data *data = dev_get_drvdata(dev);
 
 	if (args->args[0] >= data->cfg->num_phys)
+		return ERR_PTR(-ENODEV);
+
+	if (data->cfg->missing_phys & BIT(args->args[0]))
 		return ERR_PTR(-ENODEV);
 
 	if (data->cfg->missing_phys & BIT(args->args[0]))
@@ -751,6 +757,9 @@ static int sun4i_usb_phy_probe(struct platform_device *pdev)
 	for (i = 0; i < data->cfg->num_phys; i++) {
 		struct sun4i_usb_phy *phy = data->phys + i;
 		char name[16];
+
+		if (data->cfg->missing_phys & BIT(i))
+			continue;
 
 		if (data->cfg->missing_phys & BIT(i))
 			continue;

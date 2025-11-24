@@ -421,6 +421,9 @@ static int nd_bus_remove(struct device *dev)
 	wait_event(nvdimm_bus->wait,
 			atomic_read(&nvdimm_bus->ioctl_active) == 0);
 
+	wait_event(nvdimm_bus->wait,
+			atomic_read(&nvdimm_bus->ioctl_active) == 0);
+
 	nd_synchronize();
 	device_for_each_child(&nvdimm_bus->dev, NULL, child_unregister);
 
@@ -505,6 +508,8 @@ static void nd_async_device_unregister(void *d, async_cookie_t cookie)
 
 	device_unregister(dev);
 	put_device(dev);
+	if (dev->parent)
+		put_device(dev->parent);
 }
 
 void __nd_device_register(struct device *dev)
@@ -984,8 +989,10 @@ static int __nd_ioctl(struct nvdimm_bus *nvdimm_bus, struct nvdimm *nvdimm,
 			return -EFAULT;
 	}
 
-	if (!desc || (desc->out_num + desc->in_num == 0) ||
-			!test_bit(cmd, &cmd_mask))
+	if (!desc ||
+	    (desc->out_num + desc->in_num == 0) ||
+	    cmd > ND_CMD_CALL ||
+	    !test_bit(cmd, &cmd_mask))
 		return -ENOTTY;
 
 	/* fail write commands (when read-only) */

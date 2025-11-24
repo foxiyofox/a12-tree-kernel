@@ -2161,13 +2161,12 @@ int ip6_mr_input(struct sk_buff *skb)
 		.flowi6_iif	= skb->dev->ifindex,
 		.flowi6_mark	= skb->mark,
 	};
-	int err;
 
-	err = ip6mr_fib_lookup(net, &fl6, &mrt);
-	if (err < 0) {
-		kfree_skb(skb);
-		return err;
-	}
+	if (!pskb_inet_may_pull(skb))
+		goto tx_err;
+
+	if (ip6mr_fib_lookup(net, &fl6, &mrt) < 0)
+		goto tx_err;
 
 	read_lock(&mrt_lock);
 	cache = ip6mr_cache_find(mrt,

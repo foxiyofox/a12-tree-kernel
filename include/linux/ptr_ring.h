@@ -494,6 +494,8 @@ static inline int ptr_ring_init(struct ptr_ring *r, int size, gfp_t gfp)
 	if (!r->queue)
 		return -ENOMEM;
 
+	if (producer >= size)
+		producer = 0;
 	__ptr_ring_set_size(r, size);
 	r->producer = r->consumer_head = r->consumer_tail = 0;
 	spin_lock_init(&r->producer_lock);

@@ -235,6 +235,9 @@ struct sdhci_msm_variant_info {
 	bool mci_removed;
 	const struct sdhci_msm_variant_ops *var_ops;
 	const struct sdhci_msm_offset *offset;
+	bool use_cdr;
+	u32 transfer_mode;
+	bool updated_ddr_cfg;
 };
 
 struct sdhci_msm_host {
@@ -1057,10 +1060,30 @@ static void sdhci_msm_set_cdr(struct sdhci_host *host, bool enable)
 			       msm_offset->core_dll_config);
 }
 
+static void sdhci_msm_set_cdr(struct sdhci_host *host, bool enable)
+{
+	const struct sdhci_msm_offset *msm_offset = sdhci_priv_msm_offset(host);
+	u32 config, oldconfig = readl_relaxed(host->ioaddr +
+					      msm_offset->core_dll_config);
+
+	config = oldconfig;
+	if (enable) {
+		config |= CORE_CDR_EN;
+		config &= ~CORE_CDR_EXT_EN;
+	} else {
+		config &= ~CORE_CDR_EN;
+		config |= CORE_CDR_EXT_EN;
+	}
+
+	if (config != oldconfig)
+		writel_relaxed(config, host->ioaddr +
+			       msm_offset->core_dll_config);
+}
+
 static int sdhci_msm_execute_tuning(struct mmc_host *mmc, u32 opcode)
 {
 	struct sdhci_host *host = mmc_priv(mmc);
-	int tuning_seq_cnt = 3;
+	int tuning_seq_cnt = 10;
 	u8 phase, tuned_phases[16], tuned_phase_cnt = 0;
 	int rc;
 	struct mmc_ios ios = host->mmc->ios;
@@ -1118,6 +1141,22 @@ retry:
 	} while (++phase < ARRAY_SIZE(tuned_phases));
 
 	if (tuned_phase_cnt) {
+		if (tuned_phase_cnt == ARRAY_SIZE(tuned_phases)) {
+			/*
+			 * All phases valid is _almost_ as bad as no phases
+			 * valid.  Probably all phases are not really reliable
+			 * but we didn't detect where the unreliable place is.
+			 * That means we'll essentially be guessing and hoping
+			 * we get a good phase.  Better to try a few times.
+			 */
+			dev_dbg(mmc_dev(mmc), "%s: All phases valid; try again\n",
+				mmc_hostname(mmc));
+			if (--tuning_seq_cnt) {
+				tuned_phase_cnt = 0;
+				goto retry;
+			}
+		}
+
 		rc = msm_find_most_appropriate_phase(host, tuned_phases,
 						     tuned_phase_cnt);
 		if (rc < 0)
@@ -1576,6 +1615,19 @@ static int __sdhci_msm_check_write(struct sdhci_host *host, u16 val, int reg)
 		else
 			sdhci_msm_set_cdr(host, false);
 		break;
+	case SDHCI_TRANSFER_MODE:
+		msm_host->transfer_mode = val;
+		break;
+	case SDHCI_COMMAND:
+		if (!msm_host->use_cdr)
+			break;
+		if ((msm_host->transfer_mode & SDHCI_TRNS_READ) &&
+		    SDHCI_GET_CMD(val) != MMC_SEND_TUNING_BLOCK_HS200 &&
+		    SDHCI_GET_CMD(val) != MMC_SEND_TUNING_BLOCK)
+			sdhci_msm_set_cdr(host, true);
+		else
+			sdhci_msm_set_cdr(host, false);
+		break;
 	}
 
 	if (req_type) {
@@ -1700,7 +1752,9 @@ static const struct sdhci_ops sdhci_msm_ops = {
 static const struct sdhci_pltfm_data sdhci_msm_pdata = {
 	.quirks = SDHCI_QUIRK_BROKEN_CARD_DETECTION |
 		  SDHCI_QUIRK_SINGLE_POWER_WRITE |
-		  SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN,
+		  SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN |
+		  SDHCI_QUIRK_MULTIBLOCK_READ_ACMD12,
+
 	.quirks2 = SDHCI_QUIRK2_PRESET_VALUE_BROKEN,
 	.ops = &sdhci_msm_ops,
 };
@@ -1872,6 +1926,9 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 	if (core_major == 1 && core_minor >= 0x49)
 		msm_host->updated_ddr_cfg = true;
 
+	if (core_major == 1 && core_minor >= 0x49)
+		msm_host->updated_ddr_cfg = true;
+
 	/*
 	 * Power on reset state may trigger power irq if previous status of
 	 * PWRCTL was either BUS_ON or IO_HIGH_V. So before enabling pwr irq
@@ -1908,6 +1965,8 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Request IRQ failed (%d)\n", ret);
 		goto clk_disable;
 	}
+
+	msm_host->mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY | MMC_CAP_NEED_RSP_BUSY;
 
 	pm_runtime_get_noresume(&pdev->dev);
 	pm_runtime_set_active(&pdev->dev);

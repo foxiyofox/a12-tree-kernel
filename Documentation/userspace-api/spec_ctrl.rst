@@ -49,6 +49,8 @@ misfeature will fail.
 
 .. _set_spec_ctrl:
 
+.. _set_spec_ctrl:
+
 PR_SET_SPECULATION_CTRL
 -----------------------
 
