@@ -26,4 +26,5 @@ make -j32 O=aout ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llv
 
 
 =================
-"arrumar bug da tela"
+
+arrumar bug da tela
